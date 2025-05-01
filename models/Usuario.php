@@ -10,28 +10,10 @@ class Usuario {
     /**
      * Cadastra um novo usuário no sistema
      */
-    public function cadastrar($nome, $email, $cpf, $telefone, $senha, $permissao, $id_imobiliaria = null) {
+    public function cadastrar($nome, $email, $cpf, $telefone, $senha, $permissao, $id_imobiliaria, $creci = null, $foto = null) {
         $senha_hash = md5($senha);
-    
-        // Verifica se será com ou sem imobiliária
-        if ($id_imobiliaria !== null) {
-            $stmt = $this->conn->prepare("
-                INSERT INTO usuario (nome, email, cpf, telefone, senha, permissao, id_imobiliaria)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ");
-            $stmt->bind_param("ssssssi", $nome, $email, $cpf, $telefone, $senha_hash, $permissao, $id_imobiliaria);
-        } else {
-            $stmt = $this->conn->prepare("
-                INSERT INTO usuario (nome, email, cpf, telefone, senha, permissao)
-                VALUES (?, ?, ?, ?, ?, ?)
-            ");
-            $stmt->bind_param("ssssss", $nome, $email, $cpf, $telefone, $senha_hash, $permissao);
-        }
-    
-        if (!$stmt) {
-            die("Erro na preparação da query: " . $this->conn->error);
-        }
-    
+        $stmt = $this->conn->prepare("INSERT INTO usuario (nome, email, cpf, telefone, senha, permissao, id_imobiliaria, creci, foto) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssssiss", $nome, $email, $cpf, $telefone, $senha_hash, $permissao, $id_imobiliaria, $creci, $foto);
         return $stmt->execute();
     }
 
