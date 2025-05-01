@@ -54,7 +54,10 @@ $listaImobiliarias = $imobiliaria->listarTodas();
                 </select>
             </div>
             <button type="submit" class="btn btn-primary">Cadastrar</button>
+            <a href="../dashboard_superadmin.php" class="btn btn-secondary">Voltar</a>
         </form>
+    
     </div>
+
 </body>
 </html>

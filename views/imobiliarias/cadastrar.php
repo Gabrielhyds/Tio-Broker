@@ -82,6 +82,7 @@
                 <input type="text" class="form-control" name="nome" id="nome" required>
             </div>
             <button type="submit" class="btn btn-primary">Cadastrar</button>
+            <a href="../dashboard_superadmin.php" class="btn btn-secondary">Voltar</a>
         </form>
     </div>
 </body>

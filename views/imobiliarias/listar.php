@@ -50,6 +50,7 @@ $lista = $imobiliaria->listarTodas();
                 <?php endif; ?>
             </tbody>
         </table>
+        <a href="../dashboard_superadmin.php" class="btn btn-secondary">Voltar</a>
     </div>
 </body>
 </html>

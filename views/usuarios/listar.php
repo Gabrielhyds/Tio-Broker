@@ -47,6 +47,9 @@ $lista = $usuario->listarTodosComImobiliaria();
                 <?php endforeach; ?>
             </tbody>
         </table>
+        <div class="mt-4">
+            <a href="../dashboard_superadmin.php" class="btn btn-secondary">Voltar</a>
+        </div>
     </div>
 </body>
 </html>
