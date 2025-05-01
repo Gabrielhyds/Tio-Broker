@@ -19,7 +19,7 @@ $listaImobiliarias = $imobiliaria->listarTodas();
 <body class="bg-light">
     <div class="container mt-5">
         <h2 class="mb-4">Editar Usuário</h2>
-        <form action="../../controllers/UsuarioController.php" method="POST">
+        <form action="../../controllers/UsuarioController.php" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="action" value="atualizar">
             <input type="hidden" name="id_usuario" value="<?= $dados['id_usuario'] ?>">
             <div class="mb-3">
@@ -39,6 +39,22 @@ $listaImobiliarias = $imobiliaria->listarTodas();
                 <input type="text" name="telefone" class="form-control" value="<?= $dados['telefone'] ?>" required>
             </div>
             <div class="mb-3">
+                <label>CRECI:</label>
+                <input type="text" name="creci" class="form-control" value="<?= $dados['creci'] ?>">
+            </div>
+            <div class="mb-3">
+                <label>Foto atual:</label><br>
+                <?php if (!empty($dados['foto'])): ?>
+                    <img src="<?= $dados['foto'] ?>" alt="Foto do usuário" width="100">
+                <?php else: ?>
+                    <span class="text-muted">Nenhuma foto enviada.</span>
+                <?php endif; ?>
+            </div>
+            <div class="mb-3">
+                <label>Alterar Foto:</label>
+                <input type="file" name="foto" class="form-control">
+            </div>
+            <div class="mb-3">
                 <label>Permissão:</label>
                 <select name="permissao" class="form-select" required>
                     <option value="Admin" <?= $dados['permissao'] === 'Admin' ? 'selected' : '' ?>>Admin</option>
@@ -55,9 +71,8 @@ $listaImobiliarias = $imobiliaria->listarTodas();
                 </select>
             </div>
             <button type="submit" class="btn btn-primary">Salvar</button>
-            <a href="listar.php" class="btn btn-secondary">Cancelar</a>
+            <a href="listar.php" class="btn btn-secondary">Voltar</a>
         </form>
-        
     </div>
 </body>
 </html>

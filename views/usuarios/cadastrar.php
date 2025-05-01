@@ -15,7 +15,7 @@ $listaImobiliarias = $imobiliaria->listarTodas();
 <body class="bg-light">
     <div class="container mt-5">
         <h2 class="mb-4">Cadastrar Novo Usuário</h2>
-        <form action="../../controllers/UsuarioController.php" method="POST">
+        <form action="../../controllers/UsuarioController.php" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="action" value="cadastrar">
             <div class="mb-3">
                 <label>Nome:</label>
@@ -38,6 +38,14 @@ $listaImobiliarias = $imobiliaria->listarTodas();
                 <input type="password" name="senha" class="form-control" required>
             </div>
             <div class="mb-3">
+                <label>CRECI:</label>
+                <input type="text" name="creci" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label>Foto (opcional):</label>
+                <input type="file" name="foto" class="form-control">
+            </div>
+            <div class="mb-3">
                 <label>Permissão:</label>
                 <select name="permissao" class="form-select" required>
                     <option value="Admin">Admin</option>
@@ -54,10 +62,8 @@ $listaImobiliarias = $imobiliaria->listarTodas();
                 </select>
             </div>
             <button type="submit" class="btn btn-primary">Cadastrar</button>
-            <a href="../dashboard_superadmin.php" class="btn btn-secondary">Voltar</a>
+            <a href="listar.php" class="btn btn-secondary">Voltar</a>
         </form>
-    
     </div>
-
 </body>
 </html>
