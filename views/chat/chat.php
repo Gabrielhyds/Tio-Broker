@@ -70,8 +70,11 @@ if ($id_destino) {
     </style>
 </head>
 <body class="bg-light">
+    
 <div class="container mt-5">
+<a href="../dashboard_superadmin.php" class="btn btn-secondary">Voltar</a><br>
     <div class="row">
+        
         <!-- Lista de usuários -->
         <div class="col-md-4">
             <h4>Usuários</h4>
@@ -178,18 +181,17 @@ function atualizarNotificacoes() {
             });
         });
 }
-function carregarMensagens() {
-    const idConversa = <?= json_encode($id_conversa_ativa ?? null) ?>;
-    if (!idConversa) return;
 
-    fetch("get_mensagens.php?id_conversa=" + idConversa + "&t=" + new Date().getTime())
-        .then(res => res.text())
-        .then(html => {
-            const box = document.getElementById("mensagens");
-            box.innerHTML = html;
-            box.scrollTop = box.scrollHeight; // 👈 força o scroll para o final
-        });
-}   
+
+function scrollParaFimDoChat() {
+    const box = document.getElementById('mensagens');
+    if (box) {
+        box.scrollTop = box.scrollHeight;
+    }
+}
+
+// Executa assim que a página carregar
+window.onload = scrollParaFimDoChat;
 
 // Executa a cada 3 segundos
 setInterval(() => {
