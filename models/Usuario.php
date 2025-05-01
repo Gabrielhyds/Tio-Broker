@@ -10,23 +10,28 @@ class Usuario {
     /**
      * Cadastra um novo usuário no sistema
      */
-    public function cadastrar($nome, $email, $cpf, $telefone, $senha, $permissao) {
-        // Criptografa a senha usando md5
+    public function cadastrar($nome, $email, $cpf, $telefone, $senha, $permissao, $id_imobiliaria = null) {
         $senha_hash = md5($senha);
-
-        // Prepara a consulta SQL com segurança (evita SQL Injection)
-        $stmt = $this->conn->prepare("
-            INSERT INTO usuario (nome, email, cpf, telefone, senha, permissao)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ");
-
+    
+        // Verifica se será com ou sem imobiliária
+        if ($id_imobiliaria !== null) {
+            $stmt = $this->conn->prepare("
+                INSERT INTO usuario (nome, email, cpf, telefone, senha, permissao, id_imobiliaria)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ");
+            $stmt->bind_param("ssssssi", $nome, $email, $cpf, $telefone, $senha_hash, $permissao, $id_imobiliaria);
+        } else {
+            $stmt = $this->conn->prepare("
+                INSERT INTO usuario (nome, email, cpf, telefone, senha, permissao)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ");
+            $stmt->bind_param("ssssss", $nome, $email, $cpf, $telefone, $senha_hash, $permissao);
+        }
+    
         if (!$stmt) {
             die("Erro na preparação da query: " . $this->conn->error);
         }
-
-        $stmt->bind_param("ssssss", $nome, $email, $cpf, $telefone, $senha_hash, $permissao);
-
-        // Executa e retorna sucesso ou erro
+    
         return $stmt->execute();
     }
 
@@ -58,6 +63,38 @@ class Usuario {
         }
 
         return false; // Senha incorreta
+    }
+    public function listarTodosComImobiliaria() {
+        $query = "
+            SELECT u.*, i.nome AS nome_imobiliaria
+            FROM usuario u
+            LEFT JOIN imobiliaria i ON u.id_imobiliaria = i.id_imobiliaria
+            ORDER BY u.nome ASC
+        ";
+        $resultado = $this->conn->query($query);
+        return $resultado ? $resultado->fetch_all(MYSQLI_ASSOC) : [];
+    }
+    
+    public function buscarPorId($id) {
+        $stmt = $this->conn->prepare("SELECT * FROM usuario WHERE id_usuario = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_assoc();
+    }
+    
+    public function atualizar($id, $nome, $email, $cpf, $telefone, $permissao, $id_imobiliaria) {
+        $stmt = $this->conn->prepare("
+            UPDATE usuario SET nome = ?, email = ?, cpf = ?, telefone = ?, permissao = ?, id_imobiliaria = ? 
+            WHERE id_usuario = ?
+        ");
+        $stmt->bind_param("ssssssi", $nome, $email, $cpf, $telefone, $permissao, $id_imobiliaria, $id);
+        return $stmt->execute();
+    }
+    
+    public function excluir($id) {
+        $stmt = $this->conn->prepare("DELETE FROM usuario WHERE id_usuario = ?");
+        $stmt->bind_param("i", $id);
+        return $stmt->execute();
     }
 }
 ?>

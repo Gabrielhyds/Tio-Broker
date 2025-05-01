@@ -106,6 +106,18 @@ $nomeUsuario = $_SESSION['usuario']['nome'] ?? 'SuperAdmin';
                     </div>
                 </a>
             </div>
+            
+            <!-- Cadastrar Usuário -->
+            <div class="col-md-4">
+                <a href="usuarios/cadastrar.php" class="text-decoration-none">
+                    <div class="card card-custom text-center p-4">
+                        <div class="icon-box"><i class="bi bi-person-plus-fill"></i></div>
+                        <h5 class="card-title">Cadastrar Usuário</h5>
+                        <p class="card-text">Crie usuários e vincule a uma imobiliária.</p>
+                    </div>
+                </a>
+            </div>
+            
         </div>
     </div>
 
