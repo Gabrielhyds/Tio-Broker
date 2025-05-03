@@ -42,32 +42,7 @@ if ($id_destino) {
     <meta charset="UTF-8">
     <title>Chat Interno</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .chat-box {
-            border: 1px solid #dee2e6;
-            height: 400px;
-            overflow-y: auto;
-            padding: 15px;
-            background: #f8f9fa;
-        }
-        .mensagem {
-            margin-bottom: 10px;
-            max-width: 75%;
-            padding: 10px 15px;
-            border-radius: 15px;
-            clear: both;
-        }
-        .mensagem-direita {
-            background-color: #d1e7dd;
-            float: right;
-            text-align: right;
-        }
-        .mensagem-esquerda {
-            background-color: #e9ecef;
-            float: left;
-            text-align: left;
-        }
-    </style>
+    <link href="assets/style.css" rel="stylesheet">
 </head>
 <body class="bg-light">
     
