@@ -1,17 +1,29 @@
 <?php
 class Imobiliaria {
-    private $conn;
+    private $conn; // Conexão com o banco de dados
 
+    // Construtor recebe a conexão como parâmetro
     public function __construct($conn) {
         $this->conn = $conn;
     }
 
+    /**
+     * Cadastra uma nova imobiliária no banco de dados
+     * @param string $nome Nome da imobiliária
+     * @param string $cnpj CNPJ da imobiliária
+     * @return bool Sucesso ou falha no cadastro
+     */
     public function cadastrar($nome, $cnpj) {
         $stmt = $this->conn->prepare("INSERT INTO imobiliaria (nome, cnpj) VALUES (?, ?)");
         $stmt->bind_param("ss", $nome, $cnpj);
         return $stmt->execute();
     }
 
+    /**
+     * Lista todas as imobiliárias cadastradas
+     * Retorna também a quantidade de usuários vinculados a cada imobiliária
+     * @return array Lista de imobiliárias com total de usuários
+     */
     public function listarTodas() {
         $query = "
             SELECT i.*, COUNT(u.id_usuario) as total_usuarios
@@ -25,12 +37,22 @@ class Imobiliaria {
         return $resultado->fetch_all(MYSQLI_ASSOC);
     }
 
+    /**
+     * Exclui uma imobiliária pelo ID
+     * @param int $id ID da imobiliária
+     * @return bool Sucesso ou falha na exclusão
+     */
     public function excluir($id) {
         $stmt = $this->conn->prepare("DELETE FROM imobiliaria WHERE id_imobiliaria = ?");
         $stmt->bind_param("i", $id);
         return $stmt->execute();
     }
 
+    /**
+     * Busca uma imobiliária específica pelo ID
+     * @param int $id ID da imobiliária
+     * @return array|null Dados da imobiliária ou null se não encontrada
+     */
     public function buscarPorId($id) {
         $stmt = $this->conn->prepare("SELECT * FROM imobiliaria WHERE id_imobiliaria = ?");
         $stmt->bind_param("i", $id);
@@ -38,6 +60,13 @@ class Imobiliaria {
         return $stmt->get_result()->fetch_assoc();
     }
 
+    /**
+     * Atualiza os dados de uma imobiliária existente
+     * @param int $id ID da imobiliária
+     * @param string $nome Novo nome
+     * @param string $cnpj Novo CNPJ
+     * @return bool Sucesso ou falha na atualização
+     */
     public function atualizar($id, $nome, $cnpj) {
         $stmt = $this->conn->prepare("UPDATE imobiliaria SET nome = ?, cnpj = ? WHERE id_imobiliaria = ?");
         $stmt->bind_param("ssi", $nome, $cnpj, $id);

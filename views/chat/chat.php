@@ -12,9 +12,19 @@ if (!isset($_SESSION['usuario'])) {
 $chat = new Chat($connection);
 $usuarioModel = new Usuario($connection);
 $id_usuario_logado = $_SESSION['usuario']['id_usuario'];
+$permissao = $_SESSION['usuario']['permissao'];
 
-// Lista todos os usuários (exceto o logado)
-$usuariosDisponiveis = $usuarioModel->listarTodosComImobiliaria();
+// Lista de imobiliárias para o select (somente para SuperAdmin)
+$listaImobiliarias = ($permissao === 'SuperAdmin') ? $usuarioModel->listarImobiliariasComUsuarios() : [];
+$id_imobiliaria_filtro = $_GET['id_imobiliaria'] ?? null;
+
+// Filtra usuários por imobiliária (caso SuperAdmin tenha selecionado uma)
+if ($permissao === 'SuperAdmin' && $id_imobiliaria_filtro) {
+    $usuariosDisponiveis = $usuarioModel->listarPorImobiliaria($id_imobiliaria_filtro, $id_usuario_logado);
+} else {
+    $usuariosDisponiveis = $usuarioModel->listarTodosComImobiliaria($id_usuario_logado);
+}
+
 $ultimasMensagens = $chat->buscarUltimaMensagemCom($id_usuario_logado);
 $notificacoes = $chat->contarNaoLidasPorRemetente($id_usuario_logado);
 
@@ -24,18 +34,15 @@ $mensagens = [];
 
 if ($id_destino) {
     $id_conversa_ativa = $chat->buscarConversaPrivadaEntre($id_usuario_logado, $id_destino);
-
     if (!$id_conversa_ativa) {
         $id_conversa_ativa = $chat->criarConversaPrivada($id_usuario_logado, $id_destino);
     }
-
-    // Marcar mensagens do outro usuário como lidas
     $chat->marcarComoLidas($id_conversa_ativa, $id_usuario_logado);
-
-    // Recupera mensagens da conversa
     $mensagens = $chat->listarMensagensDaConversa($id_conversa_ativa);
 }
 ?>
+
+<!-- A PARTIR DAQUI É O HTML ORIGINAL COM ALTERAÇÕES MÍNIMAS -->
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -45,31 +52,45 @@ if ($id_destino) {
     <link href="assets/style.css" rel="stylesheet">
 </head>
 <body class="bg-light">
-    
+
 <div class="container mt-5">
-<a href="../dashboard_superadmin.php" class="btn btn-secondary">Voltar</a><br>
+<a href="../dashboard_superadmin.php" class="btn btn-secondary mb-2">Voltar</a>
     <div class="row">
-        
+
         <!-- Lista de usuários -->
         <div class="col-md-4">
             <h4>Usuários</h4>
+
+            <?php if ($permissao === 'SuperAdmin'): ?>
+                <form method="GET" class="mb-3">
+                    <div class="input-group">
+                        <select name="id_imobiliaria" class="form-select" onchange="this.form.submit()">
+                            <option value="#">-- Filtrar por Imobiliária --</option>
+                            <?php foreach ($listaImobiliarias as $imob): ?>
+                                <option value="<?= $imob['id_imobiliaria'] ?>" <?= ($id_imobiliaria_filtro == $imob['id_imobiliaria']) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($imob['nome']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </form>
+            <?php endif; ?>
+
             <ul class="list-group">
                 <?php foreach ($usuariosDisponiveis as $u): ?>
-                    <?php if ($u['id_usuario'] != $id_usuario_logado): ?>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <a href="chat.php?id_destino=<?= $u['id_usuario'] ?>" class="text-decoration-none flex-grow-1">
-                                <?= htmlspecialchars($u['nome']) ?>
-                                <small id="ultima-msg-<?= $u['id_usuario'] ?>" class="d-block text-muted">
-                                    <?= isset($ultimasMensagens[$u['id_usuario']]) 
-                                        ? htmlspecialchars($ultimasMensagens[$u['id_usuario']]['mensagem']) 
-                                        : 'Sem conversa ainda' ?>
-                                </small>
-                            </a>
-                            <span id="badge-<?= $u['id_usuario'] ?>" class="badge bg-danger rounded-pill <?= isset($notificacoes[$u['id_usuario']]) ? '' : 'd-none' ?>">
-                                <?= $notificacoes[$u['id_usuario']] ?? '' ?>
-                            </span>
-                        </li>
-                    <?php endif; ?>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <a href="chat.php?id_destino=<?= $u['id_usuario'] ?>&id_imobiliaria=<?= $id_imobiliaria_filtro ?>" class="text-decoration-none flex-grow-1">
+                            <?= htmlspecialchars($u['nome']) ?>
+                            <small id="ultima-msg-<?= $u['id_usuario'] ?>" class="d-block text-muted">
+                                <?= isset($ultimasMensagens[$u['id_usuario']])
+                                    ? htmlspecialchars($ultimasMensagens[$u['id_usuario']]['mensagem'])
+                                    : 'Sem conversa ainda' ?>
+                            </small>
+                        </a>
+                        <span id="badge-<?= $u['id_usuario'] ?>" class="badge bg-danger rounded-pill <?= isset($notificacoes[$u['id_usuario']]) ? '' : 'd-none' ?>">
+                            <?= $notificacoes[$u['id_usuario']] ?? '' ?>
+                        </span>
+                    </li>
                 <?php endforeach; ?>
             </ul>
         </div>
@@ -101,7 +122,7 @@ if ($id_destino) {
                         <p class="text-muted">Nenhuma mensagem ainda. Inicie a conversa.</p>
                     <?php endif; ?>
                 <?php else: ?>
-                    <p class="text-muted">Selecione um usuário ao lado para iniciar uma conversa.</p>
+                    <p class="text-muted">Selecione uma Imobiliaria e um colaborador ao lado para iniciar uma conversa.</p>
                 <?php endif; ?>
             </div>
 
@@ -110,6 +131,12 @@ if ($id_destino) {
                     <input type="hidden" name="action" value="enviar_mensagem">
                     <input type="hidden" name="id_conversa" value="<?= $id_conversa_ativa ?>">
                     <input type="hidden" name="id_destino" value="<?= $id_destino ?>">
+                    
+                    <!-- Preserva o filtro de imobiliária, se estiver ativo -->
+                    <?php if (isset($id_imobiliaria_filtro) || isset($_GET['id_imobiliaria'])): ?>
+                        <input type="hidden" name="id_imobiliaria" value="<?= htmlspecialchars($id_imobiliaria_filtro ?? $_GET['id_imobiliaria']) ?>">
+                    <?php endif; ?>
+                    
                     <div class="input-group">
                         <input type="text" name="mensagem" class="form-control" placeholder="Digite sua mensagem..." required>
                         <button type="submit" class="btn btn-primary">Enviar</button>
@@ -119,6 +146,7 @@ if ($id_destino) {
         </div>
     </div>
 </div>
+
 <script>
 function carregarMensagens() {
     const idConversa = <?= json_encode($id_conversa_ativa ?? null) ?>;
@@ -136,19 +164,12 @@ function atualizarNotificacoes() {
         .then(res => res.json())
         .then(data => {
             Object.entries(data).forEach(([userId, dados]) => {
-                // Atualiza badge
                 const badge = document.getElementById("badge-" + userId);
                 if (badge) {
-                    if (dados.total_nao_lidas > 0) {
-                        badge.textContent = dados.total_nao_lidas;
-                        badge.classList.remove("d-none");
-                    } else {
-                        badge.textContent = '';
-                        badge.classList.add("d-none");
-                    }
+                    badge.textContent = dados.total_nao_lidas || '';
+                    badge.classList.toggle("d-none", dados.total_nao_lidas == 0);
                 }
 
-                // Atualiza última mensagem
                 const msgEl = document.getElementById("ultima-msg-" + userId);
                 if (msgEl) {
                     msgEl.textContent = dados.mensagem || "Sem conversa ainda";
@@ -157,22 +178,16 @@ function atualizarNotificacoes() {
         });
 }
 
-
 function scrollParaFimDoChat() {
     const box = document.getElementById('mensagens');
-    if (box) {
-        box.scrollTop = box.scrollHeight;
-    }
+    if (box) box.scrollTop = box.scrollHeight;
 }
 
-// Executa assim que a página carregar
 window.onload = scrollParaFimDoChat;
-
-// Executa a cada 3 segundos
 setInterval(() => {
     carregarMensagens();
     atualizarNotificacoes();
-}, 100);
+}, 3000);
 </script>
 </body>
 </html>

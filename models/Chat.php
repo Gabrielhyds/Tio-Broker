@@ -1,29 +1,33 @@
 <?php
 class Chat {
-    private $conn;
+    private $conn; // Conexão com o banco de dados
 
+    // Construtor recebe a conexão
     public function __construct($conexao) {
         $this->conn = $conexao;
     }
 
+    // Cria uma nova conversa privada entre dois usuários
     public function criarConversaPrivada($id_origem, $id_destino) {
         $stmt = $this->conn->prepare("INSERT INTO conversas (tipo_conversa) VALUES ('privada')");
         $stmt->execute();
-        $id_conversa = $this->conn->insert_id;
-    
+        $id_conversa = $this->conn->insert_id; // Obtém o ID da conversa recém-criada
+
+        // Adiciona os dois usuários na conversa
         $this->adicionarUsuarioNaConversa($id_conversa, $id_origem);
         $this->adicionarUsuarioNaConversa($id_conversa, $id_destino);
-    
+
         return $id_conversa;
     }
-    
 
+    // Adiciona um usuário a uma conversa
     public function adicionarUsuarioNaConversa($id_conversa, $id_usuario) {
         $stmt = $this->conn->prepare("INSERT INTO usuarios_conversa (id_conversa, id_usuario) VALUES (?, ?)");
         $stmt->bind_param("ii", $id_conversa, $id_usuario);
         $stmt->execute();
     }
 
+    // Verifica se já existe uma conversa privada entre dois usuários
     public function buscarConversaPrivadaEntre($id1, $id2) {
         $query = "
             SELECT c.id_conversa
@@ -36,15 +40,15 @@ class Chat {
             GROUP BY c.id_conversa
             LIMIT 1
         ";
-    
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param("ii", $id1, $id2);
         $stmt->execute();
         $result = $stmt->get_result()->fetch_assoc();
-    
+
         return $result['id_conversa'] ?? null;
     }
 
+    // Lista todas as conversas do usuário
     public function listarConversasPorUsuario($id_usuario) {
         $query = "
             SELECT c.id_conversa, c.nome_conversa
@@ -53,14 +57,15 @@ class Chat {
             WHERE uc.id_usuario = ?
             ORDER BY c.data_criacao DESC
         ";
-    
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param("i", $id_usuario);
         $stmt->execute();
-    
+
         $result = $stmt->get_result();
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
+
+    // Lista todas as mensagens de uma conversa
     public function listarMensagensDaConversa($id_conversa) {
         $query = "
             SELECT m.*, u.nome AS nome_usuario
@@ -76,7 +81,7 @@ class Chat {
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
 
-
+    // Envia uma mensagem em uma conversa
     public function enviarMensagem($id_conversa, $id_usuario, $mensagem) {
         $stmt = $this->conn->prepare("
             INSERT INTO mensagens (id_conversa, id_usuario, mensagem)
@@ -85,7 +90,8 @@ class Chat {
         $stmt->bind_param("iis", $id_conversa, $id_usuario, $mensagem);
         return $stmt->execute();
     }
-    // Retorna o outro participante da conversa privada
+
+    // Retorna o ID do outro usuário em uma conversa privada
     public function obterDestinatarioDaConversa($id_conversa, $id_usuario_atual) {
         $stmt = $this->conn->prepare("
             SELECT id_usuario 
@@ -98,6 +104,8 @@ class Chat {
         $result = $stmt->get_result()->fetch_assoc();
         return $result['id_usuario'] ?? null;
     }
+
+    // Marca como lidas todas as mensagens da conversa que ainda não foram lidas e não são do usuário atual
     public function marcarComoLidas($id_conversa, $id_usuario_logado) {
         $stmt = $this->conn->prepare("
             UPDATE mensagens 
@@ -110,6 +118,7 @@ class Chat {
         $stmt->execute();
     }
 
+    // Retorna um array com o número de mensagens não lidas por remetente
     public function contarNaoLidasPorRemetente($id_usuario_logado) {
         $query = "
             SELECT m.id_usuario AS remetente, COUNT(*) AS total
@@ -121,19 +130,19 @@ class Chat {
               AND m.lida = 0
             GROUP BY m.id_usuario
         ";
-    
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param("ii", $id_usuario_logado, $id_usuario_logado);
         $stmt->execute();
         $result = $stmt->get_result();
-    
+
         $notificacoes = [];
         while ($row = $result->fetch_assoc()) {
             $notificacoes[$row['remetente']] = $row['total'];
         }
         return $notificacoes;
     }
-    
+
+    // Retorna a última mensagem trocada com cada usuário
     public function buscarUltimaMensagemCom($id_logado) {
         $query = "
             SELECT 
@@ -150,21 +159,18 @@ class Chat {
             WHERE c.tipo_conversa = 'privada'
             ORDER BY m.data_envio DESC
         ";
-    
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param("ii", $id_logado, $id_logado);
         $stmt->execute();
         $result = $stmt->get_result();
-    
+
         $ultimas = [];
         while ($row = $result->fetch_assoc()) {
             if (!isset($ultimas[$row['outro_usuario']])) {
                 $ultimas[$row['outro_usuario']] = $row;
             }
         }
-    
         return $ultimas;
     }
-
 }
 ?>
