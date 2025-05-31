@@ -1,136 +1,171 @@
-<?php
-session_start();
-if (!isset($_SESSION['usuario']) || $_SESSION['usuario']['permissao'] !== 'SuperAdmin') {
-    header('Location: ../auth/login.php');
-    exit;
-}
-
-$nomeUsuario = $_SESSION['usuario']['nome'] ?? 'SuperAdmin';
-?>
-
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Painel SuperAdmin</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f5f7fa;
-            font-family: 'Segoe UI', sans-serif;
-            padding-top: 70px; /* espaço para a navbar fixa */
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard Admin</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f8f9fa;
+    }
 
-        .dashboard-container {
-            max-width: 1100px;
-            margin: 0 auto;
-        }
+    .sidebar {
+      height: 100vh;
+      background-color: #343a40;
+      color: #fff;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 240px;
+      padding-top: 1rem;
+    }
 
-        .card-custom {
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.05);
-            transition: transform 0.2s ease, box-shadow 0.3s ease;
-        }
+    .sidebar a {
+      color: #adb5bd;
+      text-decoration: none;
+      padding: 10px 20px;
+      display: block;
+    }
 
-        .card-custom:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
-        }
+    .sidebar a:hover,
+    .sidebar a.active {
+      background-color: #495057;
+      color: #fff;
+    }
 
-        .card-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #0d6efd;
-        }
+    .main {
+      margin-left: 240px;
+      padding: 20px;
+    }
 
-        .card-text {
-            color: #6c757d;
-        }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-        .icon-box {
-            font-size: 2rem;
-            color: #0d6efd;
-            margin-bottom: 10px;
-        }
-    </style>
+    .card-icon {
+      font-size: 2rem;
+      color: #0d6efd;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+      }
+      .main {
+        margin-left: 0;
+      }
+    }
+  </style>
 </head>
 <body>
 
-    <!-- Navbar Fixa -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
-        <div class="container-fluid px-4">
-            <span class="navbar-brand fw-bold">Sistema Imobiliário</span>
-            <div class="d-flex align-items-center">
-                <span class="text-white me-3"><i class="bi bi-person-circle me-1"></i><?= htmlspecialchars($nomeUsuario) ?></span>
-                <a href="../../controllers/LogoutController.php" class="btn btn-outline-light btn-sm">Sair</a>
-            </div>
-        </div>
-    </nav>
+  <!-- Sidebar -->
+    <div class="sidebar">
+  <h4 class="text-center text-white">SuperAdmin</h4>
+  <hr class="border-light" />
+  
+  <!-- Dropdown Imobiliária -->
+  <div class="dropdown">
+    <a class="dropdown-toggle d-block" href="#" id="imobiliariaDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+      <i class="fas fa-building me-2"></i>Imobiliária
+    </a>
+    <ul class="dropdown-menu bg-dark border-0" aria-labelledby="imobiliariaDropdown">
+      <li><a class="dropdown-item text-light" href="../imobiliarias/cadastrar.php"><i class="fas fa-plus me-2"></i>Cadastrar Imobiliária</a></li>
+      <li><a class="dropdown-item text-light" href="../imobiliarias/listar.php"><i class="fas fa-list me-2"></i>Ver Imobiliárias</a></li>
+    </ul>
+  </div>
 
-    <!-- Conteúdo da Dashboard -->
-    <div class="container dashboard-container py-5">
-        <h1 class="mb-4 text-center">Painel de Controle - SuperAdmin</h1>
+  <!-- Dropdown Usuário -->
+  <div class="dropdown mt-2">
+    <a class="dropdown-toggle d-block" href="#" id="usuarioDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+      <i class="fas fa-users me-2"></i>Usuário
+    </a>
+    <ul class="dropdown-menu bg-dark border-0" aria-labelledby="usuarioDropdown">
+      <li><a class="dropdown-item text-light" href="../usuarios/cadastrar.php"><i class="fas fa-user-plus me-2"></i>Cadastrar Usuário</a></li>
+      <li><a class="dropdown-item text-light" href="../usuarios/listar.php"><i class="fas fa-users-cog me-2"></i>Gerenciar Usuários</a></li>
+    </ul>
+  </div>
 
-        <div class="row g-4">
-            <!-- Cadastrar Imobiliária -->
-            <div class="col-md-4">
-                <a href="../imobiliarias/cadastrar.php" class="text-decoration-none">
-                    <div class="card card-custom text-center p-4">
-                        <div class="icon-box"><i class="bi bi-building-add"></i></div>
-                        <h5 class="card-title">Cadastrar Imobiliária</h5>
-                        <p class="card-text">Adicione uma nova empresa à plataforma.</p>
-                    </div>
-                </a>
-            </div>
+  <a href="../chat/chat.php"><i class="fas fa-comments me-2"></i>Chat</a>
+  <a href="#"><i class="fas fa-cogs me-2"></i>Configurações</a>
+  <a href="../../controllers/LogoutController.php"><i class="fas fa-sign-out-alt me-2"></i>Sair</a>
+</div>
 
-            <!-- Listar Imobiliárias -->
-            <div class="col-md-4">
-                <a href="../imobiliarias/listar.php" class="text-decoration-none">
-                    <div class="card card-custom text-center p-4">
-                        <div class="icon-box"><i class="bi bi-buildings"></i></div>
-                        <h5 class="card-title">Ver Imobiliárias</h5>
-                        <p class="card-text">Visualize e gerencie imobiliárias cadastradas.</p>
-                    </div>
-                </a>
-            </div>
-
-            <!-- Gerenciar Usuários -->
-            <div class="col-md-4">
-                <a href="../usuarios/listar.php" class="text-decoration-none">
-                    <div class="card card-custom text-center p-4">
-                        <div class="icon-box"><i class="bi bi-people-fill"></i></div>
-                        <h5 class="card-title">Gerenciar Usuários</h5>
-                        <p class="card-text">Associe e visualize usuários por imobiliária.</p>
-                    </div>
-                </a>
-            </div>
-            
-            <!-- Cadastrar Usuário -->
-            <div class="col-md-4">
-                <a href="../usuarios/cadastrar.php" class="text-decoration-none">
-                    <div class="card card-custom text-center p-4">
-                        <div class="icon-box"><i class="bi bi-person-plus-fill"></i></div>
-                        <h5 class="card-title">Cadastrar Usuário</h5>
-                        <p class="card-text">Crie usuários e vincule a uma imobiliária.</p>
-                    </div>
-                </a>
-            </div>
-
-            <!-- Chat interno -->
-            <div class="col-md-4">
-                <a href="../chat/chat.php" class="text-decoration-none">
-                    <div class="card card-custom text-center p-4">
-                        <div class="icon-box"><i class="bi bi-chat-dots-fill"></i></div>
-                        <h5 class="card-title">Iniciar Conversa</h5>
-                        <p class="card-text">Converse com usuários.</p>
-                    </div>
-                </a>
-            </div>
-            
-        </div>
+  <!-- Conteúdo Principal -->
+  <div class="main">
+    <!-- Topbar -->
+    <div class="topbar mb-4">
+      <h2>Dashboard</h2>
+      <div class="d-flex align-items-center gap-3">
+        <input class="form-control form-control-sm" type="search" placeholder="Buscar...">
+        <img src="https://i.pravatar.cc/40" class="rounded-circle" alt="avatar" />
+      </div>
     </div>
 
+    <!-- Cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-3">
+        <div class="card shadow-sm">
+          <div class="card-body d-flex justify-content-between align-items-center">
+            <div>
+              <h6>Usuários</h6>
+              <h4>154</h4>
+            </div>
+            <i class="fas fa-users card-icon"></i>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card shadow-sm">
+          <div class="card-body d-flex justify-content-between align-items-center">
+            <div>
+              <h6>Tarefas</h6>
+              <h4>32</h4>
+            </div>
+            <i class="fas fa-tasks card-icon"></i>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card shadow-sm">
+          <div class="card-body d-flex justify-content-between align-items-center">
+            <div>
+              <h6>Relatórios</h6>
+              <h4>12</h4>
+            </div>
+            <i class="fas fa-chart-bar card-icon"></i>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card shadow-sm">
+          <div class="card-body d-flex justify-content-between align-items-center">
+            <div>
+              <h6>Alertas</h6>
+              <h4>4</h4>
+            </div>
+            <i class="fas fa-bell card-icon"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Seções adicionais -->
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Resumo</h5>
+        <p>Este é um painel administrativo simples e responsivo, pronto para ser integrado com sistemas de backend.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
