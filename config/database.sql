@@ -36,6 +36,7 @@ CREATE TABLE cliente ( -- Tabela de Clientes
     tipo_lista ENUM('Não potencial', 'Potencial') NOT NULL, -- Tipo de cliente (potencial ou não)
     id_usuario INT NOT NULL, -- Chave estrangeira para o usuário
     id_imobiliaria INT, -- Chave estrangeira para a imobiliária
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE, -- Relaciona com a tabela 'usuario'
     FOREIGN KEY (id_imobiliaria) REFERENCES imobiliaria(id_imobiliaria) ON DELETE SET NULL -- Relaciona com a tabela 'imobiliaria'
 );
