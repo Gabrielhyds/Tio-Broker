@@ -73,6 +73,7 @@
     <a href="#" class="active"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a>
     <a href="#"><i class="fas fa-tasks me-2"></i> Tarefas</a>
     <a href="#"><i class="fas fa-chart-bar me-2"></i> Relatórios</a>
+    <a href="../chat/chat.php"><i class="fas fa-comments me-2"></i> Chat</a> <!-- Novo menu Chat -->
     <a href="../contatos/visualizar.php"><i class="fas fa-address-book me-2"></i>Agenda de Contatos</a> <!-- Novo item -->
     <a href="#"><i class="fas fa-cogs me-2"></i> Configurações</a>
     <a href="../../controllers/LogoutController.php"><i class="fas fa-cogs me-2"></i>Sair</a>
