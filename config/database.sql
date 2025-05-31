@@ -134,3 +134,11 @@ CREATE TABLE mensagens ( -- Tabela de Mensagens
     FOREIGN KEY (id_conversa) REFERENCES conversas(id_conversa) ON DELETE CASCADE, -- Relaciona com a tabela 'conversas'
     FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE -- Relaciona com a tabela 'usuario'
 );
+
+CREATE TABLE password_resets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    token VARCHAR(255) NOT NULL,
+    created_at DATETIME NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES usuario(id_usuario)
+);
