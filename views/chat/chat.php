@@ -54,7 +54,7 @@ if ($id_destino) {
 <body class="bg-light">
 
 <div class="container mt-5">
-<a href="../dashboards/dashboard_superadmin.php" class="btn btn-secondary mb-2">Voltar</a>
+<a href="<?= htmlspecialchars($dashboardUrl ?? '../../index.php') ?>" class="btn btn-secondary mb-2">Voltar</a>
     <div class="row">
 
         <!-- Lista de usuários -->

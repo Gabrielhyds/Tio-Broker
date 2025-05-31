@@ -37,6 +37,10 @@ if (session_status() == PHP_SESSION_NONE) {
         .page-header h2 {
             color: #2c3e50;
             font-weight: 600;
+            margin-bottom: 0; /* Remover margem inferior do h2 */
+        }
+        .page-header .btn-group-actions a { /* Estilo para o grupo de botões no cabeçalho */
+            margin-left: 10px;
         }
         .table {
             border-collapse: separate;
@@ -46,9 +50,9 @@ if (session_status() == PHP_SESSION_NONE) {
         }
         .table th, .table td {
             vertical-align: middle;
-            padding: 0.8rem 0.7rem; /* Padding reduzido para mais colunas */
+            padding: 0.8rem 0.7rem;
             border-bottom-width: 1px;
-            font-size: 0.88rem; /* Fonte um pouco menor */
+            font-size: 0.88rem;
         }
         .table th {
             white-space: nowrap;
@@ -64,22 +68,22 @@ if (session_status() == PHP_SESSION_NONE) {
         .table-hover tbody tr:hover {
             background-color: #f1f3f5;
         }
-        .action-buttons a { /* Apenas um botão principal por linha agora */
+        .action-buttons a {
              margin: 0;
         }
         .img-thumbnail-custom {
-            width: 40px; /* Menor para economizar espaço */
+            width: 40px;
             height: 40px;
             object-fit: cover;
             border-radius: 6px;
             border: 1px solid #e0e0e0;
         }
         .icon-placeholder {
-            font-size: 1.6rem; /* Menor */
+            font-size: 1.6rem;
             color: #adb5bd;
         }
         .badge {
-            font-size: 0.7rem; /* Menor */
+            font-size: 0.7rem;
             padding: 0.3em 0.55em;
             font-weight: 500;
         }
@@ -93,11 +97,12 @@ if (session_status() == PHP_SESSION_NONE) {
             color: #842029;
             border: 1px solid rgba(220, 53, 69, 0.2);
         }
-        .btn-action-details { /* Botão de detalhes específico */
+        .btn-action-details {
             padding: 0.25rem 0.6rem;
             font-size: 0.8rem;
         }
         .btn-primary { font-weight: 500; }
+        .btn-outline-primary { font-weight: 500; } /* Adicionado para consistência */
         .alert { border-left-width: 4px; border-radius: 0.375rem; }
         .alert-success { border-left-color: #198754; }
         .alert-danger { border-left-color: #dc3545; }
@@ -105,16 +110,30 @@ if (session_status() == PHP_SESSION_NONE) {
 
         @media (max-width: 768px) {
             .container-listagem { padding: 20px 15px; margin-top: 15px; margin-bottom: 15px; }
-            .page-header { flex-direction: column; align-items: stretch !important; }
-            .page-header h2 { text-align: center; margin-bottom: 15px; }
+            .page-header { 
+                flex-direction: column; 
+                align-items: stretch !important; 
+            }
+            .page-header h2 { 
+                text-align: center; 
+                margin-bottom: 15px; 
+            }
+            .page-header .btn-group-actions { /* Grupo de botões em coluna */
+                display: flex;
+                flex-direction: column;
+                gap: 10px; /* Espaço entre os botões empilhados */
+            }
+            .page-header .btn-group-actions a {
+                margin-left: 0; /* Remove margem esquerda quando empilhado */
+                width: 100%; /* Botões ocupam largura total */
+            }
             .table th, .table td { font-size: 0.8rem; padding: 0.6rem 0.4rem; }
-            .action-buttons a.btn-action-details { width: 100%; } /* Botão de detalhes ocupa largura total */
-            /* Esconder colunas menos essenciais em telas pequenas */
+            .action-buttons a.btn-action-details { width: 100%; }
             .col-cpf, .col-empreendimento, .col-corretor, .col-imobiliaria, .col-dt-cadastro { display: none; }
         }
          @media (min-width: 769px) and (max-width: 992px) {
             .table th, .table td { font-size: 0.85rem; padding: 0.7rem 0.5rem; }
-            .col-empreendimento, .col-dt-cadastro { display: none; } /* Esconder algumas em tablets */
+            .col-empreendimento, .col-dt-cadastro { display: none; }
         }
     </style>
 </head>
@@ -122,10 +141,16 @@ if (session_status() == PHP_SESSION_NONE) {
     <div class="container-fluid px-md-4 px-lg-5">
         <div class="container-listagem">
             <div class="d-flex flex-wrap justify-content-between align-items-center page-header">
-                <h2 class="mb-0 me-sm-3"><i class="bi bi-people-fill"></i> Clientes Cadastrados</h2>
-                <a href="index.php?controller=cliente&action=cadastrar" class="btn btn-primary btn-lg">
-                    <i class="bi bi-plus-circle"></i> Novo Cliente
-                </a>
+                <h2 class="me-sm-3"><i class="bi bi-people-fill"></i> Clientes Cadastrados</h2>
+                <div class="btn-group-actions d-flex align-items-center">
+                    <a href="<?= htmlspecialchars($dashboardUrl ?? '../../index.php') ?>" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-house-door-fill"></i> <span class="d-none d-sm-inline">Voltar ao Início</span>
+                    </a>
+                    <a href="index.php?controller=cliente&action=cadastrar" class="btn btn-primary btn-lg">
+                        <i class="bi bi-plus-circle"></i> Novo Cliente
+                    </a> 
+
+                </div>
             </div>
 
             <?php if (isset($_SESSION['mensagem_sucesso'])): ?>
@@ -159,11 +184,16 @@ if (session_status() == PHP_SESSION_NONE) {
                             <tr>
                                 <th>Nome</th>
                                 <th>Telefone</th>
-                                <th class="col-cpf">CPF</th> <th class="col-empreendimento">Empreendimento</th> <th class="text-center">Classificação</th>
+                                <th class="col-cpf">CPF</th>
+                                <th class="col-empreendimento">Empreendimento</th>
+                                <th class="text-center">Classificação</th>
                                 <th class="text-center">Foto</th>
-                                <th class="col-corretor">Corretor</th> <?php if (isset($_SESSION['usuario']) && $_SESSION['usuario']['permissao'] === 'SuperAdmin'): ?>
-                                    <th class="col-imobiliaria">Imobiliária</th> <?php endif; ?>
-                                <th class="col-dt-cadastro">Data Cadastro</th> <th class="text-center">Ações</th>
+                                <th class="col-corretor">Corretor</th>
+                                <?php if (isset($_SESSION['usuario']) && $_SESSION['usuario']['permissao'] === 'SuperAdmin'): ?>
+                                    <th class="col-imobiliaria">Imobiliária</th>
+                                <?php endif; ?>
+                                <th class="col-dt-cadastro">Data Cadastro</th>
+                                <th class="text-center">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
