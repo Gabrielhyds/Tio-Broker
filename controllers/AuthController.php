@@ -28,16 +28,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'login') {
         // Redireciona o usuário para o painel adequado, conforme o nível de permissão
         switch ($dados['permissao']) {
             case 'SuperAdmin':
-                header('Location: ../views/dashboard_superadmin.php');
+                header('Location: ../views/dashboards/dashboard_superadmin.php');
                 break;
             case 'Admin':
-                header('Location: ../views/dashboard_admin.php');
+                header('Location: ../views/dashboards/dashboard_admin.php');
                 break;
             case 'Coordenador':
-                header('Location: ../views/dashboard_coordenador.php');
+                header('Location: ../views/dashboards/dashboard_coordenador.php');
                 break;
             case 'Corretor':
-                header('Location: ../views/dashboard_corretor.php');
+                header('Location: ../views/dashboards/dashboard_corretor.php');
                 break;
             default:
                 // Caso a permissão não seja reconhecida, exibe erro

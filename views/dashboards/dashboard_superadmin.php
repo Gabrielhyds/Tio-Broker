@@ -64,7 +64,7 @@ $nomeUsuario = $_SESSION['usuario']['nome'] ?? 'SuperAdmin';
             <span class="navbar-brand fw-bold">Sistema Imobiliário</span>
             <div class="d-flex align-items-center">
                 <span class="text-white me-3"><i class="bi bi-person-circle me-1"></i><?= htmlspecialchars($nomeUsuario) ?></span>
-                <a href="../controllers/LogoutController.php" class="btn btn-outline-light btn-sm">Sair</a>
+                <a href="../../controllers/LogoutController.php" class="btn btn-outline-light btn-sm">Sair</a>
             </div>
         </div>
     </nav>
@@ -76,7 +76,7 @@ $nomeUsuario = $_SESSION['usuario']['nome'] ?? 'SuperAdmin';
         <div class="row g-4">
             <!-- Cadastrar Imobiliária -->
             <div class="col-md-4">
-                <a href="imobiliarias/cadastrar.php" class="text-decoration-none">
+                <a href="../imobiliarias/cadastrar.php" class="text-decoration-none">
                     <div class="card card-custom text-center p-4">
                         <div class="icon-box"><i class="bi bi-building-add"></i></div>
                         <h5 class="card-title">Cadastrar Imobiliária</h5>
@@ -87,7 +87,7 @@ $nomeUsuario = $_SESSION['usuario']['nome'] ?? 'SuperAdmin';
 
             <!-- Listar Imobiliárias -->
             <div class="col-md-4">
-                <a href="imobiliarias/listar.php" class="text-decoration-none">
+                <a href="../imobiliarias/listar.php" class="text-decoration-none">
                     <div class="card card-custom text-center p-4">
                         <div class="icon-box"><i class="bi bi-buildings"></i></div>
                         <h5 class="card-title">Ver Imobiliárias</h5>
@@ -98,7 +98,7 @@ $nomeUsuario = $_SESSION['usuario']['nome'] ?? 'SuperAdmin';
 
             <!-- Gerenciar Usuários -->
             <div class="col-md-4">
-                <a href="usuarios/listar.php" class="text-decoration-none">
+                <a href="../usuarios/listar.php" class="text-decoration-none">
                     <div class="card card-custom text-center p-4">
                         <div class="icon-box"><i class="bi bi-people-fill"></i></div>
                         <h5 class="card-title">Gerenciar Usuários</h5>
@@ -109,7 +109,7 @@ $nomeUsuario = $_SESSION['usuario']['nome'] ?? 'SuperAdmin';
             
             <!-- Cadastrar Usuário -->
             <div class="col-md-4">
-                <a href="usuarios/cadastrar.php" class="text-decoration-none">
+                <a href="../usuarios/cadastrar.php" class="text-decoration-none">
                     <div class="card card-custom text-center p-4">
                         <div class="icon-box"><i class="bi bi-person-plus-fill"></i></div>
                         <h5 class="card-title">Cadastrar Usuário</h5>
@@ -120,7 +120,7 @@ $nomeUsuario = $_SESSION['usuario']['nome'] ?? 'SuperAdmin';
 
             <!-- Chat interno -->
             <div class="col-md-4">
-                <a href="chat/chat.php" class="text-decoration-none">
+                <a href="../chat/chat.php" class="text-decoration-none">
                     <div class="card card-custom text-center p-4">
                         <div class="icon-box"><i class="bi bi-chat-dots-fill"></i></div>
                         <h5 class="card-title">Iniciar Conversa</h5>

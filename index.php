@@ -10,16 +10,16 @@ if (!isset($_SESSION['usuario'])) {
 // Se estiver logado, verifica a permissão e redireciona
 switch ($_SESSION['usuario']['permissao']) {
     case 'SuperAdmin':
-        header('Location: views/dashboard_superadmin.php');
+        header('Location: views/dashboards/dashboard_superadmin.php');
         break;
     case 'Admin':
-        header('Location: views/dashboard_admin.php');
+        header('Location: views/dashboards/dashboard_admin.php');
         break;
     case 'Coordenador':
-        header('Location: views/dashboard_coordenador.php');
+        header('Location: views/dashboards/dashboard_coordenador.php');
         break;
     case 'Corretor':
-        header('Location: views/dashboard_corretor.php');
+        header('Location: views/dashboards/dashboard_corretor.php');
         break;
     default:
         echo "Permissão inválida. Contate o administrador.";
