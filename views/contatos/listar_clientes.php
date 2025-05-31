@@ -18,16 +18,15 @@ if (session_status() == PHP_SESSION_NONE) {
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #eef2f5; /* Um tom de cinza ainda mais suave e moderno */
+            background-color: #eef2f5;
             color: #333;
         }
-        /* Usando container-fluid para ocupar mais espaço, com padding customizado */
         .container-listagem {
             background-color: #ffffff;
-            padding: 25px 30px; /* Padding interno do card */
-            border-radius: 12px; /* Bordas mais arredondadas */
-            box-shadow: 0 8px 25px rgba(0,0,0,0.08); /* Sombra mais sutil e moderna */
-            margin-top: 20px; /* Reduzido o margin-top para container-fluid */
+            padding: 25px 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            margin-top: 20px;
             margin-bottom: 20px;
         }
         .page-header {
@@ -36,140 +35,86 @@ if (session_status() == PHP_SESSION_NONE) {
             margin-bottom: 25px;
         }
         .page-header h2 {
-            color: #2c3e50; /* Azul escuro para o título */
+            color: #2c3e50;
             font-weight: 600;
         }
         .table {
-            border-collapse: separate; /* Permite border-radius nas células da tabela */
+            border-collapse: separate;
             border-spacing: 0;
-            margin-top: 10px; /* Espaço acima da tabela */
-            width: 100%; /* Garante que a tabela tente ocupar a largura disponível */
+            margin-top: 10px;
+            width: 100%;
         }
         .table th, .table td {
             vertical-align: middle;
-            padding: 0.9rem 0.75rem; /* Padding interno das células */
+            padding: 0.8rem 0.7rem; /* Padding reduzido para mais colunas */
             border-bottom-width: 1px;
-            font-size: 0.9rem; /* Tamanho de fonte base para células */
+            font-size: 0.88rem; /* Fonte um pouco menor */
         }
         .table th {
             white-space: nowrap;
-            font-weight: 600; /* Cabeçalho mais destacado */
+            font-weight: 600;
             color: #495057;
         }
         .table-header-custom th {
-            background-color: #f8f9fa; /* Cabeçalho da tabela com cor suave */
+            background-color: #f8f9fa;
             color: #343a40;
             border-top: 1px solid #dee2e6 !important;
-            border-bottom: 2px solid #dee2e6 !important; /* Linha inferior mais grossa */
+            border-bottom: 2px solid #dee2e6 !important;
         }
         .table-hover tbody tr:hover {
-            background-color: #f1f3f5; /* Hover suave nas linhas */
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            background-color: #f1f3f5;
         }
-        .action-buttons a, .action-buttons button {
-            margin: 0 3px; /* Espaçamento horizontal entre botões */
+        .action-buttons a { /* Apenas um botão principal por linha agora */
+             margin: 0;
         }
         .img-thumbnail-custom {
-            width: 45px; /* Reduzido para economizar espaço */
-            height: 45px;
-            object-fit: cover; /* Garante que a imagem cubra o espaço sem distorcer */
-            border-radius: 8px; /* Bordas arredondadas para a imagem */
-            border: 1px solid #e0e0e0; /* Borda mais sutil */
+            width: 40px; /* Menor para economizar espaço */
+            height: 40px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
         }
         .icon-placeholder {
-            font-size: 1.8rem; /* Reduzido */
+            font-size: 1.6rem; /* Menor */
             color: #adb5bd;
         }
-        .badge { /* Estilo base para badges */
-            font-size: 0.75rem; /* Reduzido */
-            padding: 0.35em 0.6em;
+        .badge {
+            font-size: 0.7rem; /* Menor */
+            padding: 0.3em 0.55em;
             font-weight: 500;
         }
         .badge-potencial {
             background-color: rgba(25, 135, 84, 0.1);
             color: #0f5132;
-            border: 1px solid rgba(25, 135, 84, 0.3);
+            border: 1px solid rgba(25, 135, 84, 0.2);
         }
         .badge-nao-potencial {
             background-color: rgba(220, 53, 69, 0.1);
             color: #842029;
-            border: 1px solid rgba(220, 53, 69, 0.3);
+            border: 1px solid rgba(220, 53, 69, 0.2);
         }
-        .btn-action { /* Classe para botões de ação para consistência */
-            padding: 0.25rem 0.5rem; /* Reduzido */
-            font-size: 0.8rem; /* Reduzido */
+        .btn-action-details { /* Botão de detalhes específico */
+            padding: 0.25rem 0.6rem;
+            font-size: 0.8rem;
         }
-        .btn-primary {
-            background-color: #0d6efd; border-color: #0d6efd;
-            font-weight: 500;
-        }
-        .btn-primary:hover {
-            background-color: #0b5ed7; border-color: #0a58ca;
-        }
-        .btn-warning {
-            background-color: #ffc107; border-color: #ffc107; color: #212529;
-            font-weight: 500;
-        }
-         .btn-warning:hover {
-            background-color: #e0a800; border-color: #d39e00;
-        }
-        .btn-danger {
-            background-color: #dc3545; border-color: #dc3545;
-            font-weight: 500;
-        }
-        .btn-danger:hover {
-            background-color: #bb2d3b; border-color: #b02a37;
-        }
-        .alert { /* Estilo para alertas */
-            border-left-width: 4px;
-            border-radius: 0.375rem; /* Bootstrap 5 default */
-        }
+        .btn-primary { font-weight: 500; }
+        .alert { border-left-width: 4px; border-radius: 0.375rem; }
         .alert-success { border-left-color: #198754; }
         .alert-danger { border-left-color: #dc3545; }
         .alert-info { border-left-color: #0dcaf0; }
 
-        /* Responsividade */
         @media (max-width: 768px) {
-            .container-listagem {
-                padding: 20px 15px; /* Menos padding em telas pequenas */
-                margin-top: 15px;
-                margin-bottom: 15px;
-            }
-            .page-header {
-                flex-direction: column;
-                align-items: stretch !important; /* Botão ocupa largura total */
-            }
-            .page-header h2 {
-                text-align: center;
-                margin-bottom: 15px; /* Espaço entre título e botão */
-            }
-            .page-header a.btn {
-                /* width: 100%; Botão já é stretch */
-            }
-            .table th, .table td {
-                 font-size: 0.85rem; /* Reduzir mais a fonte em telas pequenas */
-                 padding: 0.7rem 0.5rem;
-            }
-             .action-buttons { /* Botões em coluna */
-                display: flex;
-                flex-direction: column;
-                align-items: stretch; /* Estica os botões */
-            }
-            .action-buttons a.btn-action {
-                width: 100%;
-                margin-bottom: 5px;
-                margin-left: 0;
-                margin-right: 0;
-            }
-             .action-buttons a.btn-action:last-child {
-                margin-bottom: 0;
-            }
+            .container-listagem { padding: 20px 15px; margin-top: 15px; margin-bottom: 15px; }
+            .page-header { flex-direction: column; align-items: stretch !important; }
+            .page-header h2 { text-align: center; margin-bottom: 15px; }
+            .table th, .table td { font-size: 0.8rem; padding: 0.6rem 0.4rem; }
+            .action-buttons a.btn-action-details { width: 100%; } /* Botão de detalhes ocupa largura total */
+            /* Esconder colunas menos essenciais em telas pequenas */
+            .col-cpf, .col-empreendimento, .col-corretor, .col-imobiliaria, .col-dt-cadastro { display: none; }
         }
          @media (min-width: 769px) and (max-width: 992px) {
-            .table th, .table td {
-                 font-size: 0.88rem;
-                 padding: 0.8rem 0.6rem;
-            }
+            .table th, .table td { font-size: 0.85rem; padding: 0.7rem 0.5rem; }
+            .col-empreendimento, .col-dt-cadastro { display: none; } /* Esconder algumas em tablets */
         }
     </style>
 </head>
@@ -214,20 +159,11 @@ if (session_status() == PHP_SESSION_NONE) {
                             <tr>
                                 <th>Nome</th>
                                 <th>Telefone</th>
-                                <th>CPF</th>
-                                <th>Empreendimento</th>
-                                <th>Renda</th>
-                                <th>Entrada</th>
-                                <th>FGTS</th>
-                                <th>Subsídio</th>
-                                <th class="text-center">Classificação</th>
+                                <th class="col-cpf">CPF</th> <th class="col-empreendimento">Empreendimento</th> <th class="text-center">Classificação</th>
                                 <th class="text-center">Foto</th>
-                                <th>Corretor</th>
-                                <?php if (isset($_SESSION['usuario']) && $_SESSION['usuario']['permissao'] === 'SuperAdmin'): ?>
-                                    <th>Imobiliária</th>
-                                <?php endif; ?>
-                                <th>Data Cadastro</th>
-                                <th class="text-center">Ações</th>
+                                <th class="col-corretor">Corretor</th> <?php if (isset($_SESSION['usuario']) && $_SESSION['usuario']['permissao'] === 'SuperAdmin'): ?>
+                                    <th class="col-imobiliaria">Imobiliária</th> <?php endif; ?>
+                                <th class="col-dt-cadastro">Data Cadastro</th> <th class="text-center">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -235,12 +171,8 @@ if (session_status() == PHP_SESSION_NONE) {
                                 <tr>
                                     <td><strong><?= htmlspecialchars($cliente['nome']) ?></strong></td>
                                     <td><?= htmlspecialchars($cliente['numero']) ?></td>
-                                    <td><?= htmlspecialchars($cliente['cpf'] ?? '-') ?></td>
-                                    <td><?= htmlspecialchars($cliente['empreendimento'] ?? '-') ?></td>
-                                    <td>R$ <?= $cliente['renda'] ? number_format($cliente['renda'], 2, ',', '.') : '-' ?></td>
-                                    <td>R$ <?= $cliente['entrada'] ? number_format($cliente['entrada'], 2, ',', '.') : '-' ?></td>
-                                    <td>R$ <?= $cliente['fgts'] ? number_format($cliente['fgts'], 2, ',', '.') : '-' ?></td>
-                                    <td>R$ <?= $cliente['subsidio'] ? number_format($cliente['subsidio'], 2, ',', '.') : '-' ?></td>
+                                    <td class="col-cpf"><?= htmlspecialchars($cliente['cpf'] ?? '-') ?></td>
+                                    <td class="col-empreendimento"><?= htmlspecialchars($cliente['empreendimento'] ?? '-') ?></td>
                                     <td class="text-center">
                                         <?php
                                         $tipoListaClass = '';
@@ -260,22 +192,17 @@ if (session_status() == PHP_SESSION_NONE) {
                                             <i class="bi bi-camera-fill icon-placeholder"></i>
                                         <?php endif; ?>
                                     </td>
-                                    <td><?= htmlspecialchars($cliente['nome_corretor'] ?? 'N/A') ?></td>
+                                    <td class="col-corretor"><?= htmlspecialchars($cliente['nome_corretor'] ?? 'N/A') ?></td>
                                     <?php if (isset($_SESSION['usuario']) && $_SESSION['usuario']['permissao'] === 'SuperAdmin'): ?>
-                                        <td><?= htmlspecialchars($cliente['nome_imobiliaria'] ?? 'N/A') ?></td>
+                                        <td class="col-imobiliaria"><?= htmlspecialchars($cliente['nome_imobiliaria'] ?? 'N/A') ?></td>
                                     <?php endif; ?>
-                                    <td>
+                                    <td class="col-dt-cadastro">
                                         <span class="d-block"><?= isset($cliente['criado_em']) ? date('d/m/Y', strtotime($cliente['criado_em'])) : '-' ?></span>
                                         <small class="text-muted"><?= isset($cliente['criado_em']) ? date('H:i', strtotime($cliente['criado_em'])) : '' ?></small>
                                     </td>
                                     <td class="text-center action-buttons">
-                                        <a href="index.php?controller=cliente&action=editar&id_cliente=<?= $cliente['id_cliente'] ?>" class="btn btn-sm btn-warning btn-action" title="Editar Cliente">
-                                            <i class="bi bi-pencil-square"></i> <span class="d-none d-lg-inline">Editar</span>
-                                        </a>
-                                        <a href="index.php?controller=cliente&action=excluir&id_cliente=<?= $cliente['id_cliente'] ?>"
-                                           class="btn btn-sm btn-danger btn-action" title="Excluir Cliente"
-                                           onclick="return confirm('Tem certeza que deseja excluir o cliente \'<?= htmlspecialchars(addslashes($cliente['nome'])) ?>\'? Esta ação não pode ser desfeita.');">
-                                           <i class="bi bi-trash-fill"></i> <span class="d-none d-lg-inline">Excluir</span>
+                                        <a href="index.php?controller=cliente&action=mostrar&id_cliente=<?= $cliente['id_cliente'] ?>" class="btn btn-sm btn-outline-primary btn-action-details" title="Ver Detalhes do Cliente">
+                                            <i class="bi bi-eye-fill"></i> <span class="d-none d-md-inline">Detalhes</span>
                                         </a>
                                     </td>
                                 </tr>

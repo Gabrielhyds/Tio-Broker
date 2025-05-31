@@ -11,14 +11,10 @@ class Cliente
 
     public function cadastrar($dados)
     {
-        // É uma boa prática garantir que todas as chaves esperadas existam.
-        // Atenção: A coluna 'cpf' na tabela 'cliente' é NOT NULL. 
-        // A lógica de validação deve garantir que $_POST['cpf'] sempre tenha um valor.
         $dados['foto'] = $dados['foto'] ?? null;
         $dados['empreendimento'] = $dados['empreendimento'] ?? null;
-        // Se o CPF é NOT NULL no banco, ele não deveria ser ?? null aqui sem validação prévia.
-        // $dados['cpf'] = $dados['cpf'] ?? null; // Esta linha pode causar erro se o CPF não for enviado.
-                                                // O formulário e o controller devem garantir que o CPF seja enviado.
+        // CPF é NOT NULL na tabela cliente, validação deve garantir que não seja nulo.
+        // $dados['cpf'] = $dados['cpf'] ?? null; // Remover ou garantir que sempre venha do POST
 
         $dados['renda'] = !empty($dados['renda']) ? $dados['renda'] : null;
         $dados['entrada'] = !empty($dados['entrada']) ? $dados['entrada'] : null;
@@ -26,19 +22,21 @@ class Cliente
         $dados['subsidio'] = !empty($dados['subsidio']) ? $dados['subsidio'] : null;
 
 
-        $sql = "INSERT INTO cliente (nome, numero, cpf, empreendimento, renda, entrada, fgts, subsidio, foto, tipo_lista, id_usuario, id_imobiliaria)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        // Assume-se que a coluna 'criado_em' existe e é gerenciada pelo banco (DEFAULT CURRENT_TIMESTAMP)
+        // ou será adicionada na query de INSERT se necessário.
+        // Se for adicionar via PHP, use NOW() como no exemplo abaixo.
+        $sql = "INSERT INTO cliente (nome, numero, cpf, empreendimento, renda, entrada, fgts, subsidio, foto, tipo_lista, id_usuario, id_imobiliaria, criado_em)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
         $stmt = $this->db->prepare($sql);
         if (!$stmt) {
-            // Lidar com erro de prepare, ex: logar ou lançar exceção
             error_log("Falha no prepare (cadastrar): (" . $this->db->errno . ") " . $this->db->error);
             return false;
         }
         $stmt->bind_param(
-            "ssssddddssii", // s para string, d para double/decimal, i para integer
+            "ssssddddssii",
             $dados['nome'],
             $dados['numero'],
-            $dados['cpf'], // Deve ser garantido que $dados['cpf'] não é null aqui
+            $dados['cpf'],
             $dados['empreendimento'],
             $dados['renda'],
             $dados['entrada'],
@@ -57,27 +55,22 @@ class Cliente
         return $success;
     }
 
-    /**
-     * Lista todos os clientes para todos os tipos de usuário.
-     * A diferenciação por $idImobiliaria e $isSuperAdmin foi removida para esta funcionalidade.
-     */
-    public function listar($idImobiliaria = null, $idUsuario = null, $isSuperAdmin = false) // Parâmetros mantidos por compatibilidade, mas não usados para filtrar
+    public function listar($idImobiliaria = null, $idUsuario = null, $isSuperAdmin = false)
     {
         $clientes = [];
-        // Todos os usuários visualizam todos os clientes.
-        // A ordenação por 'criado_em' foi removida anteriormente pois a coluna não existia.
-        // Se a coluna 'criado_em' existir, você pode adicionar 'ORDER BY c.criado_em DESC'
-        // Exemplo: ALTER TABLE cliente ADD COLUMN criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+        $orderBy = "ORDER BY c.nome ASC"; // Ordenando por nome como padrão
+
         $sql = "SELECT c.*, u.nome as nome_corretor, im.nome as nome_imobiliaria
                 FROM cliente c 
                 LEFT JOIN usuario u ON c.id_usuario = u.id_usuario 
-                LEFT JOIN imobiliaria im ON c.id_imobiliaria = im.id_imobiliaria";
+                LEFT JOIN imobiliaria im ON c.id_imobiliaria = im.id_imobiliaria
+                {$orderBy}";
         
         $stmt = $this->db->prepare($sql);
 
         if (!$stmt) {
              error_log("Falha no prepare (listar todos os clientes): (" . $this->db->errno . ") " . $this->db->error . " SQL: " . $sql);
-             return $clientes; // Retorna array vazio em caso de falha no prepare
+             return $clientes;
         }
 
         if(!$stmt->execute()){
@@ -95,15 +88,14 @@ class Cliente
         return $clientes;
     }
 
-    /**
-     * Busca um único cliente pelo seu ID.
-     * Usado para verificações de permissão antes de excluir ou para editar.
-     * @param int $idCliente
-     * @return array|null Os dados do cliente ou null se não encontrado.
-     */
     public function buscarPorId($idCliente)
     {
-        $sql = "SELECT id_cliente, nome, id_usuario, id_imobiliaria FROM cliente WHERE id_cliente = ?";
+        $sql = "SELECT c.*, u.nome as nome_corretor, u.email as email_corretor, u.telefone as telefone_corretor, 
+                       im.nome as nome_imobiliaria
+                FROM cliente c
+                LEFT JOIN usuario u ON c.id_usuario = u.id_usuario
+                LEFT JOIN imobiliaria im ON c.id_imobiliaria = im.id_imobiliaria
+                WHERE c.id_cliente = ?";
         $stmt = $this->db->prepare($sql);
         if (!$stmt) {
             error_log("Falha no prepare em buscarPorId: (" . $this->db->errno . ") " . $this->db->error . " SQL: " . $sql);
@@ -124,10 +116,67 @@ class Cliente
     }
 
     /**
-     * Exclui um cliente do banco de dados.
-     * @param int $idCliente O ID do cliente a ser excluído.
+     * Atualiza os dados de um cliente existente no banco de dados.
+     * @param int $idCliente O ID do cliente a ser atualizado.
+     * @param array $dados Os novos dados do cliente.
      * @return bool True em sucesso, false em falha.
      */
+    public function atualizar($idCliente, $dados)
+    {
+        // Campos que podem ser atualizados
+        // Não incluímos id_usuario, id_imobiliaria, criado_em pois geralmente não são alterados neste contexto.
+        // Se precisar permitir alteração de corretor/imobiliária, adicione-os aqui e no formulário.
+        $sql = "UPDATE cliente SET 
+                    nome = ?, 
+                    numero = ?, 
+                    cpf = ?, 
+                    empreendimento = ?, 
+                    renda = ?, 
+                    entrada = ?, 
+                    fgts = ?, 
+                    subsidio = ?, 
+                    foto = ?, 
+                    tipo_lista = ?
+                WHERE id_cliente = ?";
+        
+        $stmt = $this->db->prepare($sql);
+        if (!$stmt) {
+            error_log("Falha no prepare (atualizar): (" . $this->db->errno . ") " . $this->db->error . " SQL: " . $sql);
+            return false;
+        }
+
+        // Certifica que os valores numéricos opcionais sejam NULL se vazios, ou o valor numérico.
+        $renda = !empty($dados['renda']) ? (float)$dados['renda'] : null;
+        $entrada = !empty($dados['entrada']) ? (float)$dados['entrada'] : null;
+        $fgts = !empty($dados['fgts']) ? (float)$dados['fgts'] : null;
+        $subsidio = !empty($dados['subsidio']) ? (float)$dados['subsidio'] : null;
+        $foto = $dados['foto'] ?? null;
+        $empreendimento = $dados['empreendimento'] ?? null;
+
+
+        $stmt->bind_param(
+            "ssssddddssi", // s: string, d: double, i: integer
+            $dados['nome'],
+            $dados['numero'],
+            $dados['cpf'],
+            $empreendimento,
+            $renda,
+            $entrada,
+            $fgts,
+            $subsidio,
+            $foto,
+            $dados['tipo_lista'],
+            $idCliente
+        );
+
+        $success = $stmt->execute();
+        if (!$success) {
+            error_log("Falha na execução (atualizar): (" . $stmt->errno . ") " . $stmt->error);
+        }
+        $stmt->close();
+        return $success;
+    }
+
     public function excluir($idCliente)
     {
         $sql = "DELETE FROM cliente WHERE id_cliente = ?";
