@@ -76,7 +76,18 @@ if (!isset($cliente) || empty($cliente)) {
     </style>
 </head>
 <body>
-
+<?php
+//incluir o dashboard de acordo com o perfil do usuário
+if ($_SESSION['usuario']['permissao'] === 'SuperAdmin') {
+    include_once '../dashboards/dashboard_superadmin.php';
+} elseif ($_SESSION['usuario']['permissao'] === 'Admin') {
+    include_once '../dashboards/dashboard_admin.php';
+} elseif ($_SESSION['usuario']['permissao'] === 'Coordenador') {
+    include_once '../dashboards/dashboard_coordenador.php';
+} else {
+    include_once '../dashboards/dashboard_corretor.php';
+}
+?>
 <div class="container container-form">
     <h2><i class="bi bi-pencil-square"></i> Editar Cliente</h2>
 
