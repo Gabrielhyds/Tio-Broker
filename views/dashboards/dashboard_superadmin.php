@@ -119,7 +119,8 @@
 </head>
 <body>
 
- <aside class="sidebar">
+<!-- Sidebar SuperAdmin (usada via include) -->
+<aside class="sidebar">
   <h4>SuperAdmin</h4>
   <hr />
 
@@ -154,6 +155,7 @@
   <a href="/controllers/LogoutController.php" class="nav-link mt-2">
     <i class="fas fa-sign-out-alt"></i> Sair
   </a>
+</aside>
 </aside>
   <!-- Bootstrap 5 JS Bundle (Popper + JS) -->
   <script 
