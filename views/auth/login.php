@@ -83,6 +83,7 @@
     </style>
 </head>
 <body>
+    
     <div class="login-box shadow">
        <div class="login-logo mb-3 flex-column">
             <img src="../assets/img/logo.png" alt="Logo Imobiliária" style="height: 54px; width: auto; margin-bottom: 8px;">
@@ -127,6 +128,9 @@
             </div>
         </form>
     </div>
+    
+
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

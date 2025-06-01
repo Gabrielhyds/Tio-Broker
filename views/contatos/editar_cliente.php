@@ -1,7 +1,10 @@
 <?php
-// Garante que a sessão seja iniciada
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
+@session_start();
+
+// Se o usuário não estiver logado, envia para o login
+if (!isset($_SESSION['usuario'])) {
+    header('Location: ../auth/login.php');
+    exit;
 }
 
 // Verifica se a variável $cliente existe (passada pelo controller)

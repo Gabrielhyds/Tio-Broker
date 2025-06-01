@@ -1,35 +1,39 @@
 <?php
-// Inicia a sessão para permitir o uso de variáveis de sessão
 session_start();
-
-// Inclui o arquivo de configuração com os dados de conexão ao banco de dados
 require_once '../config/config.php';
+require_once '../models/Usuario.php';
 
-// Inclui o modelo de usuário que contém os métodos de login e manipulação de dados do usuário
-require_once '../models/Usuario.php'; 
-
-// Verifica se a requisição foi feita via método POST e se a ação é de login
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'login') {
-    
-    // Recupera os dados do formulário
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'login') {
     $email = $_POST['email'];
     $senha = $_POST['senha'];
 
-    // Instancia o objeto Usuario passando a conexão com o banco
     $usuario = new Usuario($connection);
+    $dados   = $usuario->login($email, $senha);
 
-    // Chama o método de login para verificar as credenciais
-    $dados = $usuario->login($email, $senha);
-
-    // Se o login for bem-sucedido, os dados do usuário são armazenados na sessão
     if ($dados) {
+        // Se for SuperAdmin, não checa imobiliária—vai direto ao dashboard
+        if ($dados['permissao'] === 'SuperAdmin') {
+            $_SESSION['usuario'] = $dados;
+            header('Location: ../views/dashboards/dashboard_superadmin.php');
+            exit;
+        }
+
+        // Para todas as outras permissões, verifica vínculo com imobiliária
+        if (
+            !isset($dados['id_imobiliaria']) ||
+            $dados['id_imobiliaria'] === '' ||
+            $dados['id_imobiliaria'] === null ||
+            $dados['id_imobiliaria'] == 0
+        ) {
+            // Usuário autenticado, mas sem imobiliária: redireciona para página de alerta
+            header('Location: ../views/auth/sem_imobiliaria.php');
+            exit;
+        }
+
+        // Se tiver imobiliária, salva na sessão e redireciona conforme permissão
         $_SESSION['usuario'] = $dados;
-    
-        // Redireciona o usuário para o painel adequado, conforme o nível de permissão
+
         switch ($dados['permissao']) {
-            case 'SuperAdmin':
-                header('Location: ../views/dashboards/dashboard_superadmin.php');
-                break;
             case 'Admin':
                 header('Location: ../views/dashboards/dashboard_admin.php');
                 break;
@@ -40,15 +44,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'login') {
                 header('Location: ../views/dashboards/dashboard_corretor.php');
                 break;
             default:
-                // Caso a permissão não seja reconhecida, exibe erro
                 echo "Permissão inválida. Contate o administrador.";
                 exit;
         }
-        // Encerra o script após o redirecionamento
+
         exit;
     } else {
-        // Se o login falhar, exibe mensagem de erro
-        echo "Login inválido.";
+        // Credenciais incorretas: redireciona para página de “Login Inválido”
+        header('Location: ../views/auth/login_invalido.php');
+        exit;
     }
 }
 ?>

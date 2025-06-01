@@ -1,7 +1,10 @@
 <?php
-// Garante que a sessão seja iniciada se não estiver (para mensagens, etc.)
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
+@session_start();
+
+// Se o usuário não estiver logado, envia para o login
+if (!isset($_SESSION['usuario'])) {
+    header('Location: ../auth/login.php');
+    exit;
 }
 
 // Verifica se a variável $cliente existe (passada pelo controller)
@@ -184,6 +187,18 @@ if (!isset($cliente) || empty($cliente)) {
     </style>
 </head>
 <body>
+    <?php
+        //incluir o dashboard de acordo com o perfil do usuário
+        if ($_SESSION['usuario']['permissao'] === 'SuperAdmin') {
+            include_once '../dashboards/dashboard_superadmin.php';
+        } elseif ($_SESSION['usuario']['permissao'] === 'Admin') {
+            include_once '../dashboards/dashboard_admin.php';
+        } elseif ($_SESSION['usuario']['permissao'] === 'Coordenador') {
+            include_once '../dashboards/dashboard_coordenador.php';
+        } else {
+            include_once '../dashboards/dashboard_corretor.php';
+        }
+    ?>
     <div class="container">
         <div class="profile-container">
             <div class="profile-header">

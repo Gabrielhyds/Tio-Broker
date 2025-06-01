@@ -68,13 +68,13 @@
 
   <!-- Sidebar -->
   <div class="sidebar">
-    <h4 class="text-center text-white">Admin</h4>
+    <h4 class="text-center text-white">Coordenador</h4>
     <hr class="border-light" />
-    <a href="#" class="active"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a>
+    <a href="#"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a>
     <a href="#"><i class="fas fa-tasks me-2"></i> Tarefas</a>
     <a href="#"><i class="fas fa-chart-bar me-2"></i> Relatórios</a>
     <a href="../chat/chat.php"><i class="fas fa-comments me-2"></i> Chat</a> <!-- Novo menu Chat -->
-    <a href="../contatos/visualizar.php"><i class="fas fa-address-book me-2"></i>Agenda de Contatos</a> <!-- Novo item -->
+    <a href="../contatos/index.php?controller=cliente&action=listar"><i class="fas fa-address-book me-2"></i>Agenda de Contatos</a> <!-- Novo item -->
     <a href="#"><i class="fas fa-cogs me-2"></i> Configurações</a>
     <a href="../../controllers/LogoutController.php"><i class="fas fa-cogs me-2"></i>Sair</a>
    </div>
@@ -90,62 +90,10 @@
       </div>
     </div>
 
-    <!-- Cards -->
-    <div class="row g-3 mb-4">
-      <div class="col-md-3">
-        <div class="card shadow-sm">
-          <div class="card-body d-flex justify-content-between align-items-center">
-            <div>
-              <h6>Usuários</h6>
-              <h4>154</h4>
-            </div>
-            <i class="fas fa-users card-icon"></i>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card shadow-sm">
-          <div class="card-body d-flex justify-content-between align-items-center">
-            <div>
-              <h6>Tarefas</h6>
-              <h4>32</h4>
-            </div>
-            <i class="fas fa-tasks card-icon"></i>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card shadow-sm">
-          <div class="card-body d-flex justify-content-between align-items-center">
-            <div>
-              <h6>Relatórios</h6>
-              <h4>12</h4>
-            </div>
-            <i class="fas fa-chart-bar card-icon"></i>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card shadow-sm">
-          <div class="card-body d-flex justify-content-between align-items-center">
-            <div>
-              <h6>Alertas</h6>
-              <h4>4</h4>
-            </div>
-            <i class="fas fa-bell card-icon"></i>
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Seções adicionais -->
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h5 class="card-title">Resumo</h5>
-        <p>Este é um painel administrativo simples e responsivo, pronto para ser integrado com sistemas de backend.</p>
-      </div>
-    </div>
-  </div>
+  
+
+
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

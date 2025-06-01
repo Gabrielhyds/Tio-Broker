@@ -52,7 +52,18 @@ if ($id_destino) {
     <link href="assets/style.css" rel="stylesheet">
 </head>
 <body class="bg-light">
-
+    <?php
+        //incluir o dashboard de acordo com o perfil do usuário
+        if ($_SESSION['usuario']['permissao'] === 'SuperAdmin') {
+            include_once '../dashboards/dashboard_superadmin.php';
+        } elseif ($_SESSION['usuario']['permissao'] === 'Admin') {
+            include_once '../dashboards/dashboard_admin.php';
+        } elseif ($_SESSION['usuario']['permissao'] === 'Coordenador') {
+            include_once '../dashboards/dashboard_coordenador.php';
+        } else {
+            include_once '../dashboards/dashboard_corretor.php';
+        }
+    ?>
 <div class="container mt-5">
 <a href="<?= htmlspecialchars($dashboardUrl ?? '../../index.php') ?>" class="btn btn-secondary mb-2">Voltar</a>
     <div class="row">

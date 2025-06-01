@@ -1,7 +1,10 @@
 <?php
-// Inicia a sessão se ainda não foi iniciada, para exibir mensagens
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
+@session_start();
+
+// Se o usuário não estiver logado, envia para o login
+if (!isset($_SESSION['usuario'])) {
+    header('Location: ../auth/login.php');
+    exit;
 }
 ?>
 <!DOCTYPE html>
@@ -138,6 +141,18 @@ if (session_status() == PHP_SESSION_NONE) {
     </style>
 </head>
 <body>
+    <?php
+        //incluir o dashboard de acordo com o perfil do usuário
+        if ($_SESSION['usuario']['permissao'] === 'SuperAdmin') {
+            include_once '../dashboards/dashboard_superadmin.php';
+        } elseif ($_SESSION['usuario']['permissao'] === 'Admin') {
+            include_once '../dashboards/dashboard_admin.php';
+        } elseif ($_SESSION['usuario']['permissao'] === 'Coordenador') {
+            include_once '../dashboards/dashboard_coordenador.php';
+        } else {
+            include_once '../dashboards/dashboard_corretor.php';
+        }
+    ?>
     <div class="container-fluid px-md-4 px-lg-5">
         <div class="container-listagem">
             <div class="d-flex flex-wrap justify-content-between align-items-center page-header">
