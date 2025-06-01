@@ -77,7 +77,7 @@
 <body>
     <div class="reset-box shadow">
         <div class="reset-logo mb-3 flex-column">
-            <img src="../assets/img/logo.png" alt="Logo Imobiliária">
+            <img src="../assets/img/tio_broker_ligth.png" alt="Logo Imobiliária">
         </div>
         <h4 class="mb-2 text-center" style="letter-spacing:.5px;color:#09304d;">Redefinir Senha</h4>
         <p class="mb-4 text-center text-muted small">

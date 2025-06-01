@@ -86,7 +86,7 @@
     
     <div class="login-box shadow">
        <div class="login-logo mb-3 flex-column">
-            <img src="../assets/img/logo.png" alt="Logo Imobiliária" style="height: 54px; width: auto; margin-bottom: 8px;">
+            <img src="../assets/img/tio_broker_ligth.png" alt="Logo Imobiliária" style="height: 54px; width: auto; margin-bottom: 8px;">
         </div>
         <h3 class="mb-3 text-center" style="letter-spacing:.5px;color:#09304d;">Acesso ao Painel</h3>
         <?php if (isset($_GET['reset']) && $_GET['reset'] === 'success'): ?>

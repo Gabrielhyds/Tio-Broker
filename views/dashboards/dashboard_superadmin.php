@@ -4,61 +4,114 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Dashboard Admin</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
+  <!-- Bootstrap 5 CSS + FontAwesome -->
+  <link 
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" 
+    rel="stylesheet" 
+  />
+  <link 
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" 
+    rel="stylesheet" 
+  />
+
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
       background-color: #f8f9fa;
+      margin: 0;
+      padding: 0;
     }
 
+    /* Sidebar fixa à esquerda */
     .sidebar {
-      height: 100vh;
-      background-color: #343a40;
-      color: #fff;
       position: fixed;
       top: 0;
       left: 0;
       width: 240px;
+      height: 100vh;
+      background-color: #343a40;
       padding-top: 1rem;
-    }
-
-    .sidebar a {
+      overflow-y: auto;
       color: #adb5bd;
-      text-decoration: none;
-      padding: 10px 20px;
-      display: block;
+    }
+    .sidebar h4 {
+      color: #fff;
+      text-align: center;
+      margin-bottom: 0.75rem;
+    }
+    .sidebar hr {
+      border-color: #495057;
+      margin: 0.5rem 0 1rem;
     }
 
-    .sidebar a:hover,
-    .sidebar a.active {
+    /* Nav principal */
+    .sidebar .nav-link {
+      color: #adb5bd;
+      padding: 0.5rem 1rem;
+      display: flex;
+      align-items: center;
+      font-size: 0.95rem;
+    }
+    .sidebar .nav-link:hover,
+    .sidebar .nav-link.active {
       background-color: #495057;
       color: #fff;
     }
-
-    .main {
-      margin-left: 240px;
-      padding: 20px;
+    .sidebar .nav-link i {
+      width: 1.25rem;
+      text-align: center;
+      margin-right: 0.5rem;
+      color: #adb5bd;
+    }
+    .sidebar .nav-link.active i {
+      color: #fff;
     }
 
+    /* Subitens (indentados) */
+    .sidebar .submenu-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      padding: 0.5rem 1rem;
+      color: #6c757d;
+      margin-top: 1rem;
+      letter-spacing: 0.03em;
+    }
+    .sidebar .submenu-item {
+      padding-left: 2.5rem;
+      font-size: 0.90rem;
+    }
+    .sidebar .submenu-item i {
+      width: 1.1rem;
+      text-align: center;
+      margin-right: 0.4rem;
+    }
+
+    /* Espaço para o conteúdo principal */
+    .main-content {
+      margin-left: 240px;
+      padding: 1.5rem;
+    }
+
+    /* Topbar dentro de main */
     .topbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    .topbar .form-control {
+      max-width: 200px;
     }
 
-    .card-icon {
-      font-size: 2rem;
-      color: #0d6efd;
-    }
-
+    /* Responsividade para telas pequenas */
     @media (max-width: 768px) {
       .sidebar {
-        position: relative;
         width: 100%;
         height: auto;
+        position: relative;
       }
-      .main {
+      .main-content {
         margin-left: 0;
       }
     }
@@ -66,106 +119,45 @@
 </head>
 <body>
 
-  <!-- Sidebar -->
-    <div class="sidebar">
-  <h4 class="text-center text-white">SuperAdmin</h4>
-  <hr class="border-light" />
-  
-  <!-- Dropdown Imobiliária -->
-  <div class="dropdown">
-    <a class="dropdown-toggle d-block" href="#" id="imobiliariaDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-      <i class="fas fa-building me-2"></i>Imobiliária
-    </a>
-    <ul class="dropdown-menu bg-dark border-0" aria-labelledby="imobiliariaDropdown">
-      <li><a class="dropdown-item text-light" href="../imobiliarias/cadastrar.php"><i class="fas fa-plus me-2"></i>Cadastrar Imobiliária</a></li>
-      <li><a class="dropdown-item text-light" href="../imobiliarias/listar.php"><i class="fas fa-list me-2"></i>Ver Imobiliárias</a></li>
-    </ul>
-  </div>
+ <aside class="sidebar">
+  <h4>SuperAdmin</h4>
+  <hr />
 
-  <!-- Dropdown Usuário -->
-  <div class="dropdown mt-2">
-    <a class="dropdown-toggle d-block" href="#" id="usuarioDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-      <i class="fas fa-users me-2"></i>Usuário
-    </a>
-    <ul class="dropdown-menu bg-dark border-0" aria-labelledby="usuarioDropdown">
-      <li><a class="dropdown-item text-light" href="../usuarios/cadastrar.php"><i class="fas fa-user-plus me-2"></i>Cadastrar Usuário</a></li>
-      <li><a class="dropdown-item text-light" href="../usuarios/listar.php"><i class="fas fa-users-cog me-2"></i>Gerenciar Usuários</a></li>
-    </ul>
-  </div>
+  <!-- Submenu Imobiliária -->
+  <span class="submenu-title">Imobiliária</span>
+  <a href="../imobiliarias/cadastrar_imobiliaria.php" class="nav-link submenu-item<?= (basename($_SERVER['PHP_SELF']) == 'cadastrar_imobiliaria.php' ? ' active' : '') ?>">
+    <i class="fas fa-plus"></i> Cadastrar
+  </a>
+  <a href="../imobiliarias/listar_imobiliaria.php" class="nav-link submenu-item<?= (basename($_SERVER['PHP_SELF']) == 'listar_imobiliaria.php' ? ' active' : '') ?>">
+    <i class="fas fa-list"></i> Ver Imobiliárias
+  </a>
 
-  <a href="../chat/chat.php"><i class="fas fa-comments me-2"></i>Chat</a>
-  <a href="#"><i class="fas fa-cogs me-2"></i>Configurações</a>
-  <a href="../../controllers/LogoutController.php"><i class="fas fa-sign-out-alt me-2"></i>Sair</a>
-</div>
+  <!-- Submenu Usuário -->
+  <span class="submenu-title">Usuário</span>
+  <a href="../usuarios/cadastrar.php" class="nav-link submenu-item<?= (basename($_SERVER['PHP_SELF']) == 'cadastrar.php' ? ' active' : '') ?>">
+    <i class="fas fa-user-plus"></i> Cadastrar Usuário
+  </a>
+  <a href="../usuarios/listar.php" class="nav-link submenu-item<?= (basename($_SERVER['PHP_SELF']) == 'listar.php' ? ' active' : '') ?>">
+    <i class="fas fa-users-cog"></i> Gerenciar Usuários
+  </a>
 
-  <!-- Conteúdo Principal -->
-  <div class="main">
-    <!-- Topbar -->
-    <div class="topbar mb-4">
-      <h2>Dashboard</h2>
-      <div class="d-flex align-items-center gap-3">
-        <input class="form-control form-control-sm" type="search" placeholder="Buscar...">
-        <img src="https://i.pravatar.cc/40" class="rounded-circle" alt="avatar" />
-      </div>
-    </div>
+  <!-- Links fixos -->
+  <span class="submenu-title mt-3">Ferramentas</span>
+  <a href="../chat/chat.php" class="nav-link<?= (basename($_SERVER['PHP_SELF']) == 'chat.php' ? ' active' : '') ?>">
+    <i class="fas fa-comments"></i> Chat
+  </a>
+  <a href="/configuracoes.php" class="nav-link<?= (basename($_SERVER['PHP_SELF']) == 'configuracoes.php' ? ' active' : '') ?>">
+    <i class="fas fa-cogs"></i> Configurações
+  </a>
 
-    <!-- Cards -->
-    <div class="row g-3 mb-4">
-      <div class="col-md-3">
-        <div class="card shadow-sm">
-          <div class="card-body d-flex justify-content-between align-items-center">
-            <div>
-              <h6>Usuários</h6>
-              <h4>154</h4>
-            </div>
-            <i class="fas fa-users card-icon"></i>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card shadow-sm">
-          <div class="card-body d-flex justify-content-between align-items-center">
-            <div>
-              <h6>Tarefas</h6>
-              <h4>32</h4>
-            </div>
-            <i class="fas fa-tasks card-icon"></i>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card shadow-sm">
-          <div class="card-body d-flex justify-content-between align-items-center">
-            <div>
-              <h6>Relatórios</h6>
-              <h4>12</h4>
-            </div>
-            <i class="fas fa-chart-bar card-icon"></i>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card shadow-sm">
-          <div class="card-body d-flex justify-content-between align-items-center">
-            <div>
-              <h6>Alertas</h6>
-              <h4>4</h4>
-            </div>
-            <i class="fas fa-bell card-icon"></i>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Seções adicionais -->
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h5 class="card-title">Resumo</h5>
-        <p>Este é um painel administrativo simples e responsivo, pronto para ser integrado com sistemas de backend.</p>
-      </div>
-    </div>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <hr />
+  <a href="/controllers/LogoutController.php" class="nav-link mt-2">
+    <i class="fas fa-sign-out-alt"></i> Sair
+  </a>
+</aside>
+  <!-- Bootstrap 5 JS Bundle (Popper + JS) -->
+  <script 
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+  ></script>
 </body>
 </html>

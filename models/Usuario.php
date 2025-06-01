@@ -110,5 +110,37 @@ class Usuario {
         $resultado = $this->conn->query($query);
         return $resultado ? $resultado->fetch_all(MYSQLI_ASSOC) : [];
     }
+
+    /**
+     * Retira o vínculo de um usuário com a imobiliária (seta id_imobiliaria = NULL)
+     * @param int $id_usuario
+     * @return bool true se atualizou, false caso contrário
+     */
+    public function removerImobiliaria($id_usuario) {
+        $stmt = $this->conn->prepare("
+            UPDATE usuario
+            SET id_imobiliaria = NULL
+            WHERE id_usuario = ?
+        ");
+        $stmt->bind_param("i", $id_usuario);
+        return $stmt->execute();
+    }
+
+    
+    /**
+     * Vincula um usuário a uma imobiliária
+     */
+    public function vincularImobiliaria($id_usuario, $id_imobiliaria) {
+        $stmt = $this->conn->prepare("
+            UPDATE usuario
+            SET id_imobiliaria = ?
+            WHERE id_usuario = ?
+        ");
+        $stmt->bind_param("ii", $id_imobiliaria, $id_usuario);
+        return $stmt->execute();
+    }
+
+
+    
 }
 ?>

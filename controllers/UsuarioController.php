@@ -20,7 +20,7 @@ function salvarFoto($inputName) {
         $caminho = '../uploads/' . $novoNome; // Caminho onde será salva
 
         // Cria o diretório uploads se não existir
-        if (!is_dir('../uploads')) mkdir('../uploads');
+        if (!is_dir('../uploads')) mkdir('../uploads', 0755, true);
 
         // Move a imagem temporária para o local definitivo
         move_uploaded_file($_FILES[$inputName]['tmp_name'], $caminho);
@@ -52,6 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Redireciona após o cadastro com flag de sucesso
         header('Location: ../views/usuarios/listar.php?sucesso=1');
+        exit;
     }
 
     // Atualização de usuário existente
@@ -79,6 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Redireciona com flag de sucesso na edição
         header('Location: ../views/usuarios/listar.php?atualizado=1');
+        exit;
     }
 }
 
@@ -86,4 +88,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if (isset($_GET['excluir'])) {
     $usuario->excluir($_GET['excluir']);
     header('Location: ../views/usuarios/listar.php?excluido=1');
+    exit;
 }
+
+// Remover vínculo de usuário com imobiliária
+// Espera receber ?removerImobiliaria={id_usuario}&idImobiliaria={id_imobiliaria}
+if (isset($_GET['removerImobiliaria']) && isset($_GET['idImobiliaria'])) {
+    $idUsuario     = intval($_GET['removerImobiliaria']);
+    $idImobiliaria = intval($_GET['idImobiliaria']);
+
+    // Chama método no modelo para desvincular
+    if ($usuario->removerImobiliaria($idUsuario)) {
+        // Redireciona de volta para a edição da imobiliária com flag de remoção
+       header("Location: ../views/imobiliarias/editar_imobiliaria.php?id={$idImobiliaria}&removido=1");
+       exit;
+    } else {
+        echo "Erro ao remover vínculo do usuário.";
+        exit;
+    }
+}
+
+// 2) NOVO: Vincular o usuário selecionado à imobiliária
+// Vem do formulário <select name="incluirUsuario"> via GET
+if (isset($_GET['incluirUsuario']) && isset($_GET['idImobiliaria'])) {
+    $idUsuario     = intval($_GET['incluirUsuario']);
+    $idImobiliaria = intval($_GET['idImobiliaria']);
+
+    if ($usuario->vincularImobiliaria($idUsuario, $idImobiliaria)) {
+        header("Location: ../views/imobiliarias/editar_imobiliaria.php?id={$idImobiliaria}&incluidoUsuario=1");
+        exit;
+    } else {
+        echo "Erro ao vincular usuário à imobiliária.";
+        exit;
+    }
+}
+
+// Se nada for acionado, retorna 400
+header('HTTP/1.1 400 Bad Request');
+echo "Requisição inválida.";
+exit;

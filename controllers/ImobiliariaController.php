@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Tenta cadastrar no banco de dados
         if ($imobiliaria->cadastrar($nome, $cnpj)) {
             // Redireciona para a listagem com mensagem de sucesso
-            header('Location: ../views/imobiliarias/listar.php?sucesso=1');
+            header('Location: ../views/imobiliarias/listar_imobiliaria.php?sucesso=1');
         } else {
             // Exibe erro se falhar
             echo "Erro ao cadastrar imobiliária.";
@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Tenta atualizar no banco
         if ($imobiliaria->atualizar($id, $nome, $cnpj)) {
-            header('Location: ../views/imobiliarias/listar.php?atualizado=1');
+            header('Location: ../views/imobiliarias/listar_imobiliaria.php?atualizado=1');
         } else {
             echo "Erro ao atualizar imobiliária.";
         }
@@ -51,7 +51,7 @@ if (isset($_GET['excluir'])) {
     
     if ($imobiliaria->excluir($id)) {
         // Redireciona após exclusão
-        header('Location: ../views/imobiliarias/listar.php?excluido=1');
+        header('Location: ../views/imobiliarias/listar_imobiliaria.php?excluido=1');
     } else {
         echo "Erro ao excluir imobiliária.";
     }
