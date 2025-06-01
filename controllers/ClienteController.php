@@ -1,31 +1,35 @@
 <?php
 
-require_once __DIR__ . '/../models/Cliente.php';
+require_once __DIR__ . '/../models/Cliente.php'; // Model de Cliente
+require_once __DIR__ . '/../models/Interacao.php'; // Model de Interacao
+require_once __DIR__ . '/../models/DocumentoModel.php'; // Incluir o Model de Documento
 
 class ClienteController
 {
     private $clienteModel;
-    private $dashboardBaseUrl; // Variável para armazenar o caminho para o index.php raiz
+    private $interacaoModel;
+    private $documentoModel; // Adicionar propriedade para o DocumentoModel
+    private $db; // Propriedade para armazenar a conexão com o banco
+    private $dashboardBaseUrl;
 
     public function __construct($db)
     {
-        $this->clienteModel = new Cliente($db);
+        $this->db = $db; // Armazenar a conexão com o banco
+        $this->clienteModel = new Cliente($this->db);
+        $this->interacaoModel = new Interacao($this->db);
+        $this->documentoModel = new DocumentoModel($this->db); // Instanciar o DocumentoModel com a conexão
+
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
-        // Define o caminho base para o index.php que redireciona para os dashboards
-        // Ajuste este caminho se a estrutura do seu projeto for diferente.
-        // Assumindo que as views do controller de cliente estão em views/contatos/
-        // e o index.php principal está dois níveis acima.
-        $this->dashboardBaseUrl = '../../index.php';
+        $this->dashboardBaseUrl = '../../index.php'; // Ajuste conforme a estrutura do seu projeto
     }
 
     private function verificarLogin() {
         if (!isset($_SESSION['usuario'])) {
             $_SESSION['mensagem_erro'] = "Você precisa estar logado para acessar esta página.";
-            // Esta rota é relativa ao index.php que está executando o controller
-            // Se o index.php do controller está em views/contatos/, e o controller de auth também é chamado por ele:
-            header('Location: index.php?controller=auth&action=login');
+            // Ajuste o caminho para o seu roteador principal se necessário
+            header('Location: index.php?controller=auth&action=login'); 
             exit;
         }
     }
@@ -33,18 +37,21 @@ class ClienteController
     public function listar()
     {
         $this->verificarLogin();
-        $dashboardUrl = $this->dashboardBaseUrl; // Torna a URL do dashboard disponível para a view
+        $dashboardUrl = $this->dashboardBaseUrl;
         $idImobiliaria = $_SESSION['usuario']['id_imobiliaria'] ?? null;
         $idUsuario = $_SESSION['usuario']['id_usuario'] ?? null;
         $isSuperAdmin = ($_SESSION['usuario']['permissao'] ?? '') === 'SuperAdmin';
+        
         $clientes = $this->clienteModel->listar($idImobiliaria, $idUsuario, $isSuperAdmin);
+        
+        // Caminho para a view de listagem
         require __DIR__ . '/../views/contatos/listar_clientes.php';
     }
 
     public function cadastrar()
     {
         $this->verificarLogin();
-        $dashboardUrl = $this->dashboardBaseUrl; // Torna a URL do dashboard disponível para a view
+        $dashboardUrl = $this->dashboardBaseUrl; 
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($_POST['nome']) || empty($_POST['numero']) || empty($_POST['cpf']) || empty($_POST['tipo_lista'])) {
@@ -59,14 +66,14 @@ class ClienteController
                 'numero' => $_POST['numero'],
                 'cpf' => $_POST['cpf'],
                 'empreendimento' => $_POST['empreendimento'] ?? null,
-                'renda' => !empty($_POST['renda']) ? $_POST['renda'] : null,
-                'entrada' => !empty($_POST['entrada']) ? $_POST['entrada'] : null,
-                'fgts' => !empty($_POST['fgts']) ? $_POST['fgts'] : null,
-                'subsidio' => !empty($_POST['subsidio']) ? $_POST['subsidio'] : null,
-                'foto' => $_POST['foto'] ?? null,
+                'renda' => !empty($_POST['renda']) ? str_replace(['.', ','], ['', '.'], $_POST['renda']) : null,
+                'entrada' => !empty($_POST['entrada']) ? str_replace(['.', ','], ['', '.'], $_POST['entrada']) : null,
+                'fgts' => !empty($_POST['fgts']) ? str_replace(['.', ','], ['', '.'], $_POST['fgts']) : null,
+                'subsidio' => !empty($_POST['subsidio']) ? str_replace(['.', ','], ['', '.'], $_POST['subsidio']) : null,
+                'foto' => $_POST['foto'] ?? null, // Considere como o upload de fotos será tratado
                 'tipo_lista' => $_POST['tipo_lista'],
                 'id_usuario' => $_SESSION['usuario']['id_usuario'],
-                'id_imobiliaria' => $_SESSION['usuario']['id_imobiliaria']
+                'id_imobiliaria' => $_SESSION['usuario']['id_imobiliaria'] ?? null // Garanta que id_imobiliaria exista na sessão
             ];
 
             if ($this->clienteModel->cadastrar($dados)) {
@@ -85,7 +92,7 @@ class ClienteController
     public function mostrar()
     {
         $this->verificarLogin();
-        $dashboardUrl = $this->dashboardBaseUrl; // Torna a URL do dashboard disponível para a view
+        $dashboardUrl = $this->dashboardBaseUrl;
 
         if (!isset($_GET['id_cliente']) || !is_numeric($_GET['id_cliente'])) {
             $_SESSION['mensagem_erro'] = "ID do cliente inválido ou não fornecido.";
@@ -100,17 +107,25 @@ class ClienteController
             header('Location: index.php?controller=cliente&action=listar');
             exit;
         }
+
+        // Buscar o histórico de interações para este cliente
+        $interacoes = $this->interacaoModel->listarPorCliente($idCliente);
+
+        // Buscar os documentos para este cliente << --- ADICIONADO AQUI
+        $documentos = $this->documentoModel->buscarPorCliente($idCliente);
+
+        // Caminho para a view de mostrar cliente
         require __DIR__ . '/../views/contatos/mostrar_cliente.php';
     }
     
     public function editar() {
         $this->verificarLogin();
-        $dashboardUrl = $this->dashboardBaseUrl; // Torna a URL do dashboard disponível para a view
+        $dashboardUrl = $this->dashboardBaseUrl;
 
         if (!isset($_GET['id_cliente']) || !is_numeric($_GET['id_cliente'])) {
-             $_SESSION['mensagem_erro'] = "ID do cliente inválido para edição.";
-             header('Location: index.php?controller=cliente&action=listar');
-             exit;
+            $_SESSION['mensagem_erro'] = "ID do cliente inválido para edição.";
+            header('Location: index.php?controller=cliente&action=listar');
+            exit;
         }
         $idCliente = (int)$_GET['id_cliente'];
 
@@ -128,11 +143,11 @@ class ClienteController
                 'numero' => $_POST['numero'],
                 'cpf' => $_POST['cpf'],
                 'empreendimento' => $_POST['empreendimento'] ?? null,
-                'renda' => !empty($_POST['renda']) ? $_POST['renda'] : null,
-                'entrada' => !empty($_POST['entrada']) ? $_POST['entrada'] : null,
-                'fgts' => !empty($_POST['fgts']) ? $_POST['fgts'] : null,
-                'subsidio' => !empty($_POST['subsidio']) ? $_POST['subsidio'] : null,
-                'foto' => $_POST['foto'] ?? null,
+                'renda' => !empty($_POST['renda']) ? str_replace(['.', ','], ['', '.'], $_POST['renda']) : null,
+                'entrada' => !empty($_POST['entrada']) ? str_replace(['.', ','], ['', '.'], $_POST['entrada']) : null,
+                'fgts' => !empty($_POST['fgts']) ? str_replace(['.', ','], ['', '.'], $_POST['fgts']) : null,
+                'subsidio' => !empty($_POST['subsidio']) ? str_replace(['.', ','], ['', '.'], $_POST['subsidio']) : null,
+                'foto' => $_POST['foto'] ?? null, // Considere como o upload de fotos será tratado
                 'tipo_lista' => $_POST['tipo_lista'],
             ];
 
@@ -141,8 +156,7 @@ class ClienteController
                 header('Location: index.php?controller=cliente&action=mostrar&id_cliente=' . $idCliente);
             } else {
                 $_SESSION['mensagem_erro'] = "Erro ao atualizar cliente. Verifique os dados e tente novamente.";
-                $cliente = $dadosAtualizar; 
-                $cliente['id_cliente'] = $idCliente;
+                $cliente = array_merge(['id_cliente' => $idCliente], $dadosAtualizar); // Mescla para manter o ID
                 require __DIR__ . '/../views/contatos/editar_cliente.php';
             }
             exit;
@@ -161,7 +175,6 @@ class ClienteController
     public function excluir()
     {
         $this->verificarLogin();
-        // Não precisa de $dashboardUrl aqui pois redireciona diretamente para a lista
         if (!isset($_GET['id_cliente']) || !is_numeric($_GET['id_cliente'])) {
             $_SESSION['mensagem_erro'] = "ID do cliente inválido.";
             header('Location: index.php?controller=cliente&action=listar');
@@ -169,10 +182,13 @@ class ClienteController
         }
         $idCliente = (int)$_GET['id_cliente'];
         
+        // Adicionar lógica para verificar permissões de exclusão, se necessário
+        // Ex: if ($_SESSION['usuario']['permissao'] !== 'SuperAdmin' && $cliente['id_usuario'] !== $_SESSION['usuario']['id_usuario']) { ... }
+
         if ($this->clienteModel->excluir($idCliente)) {
             $_SESSION['mensagem_sucesso'] = "Cliente excluído com sucesso!";
         } else {
-            $_SESSION['mensagem_erro'] = "Erro ao excluir cliente.";
+            $_SESSION['mensagem_erro'] = "Erro ao excluir cliente. Pode haver interações ou documentos associados.";
         }
         header('Location: index.php?controller=cliente&action=listar');
         exit;
