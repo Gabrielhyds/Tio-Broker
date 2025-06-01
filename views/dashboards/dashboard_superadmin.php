@@ -152,7 +152,7 @@
   </a>
 
   <hr />
-  <a href="/controllers/LogoutController.php" class="nav-link mt-2">
+  <a href="../../controllers/LogoutController.php" class="nav-link mt-2">
     <i class="fas fa-sign-out-alt"></i> Sair
   </a>
 </aside>
