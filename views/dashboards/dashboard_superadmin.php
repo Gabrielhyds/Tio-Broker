@@ -125,6 +125,12 @@
   <hr />
 
   <!-- Submenu Imobiliária -->
+  <span class="submenu-title">Inicio</span>
+  <a href="../dashboards/resumo.php" class="nav-link submenu-item<?= (basename($_SERVER['PHP_SELF']) == 'dashboard_superadmin.php' ? ' active' : '') ?>">
+    <i class="fas fa-plus"></i> Resumo
+  </a>
+
+  <!-- Submenu Imobiliária -->
   <span class="submenu-title">Imobiliária</span>
   <a href="../imobiliarias/cadastrar_imobiliaria.php" class="nav-link submenu-item<?= (basename($_SERVER['PHP_SELF']) == 'cadastrar_imobiliaria.php' ? ' active' : '') ?>">
     <i class="fas fa-plus"></i> Cadastrar

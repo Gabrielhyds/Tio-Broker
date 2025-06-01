@@ -10,7 +10,7 @@ if (!isset($_SESSION['usuario'])) {
 // Se estiver logado, verifica a permissão e redireciona
 switch ($_SESSION['usuario']['permissao']) {
     case 'SuperAdmin':
-        header('Location: views/dashboards/dashboard_superadmin.php');
+        header('Location: views/dashboards/resumo.php');
         break;
     case 'Admin':
         header('Location: views/dashboards/dashboard_admin.php');
