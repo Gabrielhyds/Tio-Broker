@@ -4,9 +4,6 @@ require_once '../../config/config.php';
 require_once '../../models/Usuario.php';
 require_once '../../models/Chat.php';
 
-// IMPORTANTE: Para o funcionamento correto dos emojis, certifique-se de que a conexão
-// com o banco de dados e as tabelas ('mensagens') estejam utilizando o charset 'utf8mb4'.
-
 // Inicia a sessão para obter os dados do usuário logado
 session_start();
 
@@ -29,22 +26,14 @@ $id_imobiliaria_filtro = $_GET['id_imobiliaria'] ?? null;
 $listaImobiliarias = [];
 $usuariosDisponiveis = [];
 
-// Define a lista de usuários visíveis com base na permissão
+// Lógica de filtro para SuperAdmin
 if ($permissao === 'SuperAdmin') {
-    // SuperAdmin pode ver o seletor de imobiliárias para filtrar
     $listaImobiliarias = $usuarioModel->listarImobiliariasComUsuarios();
-
     if ($id_imobiliaria_filtro) {
-        // Se um filtro foi selecionado, lista os usuários da imobiliária escolhida
         $usuariosDisponiveis = $usuarioModel->listarPorImobiliaria($id_imobiliaria_filtro, $id_usuario_logado);
-    } else {
-        // ALTERAÇÃO: Se nenhum filtro foi selecionado, a lista de usuários permanece vazia.
-        $usuariosDisponiveis = [];
     }
 } else {
-    // Para os demais perfis (Admin, Coordenador, Corretor), mostra apenas usuários da mesma imobiliária
     if ($id_imobiliaria_usuario) {
-        // Usa o ID da imobiliária do próprio usuário logado para buscar os colegas
         $usuariosDisponiveis = $usuarioModel->listarPorImobiliaria($id_imobiliaria_usuario, $id_usuario_logado);
     }
 }
@@ -53,36 +42,23 @@ if ($permissao === 'SuperAdmin') {
 $ultimasMensagens = $chat->buscarUltimaMensagemCom($id_usuario_logado);
 $notificacoes = $chat->contarNaoLidasPorRemetente($id_usuario_logado);
 
-// Ordena a lista de usuários para que as conversas mais recentes apareçam no topo
-// Esta função funciona corretamente mesmo se $usuariosDisponiveis for um array vazio.
+// Ordena a lista de usuários
 usort($usuariosDisponiveis, function ($a, $b) use ($ultimasMensagens) {
-    // Pega o timestamp da última mensagem para cada usuário
     $timestampA = isset($ultimasMensagens[$a['id_usuario']]) ? strtotime($ultimasMensagens[$a['id_usuario']]['data_envio']) : 0;
     $timestampB = isset($ultimasMensagens[$b['id_usuario']]) ? strtotime($ultimasMensagens[$b['id_usuario']]['data_envio']) : 0;
-
-    // Se os timestamps são iguais, mantém a ordem original
-    if ($timestampA == $timestampB) {
-        return 0;
-    }
-
-    // Compara os timestamps para ordenar do mais recente para o mais antigo (descendente)
+    if ($timestampA == $timestampB) return 0;
     return ($timestampA > $timestampB) ? -1 : 1;
 });
 
 // Lógica para abrir uma conversa ativa
 $id_destino = $_GET['id_destino'] ?? null;
 $id_conversa_ativa = null;
-$mensagens = [];
-
 if ($id_destino) {
-    // Busca ou cria uma conversa privada com o usuário de destino
     $id_conversa_ativa = $chat->buscarConversaPrivadaEntre($id_usuario_logado, $id_destino);
     if (!$id_conversa_ativa) {
         $id_conversa_ativa = $chat->criarConversaPrivada($id_usuario_logado, $id_destino);
     }
-    // Marca as mensagens como lidas e carrega o histórico
     $chat->marcarComoLidas($id_conversa_ativa, $id_usuario_logado);
-    $mensagens = $chat->listarMensagensDaConversa($id_conversa_ativa);
 }
 ?>
 <!DOCTYPE html>
@@ -92,24 +68,145 @@ if ($id_destino) {
     <meta charset="UTF-8">
     <title>Chat Interno</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="assets/style.css" rel="stylesheet">
-    <!-- Adiciona a biblioteca de seletor de emojis -->
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
+    <link href="assets/style.css" rel="stylesheet">
+
+    <!-- CSS CORRIGIDO para Reações -->
+    <style>
+    .mensagem-wrapper {
+        position: relative;
+        margin-bottom: 5px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .minha-mensagem {
+        align-items: flex-end;
+    }
+
+    .outra-mensagem {
+        align-items: flex-start;
+    }
+
+    /* Adiciona um padding para o botão de reagir não sobrepor a mensagem */
+    .minha-mensagem .mensagem {
+        margin-left: 40px;
+    }
+
+    .outra-mensagem .mensagem {
+        margin-right: 40px;
+    }
+
+    .mensagem {
+        position: relative;
+    }
+
+    .mensagem .btn-reagir {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: none;
+        background-color: rgba(0, 0, 0, 0.05);
+        color: #6c757d;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+    .minha-mensagem .mensagem .btn-reagir {
+        left: -38px;
+    }
+
+    .outra-mensagem .mensagem .btn-reagir {
+        right: -38px;
+    }
+
+    .mensagem-wrapper:hover .btn-reagir {
+        opacity: 1;
+    }
+
+    /* Seletor agora é FIXO para evitar problemas com scroll */
+    .seletor-reacao {
+        position: fixed;
+        background-color: #fff;
+        border-radius: 20px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        padding: 5px;
+        display: flex;
+        gap: 5px;
+        z-index: 1051;
+        transform: scale(0.9);
+        opacity: 0;
+        transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+        pointer-events: none;
+    }
+
+    .seletor-reacao.visivel {
+        transform: scale(1);
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .seletor-reacao .emoji-reacao {
+        font-size: 24px;
+        cursor: pointer;
+        padding: 3px;
+        border-radius: 50%;
+        transition: transform 0.1s, background-color 0.1s;
+    }
+
+    .seletor-reacao .emoji-reacao:hover {
+        background-color: #eee;
+        transform: scale(1.2);
+    }
+
+    .reacoes-container {
+        padding: 0 8px;
+        margin-top: -8px;
+        z-index: 1;
+    }
+
+    .minha-mensagem .reacoes-container {
+        align-self: flex-end;
+        margin-right: 10px;
+    }
+
+    .outra-mensagem .reacoes-container {
+        align-self: flex-start;
+        margin-left: 10px;
+    }
+
+    .reacoes-container .badge {
+        cursor: help;
+    }
+
+    .status-lida {
+        font-size: 14px;
+        margin-left: 5px;
+        color: #6c757d;
+    }
+
+    .status-lida.visto {
+        color: #198754;
+    }
+    </style>
 </head>
 
 <body class="bg-light">
     <?php
-    // Inclui o dashboard correspondente ao perfil do usuário
-    if ($_SESSION['usuario']['permissao'] === 'SuperAdmin') {
-        include_once '../dashboards/dashboard_superadmin.php';
-    } elseif ($_SESSION['usuario']['permissao'] === 'Admin') {
-        include_once '../dashboards/dashboard_admin.php';
-    } elseif ($_SESSION['usuario']['permissao'] === 'Coordenador') {
-        include_once '../dashboards/dashboard_coordenador.php';
-    } else {
-        include_once '../dashboards/dashboard_corretor.php';
-    }
+    if ($permissao === 'SuperAdmin') include_once '../dashboards/dashboard_superadmin.php';
+    elseif ($permissao === 'Admin') include_once '../dashboards/dashboard_admin.php';
+    elseif ($permissao === 'Coordenador') include_once '../dashboards/dashboard_coordenador.php';
+    else include_once '../dashboards/dashboard_corretor.php';
     ?>
+
     <div class="container mt-5">
         <a href="<?= htmlspecialchars($dashboardUrl ?? '../../index.php') ?>" class="btn btn-secondary mb-2">Voltar</a>
         <div class="row">
@@ -117,9 +214,7 @@ if ($id_destino) {
             <!-- Lista de usuários -->
             <div class="col-md-4">
                 <h4>Usuários</h4>
-
                 <?php if ($permissao === 'SuperAdmin'): ?>
-                <!-- Formulário de filtro de imobiliária (apenas para SuperAdmin) -->
                 <form method="GET" class="mb-3">
                     <div class="input-group">
                         <select name="id_imobiliaria" class="form-select" onchange="this.form.submit()">
@@ -136,35 +231,21 @@ if ($id_destino) {
                 <?php endif; ?>
 
                 <?php
-                // ALTERAÇÃO: Lógica de exibição da lista ou de mensagens de status
                 if ($permissao === 'SuperAdmin' && !$id_imobiliaria_filtro) :
-                ?>
-                <div class="alert alert-info" role="alert">
-                    Selecione uma imobiliária para filtrar os usuários.
-                </div>
-                <?php
+                    echo '<div class="alert alert-info">Selecione uma imobiliária para filtrar.</div>';
                 elseif (empty($usuariosDisponiveis)) :
-                ?>
-                <div class="alert alert-secondary" role="alert">
-                    Nenhum usuário para exibir.
-                </div>
-                <?php
+                    echo '<div class="alert alert-secondary">Nenhum usuário para exibir.</div>';
                 else :
                 ?>
                 <ul class="list-group">
                     <?php foreach ($usuariosDisponiveis as $u): ?>
-                    <?php
-                            // Pula a exibição do próprio usuário na lista para evitar auto-chat.
-                            if ($u['id_usuario'] == $id_usuario_logado) continue;
-                            ?>
+                    <?php if ($u['id_usuario'] == $id_usuario_logado) continue; ?>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                         <a href="chat.php?id_destino=<?= $u['id_usuario'] ?>&id_imobiliaria=<?= $id_imobiliaria_filtro ?>"
                             class="text-decoration-none flex-grow-1">
                             <?= htmlspecialchars($u['nome']) ?>
                             <small id="ultima-msg-<?= $u['id_usuario'] ?>" class="d-block text-muted">
-                                <?= isset($ultimasMensagens[$u['id_usuario']])
-                                            ? htmlspecialchars(substr($ultimasMensagens[$u['id_usuario']]['mensagem'], 0, 30)) . '...'
-                                            : 'Nenhuma conversa iniciada' ?>
+                                <?= isset($ultimasMensagens[$u['id_usuario']]) ? htmlspecialchars(substr($ultimasMensagens[$u['id_usuario']]['mensagem'], 0, 30)) . '...' : 'Nenhuma conversa iniciada' ?>
                             </small>
                         </a>
                         <span id="badge-<?= $u['id_usuario'] ?>"
@@ -181,39 +262,17 @@ if ($id_destino) {
             <div class="col-md-8">
                 <h4>Mensagens</h4>
                 <div class="chat-box mb-3" id="mensagens">
-                    <?php if ($id_conversa_ativa): ?>
-                    <?php if (!empty($mensagens)): ?>
-                    <?php foreach ($mensagens as $m): ?>
-                    <?php
-                                $isMinha = ($m['id_usuario'] == $id_usuario_logado);
-                                $classe = $isMinha ? 'mensagem-direita' : 'mensagem-esquerda';
-                                $status = $isMinha
-                                    ? ($m['lida'] ? '<span class="text-success">✔️</span>' : '<span class="text-muted">✔️</span>')
-                                    : '';
-                                ?>
-                    <div class="mensagem <?= $classe ?>">
-                        <div><strong><?= htmlspecialchars($m['nome_usuario']) ?>:</strong></div>
-                        <div><?= nl2br(htmlspecialchars($m['mensagem'])) ?></div>
-                        <small class="text-muted d-block">
-                            <?= date('d/m/Y H:i', strtotime($m['data_envio'])) ?>
-                            <?= $status ?>
-                        </small>
-                    </div>
-                    <?php endforeach; ?>
-                    <?php else: ?>
-                    <p class="text-muted">Nenhuma mensagem ainda. Inicie a conversa.</p>
-                    <?php endif; ?>
-                    <?php else: ?>
-                    <p class="text-muted">Selecione um colaborador ao lado para iniciar uma conversa.</p>
+                    <?php if (!$id_conversa_ativa): ?>
+                    <p class="text-muted text-center mt-3">Selecione um colaborador ao lado para iniciar uma conversa.
+                    </p>
                     <?php endif; ?>
                 </div>
 
                 <?php if ($id_conversa_ativa): ?>
-                <form action="../../controllers/ChatController.php" method="POST">
+                <form id="form-mensagem" action="../../controllers/ChatController.php" method="POST">
                     <input type="hidden" name="action" value="enviar_mensagem">
                     <input type="hidden" name="id_conversa" value="<?= $id_conversa_ativa ?>">
                     <input type="hidden" name="id_destino" value="<?= $id_destino ?>">
-
                     <?php if (isset($id_imobiliaria_filtro)): ?>
                     <input type="hidden" name="id_imobiliaria" value="<?= htmlspecialchars($id_imobiliaria_filtro) ?>">
                     <?php endif; ?>
@@ -232,11 +291,73 @@ if ($id_destino) {
         </div>
     </div>
 
+    <!-- Seletor de reação (HTML único, controlado por JS) -->
+    <div class="seletor-reacao" id="seletor-reacao-global">
+        <span class="emoji-reacao" data-reacao="👍">👍</span>
+        <span class="emoji-reacao" data-reacao="❤️">❤️</span>
+        <span class="emoji-reacao" data-reacao="😂">😂</span>
+        <span class="emoji-reacao" data-reacao="😮">😮</span>
+        <span class="emoji-reacao" data-reacao="😢">😢</span>
+        <span class="emoji-reacao" data-reacao="🙏">🙏</span>
+    </div>
+
+
     <script>
-    // Mantém uma referência ao temporizador para poder limpá-lo se necessário
     let pollingInterval;
 
-    // Função para carregar dinamicamente as mensagens da conversa ativa
+    // --- Lógica de Reações (Refatorada) ---
+    const seletorReacao = document.getElementById('seletor-reacao-global');
+
+    function mostrarSeletorReacao(btnReagir) {
+        const idMensagem = btnReagir.closest('.mensagem').dataset.idMensagem;
+        seletorReacao.dataset.idMensagem = idMensagem; // Armazena o ID da mensagem no seletor
+
+        const rect = btnReagir.getBoundingClientRect();
+
+        // Calcula a posição do seletor para ficar acima do botão
+        let top = rect.top - seletorReacao.offsetHeight - 5;
+        let left = rect.left + (rect.width / 2) - (seletorReacao.offsetWidth / 2);
+
+        // Ajusta para não sair da tela
+        if (top < 0) top = rect.bottom + 5; // Se não couber em cima, põe embaixo
+        if (left < 5) left = 5;
+        if (left + seletorReacao.offsetWidth > window.innerWidth) {
+            left = window.innerWidth - seletorReacao.offsetWidth - 5;
+        }
+
+        seletorReacao.style.top = `${top}px`;
+        seletorReacao.style.left = `${left}px`;
+        seletorReacao.classList.add('visivel');
+    }
+
+    function esconderSeletorReacao() {
+        seletorReacao.classList.remove('visivel');
+    }
+
+    function enviarReacao(idMensagem, reacao) {
+        const formData = new FormData();
+        formData.append('action', 'reagir_mensagem');
+        formData.append('id_mensagem', idMensagem);
+        formData.append('reacao', reacao);
+
+        fetch('../../controllers/ChatController.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    carregarMensagens();
+                } else {
+                    console.error('Erro ao reagir:', data.error || 'Erro desconhecido');
+                }
+            })
+            .catch(err => console.error('Fetch error:', err));
+
+        esconderSeletorReacao();
+    }
+
+    // --- Funções do Chat ---
     function carregarMensagens() {
         const idConversa = <?= json_encode($id_conversa_ativa ?? null) ?>;
         if (!idConversa) return;
@@ -245,10 +366,14 @@ if ($id_destino) {
             .then(res => res.text())
             .then(html => {
                 const chatBox = document.getElementById("mensagens");
-                const shouldScroll = chatBox.scrollTop + chatBox.clientHeight >= chatBox.scrollHeight - 20;
+                if (!chatBox) return;
+
+                const isScrolledToBottom = chatBox.scrollTop + chatBox.clientHeight >= chatBox.scrollHeight - 30;
                 const scrollPosition = chatBox.scrollTop;
+
                 chatBox.innerHTML = html;
-                if (shouldScroll) {
+
+                if (isScrolledToBottom) {
                     scrollParaFimDoChat();
                 } else {
                     chatBox.scrollTop = scrollPosition;
@@ -256,80 +381,67 @@ if ($id_destino) {
             });
     }
 
-    // Função para atualizar as notificações e última mensagem na lista de usuários
-    function atualizarStatusListaUsuarios() {
-        fetch(`get_notificacoes.php?t=${new Date().getTime()}`)
-            .then(res => res.ok ? res.json() : Promise.reject('Network response was not ok.'))
-            .then(data => {
-                if (!data) return;
-                document.querySelectorAll('.list-group-item a').forEach(link => {
-                    const userId = new URLSearchParams(link.href.split('?')[1]).get('id_destino');
-                    if (!userId) return;
-
-                    const badge = document.getElementById(`badge-${userId}`);
-                    const msgEl = document.getElementById(`ultima-msg-${userId}`);
-                    if (!badge || !msgEl) return;
-
-                    const userData = data[userId];
-                    if (userData) {
-                        let mensagem = userData.mensagem || "Nenhuma conversa iniciada";
-                        msgEl.textContent = mensagem.length > 30 ? mensagem.substring(0, 30) + '...' :
-                            mensagem;
-                        const totalNaoLidas = parseInt(userData.total_nao_lidas, 10) || 0;
-                        if (totalNaoLidas > 0) {
-                            badge.textContent = totalNaoLidas;
-                            badge.classList.remove('d-none');
-                        } else {
-                            badge.classList.add('d-none');
-                        }
-                    } else {
-                        badge.classList.add('d-none');
-                    }
-                });
-            })
-            .catch(error => console.error('Erro ao buscar notificações:', error));
-    }
-
-    // Função para rolar a caixa de chat para a última mensagem
     function scrollParaFimDoChat() {
         const box = document.getElementById('mensagens');
         if (box) box.scrollTop = box.scrollHeight;
     }
 
-    // Executa as funções quando a página é carregada
-    window.onload = function() {
-        scrollParaFimDoChat();
+    // --- EVENT LISTENERS ---
+    document.addEventListener('DOMContentLoaded', function() {
+        const idConversa = <?= json_encode($id_conversa_ativa ?? null) ?>;
 
-        pollingInterval = setInterval(() => {
+        if (idConversa) {
             carregarMensagens();
-            atualizarStatusListaUsuarios();
-        }, 3000);
+            scrollParaFimDoChat();
+            pollingInterval = setInterval(carregarMensagens, 3000);
+        }
 
-        // --- LÓGICA DO SELETOR DE EMOJIS ---
-        const emojiBtn = document.getElementById('emoji-btn');
+        document.body.addEventListener('click', function(e) {
+            const btnReagir = e.target.closest('.btn-reagir');
+            if (btnReagir) {
+                e.stopPropagation();
+                const idMensagemAtual = btnReagir.closest('.mensagem').dataset.idMensagem;
+                if (seletorReacao.classList.contains('visivel') && seletorReacao.dataset.idMensagem ===
+                    idMensagemAtual) {
+                    esconderSeletorReacao();
+                } else {
+                    mostrarSeletorReacao(btnReagir);
+                }
+                return;
+            }
+
+            const emojiClicado = e.target.closest('.emoji-reacao');
+            if (emojiClicado && seletorReacao.classList.contains('visivel')) {
+                const idMensagem = seletorReacao.dataset.idMensagem;
+                const reacao = emojiClicado.dataset.reacao;
+                enviarReacao(idMensagem, reacao);
+                return;
+            }
+
+            if (!e.target.closest('.seletor-reacao')) {
+                esconderSeletorReacao();
+            }
+
+            const emojiBtn = document.getElementById('emoji-btn');
+            const emojiPicker = document.querySelector('emoji-picker');
+            if (emojiBtn && emojiPicker) {
+                if (emojiBtn.contains(e.target)) {
+                    emojiPicker.classList.toggle('d-none');
+                } else if (!emojiPicker.contains(e.target) && !e.target.closest('emoji-picker')) {
+                    emojiPicker.classList.add('d-none');
+                }
+            }
+        });
+
         const emojiPicker = document.querySelector('emoji-picker');
         const messageInput = document.getElementById('mensagem-input');
-
-        if (emojiBtn && emojiPicker && messageInput) {
-            // Mostra/esconde o seletor de emojis
-            emojiBtn.addEventListener('click', () => {
-                emojiPicker.classList.toggle('d-none');
-            });
-
-            // Insere o emoji no campo de texto ao ser clicado
+        if (emojiPicker && messageInput) {
             emojiPicker.addEventListener('emoji-click', event => {
                 messageInput.value += event.detail.emoji.unicode;
                 messageInput.focus();
             });
-
-            // Opcional: esconde o picker se clicar fora dele
-            document.addEventListener('click', (event) => {
-                if (!emojiPicker.contains(event.target) && !emojiBtn.contains(event.target)) {
-                    emojiPicker.classList.add('d-none');
-                }
-            });
         }
-    };
+    });
     </script>
 </body>
 

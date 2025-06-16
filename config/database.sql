@@ -135,6 +135,18 @@ CREATE TABLE mensagens ( -- Tabela de Mensagens
     FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE -- Relaciona com a tabela 'usuario'
 );
 
+CREATE TABLE reacoes (
+  id_reacao INT AUTO_INCREMENT PRIMARY KEY,
+  id_mensagem INT NOT NULL,
+  id_usuario INT NOT NULL,
+  reacao VARCHAR(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (id_mensagem) REFERENCES mensagens(id_mensagem) ON DELETE CASCADE,
+  FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE,
+  -- Garante que um usuário só pode ter uma reação por mensagem
+  UNIQUE KEY `reacao_unica_usuario_mensagem` (`id_mensagem`, `id_usuario`)
+);
+
 CREATE TABLE password_resets (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
