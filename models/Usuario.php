@@ -48,37 +48,67 @@ class Usuario
         return false; // Senha incorreta
     }
 
-    // --- NOVO ---
     /**
-     * Conta o total de usuários cadastrados.
+     * Conta o total de usuários cadastrados, com filtro opcional.
+     * @param string|null $filtro Termo para buscar nos campos visíveis.
      * @return int Total de usuários.
      */
-    public function contarTotal()
+    public function contarTotal($filtro = null)
     {
-        $resultado = $this->conn->query("SELECT COUNT(id_usuario) as total FROM usuario");
-        $dados = $resultado->fetch_assoc();
-        return (int)($dados['total'] ?? 0);
+        $sql = "SELECT COUNT(u.id_usuario) as total 
+                FROM usuario u
+                LEFT JOIN imobiliaria i ON u.id_imobiliaria = i.id_imobiliaria";
+        $params = [];
+        $types = "";
+
+        if (!empty($filtro)) {
+            $sql .= " WHERE u.nome LIKE ? OR u.email LIKE ? OR u.permissao LIKE ? OR i.nome LIKE ?";
+            $searchTerm = "%{$filtro}%";
+            $params = [$searchTerm, $searchTerm, $searchTerm, $searchTerm];
+            $types = "ssss";
+        }
+
+        $stmt = $this->conn->prepare($sql);
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+        $resultado = $stmt->get_result()->fetch_assoc();
+        return (int)($resultado['total'] ?? 0);
     }
 
-    // --- ALTERADO ---
     /**
-     * Lista os usuários de forma paginada com o nome da imobiliária.
+     * Lista os usuários de forma paginada com o nome da imobiliária, com filtro opcional.
      * @param int $pagina_atual O número da página atual.
      * @param int $limite O número de itens por página.
+     * @param string|null $filtro Termo para buscar nos campos visíveis.
      * @return array Lista de usuários para a página atual.
      */
-    public function listarPaginadoComImobiliaria($pagina_atual, $limite)
+    public function listarPaginadoComImobiliaria($pagina_atual, $limite, $filtro = null)
     {
         $offset = ($pagina_atual - 1) * $limite;
-        $query = "
+        $sql = "
             SELECT u.*, i.nome AS nome_imobiliaria
             FROM usuario u
             LEFT JOIN imobiliaria i ON u.id_imobiliaria = i.id_imobiliaria
-            ORDER BY u.nome ASC
-            LIMIT ? OFFSET ?
         ";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bind_param("ii", $limite, $offset);
+        $params = [];
+        $types = '';
+
+        if (!empty($filtro)) {
+            $sql .= " WHERE u.nome LIKE ? OR u.email LIKE ? OR u.permissao LIKE ? OR i.nome LIKE ?";
+            $searchTerm = "%{$filtro}%";
+            $params = [$searchTerm, $searchTerm, $searchTerm, $searchTerm];
+            $types = "ssss";
+        }
+
+        $sql .= " ORDER BY u.nome ASC LIMIT ? OFFSET ?";
+        $params[] = $limite;
+        $params[] = $offset;
+        $types .= "ii";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param($types, ...$params);
         $stmt->execute();
         $resultado = $stmt->get_result();
         return $resultado ? $resultado->fetch_all(MYSQLI_ASSOC) : [];
@@ -160,8 +190,6 @@ class Usuario
 
     /**
      * Retira o vínculo de um usuário com a imobiliária (seta id_imobiliaria = NULL)
-     * @param int $id_usuario
-     * @return bool true se atualizou, false caso contrário
      */
     public function removerImobiliaria($id_usuario)
     {

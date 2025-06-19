@@ -1,17 +1,13 @@
 <?php
 class Imobiliaria
 {
-    private $conn; // Conexão com o banco de dados
+    private $conn;
 
-    // Construtor recebe a conexão como parâmetro
     public function __construct($conn)
     {
         $this->conn = $conn;
     }
 
-    /**
-     * Cadastra uma nova imobiliária no banco de dados
-     */
     public function cadastrar($nome, $cnpj)
     {
         $stmt = $this->conn->prepare("INSERT INTO imobiliaria (nome, cnpj) VALUES (?, ?)");
@@ -19,51 +15,82 @@ class Imobiliaria
         return $stmt->execute();
     }
 
-    // --- NOVO ---
     /**
-     * Conta o total de imobiliárias cadastradas.
+     * Conta o total de imobiliárias, com filtro opcional.
+     * @param string|null $filtro Termo para buscar no ID, nome ou CNPJ.
      * @return int Total de imobiliárias.
      */
-    public function contarTotal()
+    public function contarTotal($filtro = null)
     {
-        $resultado = $this->conn->query("SELECT COUNT(id_imobiliaria) as total FROM imobiliaria");
-        $dados = $resultado->fetch_assoc();
-        return (int)($dados['total'] ?? 0);
+        $sql = "SELECT COUNT(id_imobiliaria) as total FROM imobiliaria";
+        $params = [];
+        $types = "";
+
+        if (!empty($filtro)) {
+            $sql .= " WHERE nome LIKE ? OR cnpj LIKE ?";
+            $searchTerm = "%{$filtro}%";
+            $params = [$searchTerm, "%" . str_replace(['.', '/', '-'], '', $filtro) . "%"];
+            $types = "ss";
+
+            if (is_numeric($filtro)) {
+                $sql .= " OR id_imobiliaria = ?";
+                $params[] = (int)$filtro;
+                $types .= "i";
+            }
+        }
+
+        $stmt = $this->conn->prepare($sql);
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+        $resultado = $stmt->get_result()->fetch_assoc();
+        return (int)($resultado['total'] ?? 0);
     }
 
-    // --- ALTERADO ---
     /**
-     * Lista as imobiliárias de forma paginada.
+     * Lista as imobiliárias de forma paginada, com filtro opcional.
      * @param int $pagina_atual O número da página atual.
      * @param int $limite O número de itens por página.
+     * @param string|null $filtro Termo para buscar no ID, nome ou CNPJ.
      * @return array Lista de imobiliárias para a página atual.
      */
-    public function listarPaginado($pagina_atual, $limite)
+    public function listarPaginado($pagina_atual, $limite, $filtro = null)
     {
-        // Calcula o offset para a consulta SQL
         $offset = ($pagina_atual - 1) * $limite;
-
-        $query = "
+        $sql = "
             SELECT i.*, COUNT(u.id_usuario) as total_usuarios
             FROM imobiliaria i
             LEFT JOIN usuario u ON i.id_imobiliaria = u.id_imobiliaria
-            GROUP BY i.id_imobiliaria
-            ORDER BY i.nome ASC
-            LIMIT ? OFFSET ?
         ";
+        $params = [];
+        $types = '';
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->bind_param("ii", $limite, $offset);
+        if (!empty($filtro)) {
+            $sql .= " WHERE i.nome LIKE ? OR i.cnpj LIKE ?";
+            $searchTerm = "%{$filtro}%";
+            $params = [$searchTerm, "%" . str_replace(['.', '/', '-'], '', $filtro) . "%"];
+            $types = "ss";
+
+            if (is_numeric($filtro)) {
+                $sql .= " OR i.id_imobiliaria = ?";
+                $params[] = (int)$filtro;
+                $types .= "i";
+            }
+        }
+
+        $sql .= " GROUP BY i.id_imobiliaria ORDER BY i.nome ASC LIMIT ? OFFSET ?";
+        $params[] = $limite;
+        $params[] = $offset;
+        $types .= "ii";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param($types, ...$params);
         $stmt->execute();
-
         $resultado = $stmt->get_result();
         return $resultado ? $resultado->fetch_all(MYSQLI_ASSOC) : [];
     }
 
-
-    /**
-     * Exclui uma imobiliária pelo ID
-     */
     public function excluir($id)
     {
         $stmt = $this->conn->prepare("DELETE FROM imobiliaria WHERE id_imobiliaria = ?");
@@ -71,9 +98,6 @@ class Imobiliaria
         return $stmt->execute();
     }
 
-    /**
-     * Busca uma imobiliária específica pelo ID
-     */
     public function buscarPorId($id)
     {
         $stmt = $this->conn->prepare("SELECT * FROM imobiliaria WHERE id_imobiliaria = ?");
@@ -82,9 +106,6 @@ class Imobiliaria
         return $stmt->get_result()->fetch_assoc();
     }
 
-    /**
-     * Atualiza os dados de uma imobiliária existente
-     */
     public function atualizar($id, $nome, $cnpj)
     {
         $stmt = $this->conn->prepare("UPDATE imobiliaria SET nome = ?, cnpj = ? WHERE id_imobiliaria = ?");
@@ -92,9 +113,6 @@ class Imobiliaria
         return $stmt->execute();
     }
 
-    /**
-     * Verifica se uma imobiliária possui usuários vinculados.
-     */
     public function temUsuariosVinculados($id_imobiliaria)
     {
         $stmt = $this->conn->prepare("SELECT COUNT(id_usuario) as total FROM usuario WHERE id_imobiliaria = ?");
@@ -104,9 +122,6 @@ class Imobiliaria
         return $result['total'] > 0;
     }
 
-    /**
-     * Lista todas as imobiliárias para selects (sem paginação).
-     */
     public function listarTodas()
     {
         $query = "SELECT id_imobiliaria, nome FROM imobiliaria ORDER BY nome ASC";

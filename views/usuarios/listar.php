@@ -1,13 +1,11 @@
 <?php
 session_start();
 
-// Verifica se o usuário está logado
 if (!isset($_SESSION['usuario'])) {
   header('Location: /auth/login.php');
   exit;
 }
 
-// Define o menu ativo para o sidebar
 $activeMenu = 'usuario_listar';
 
 require_once '../../config/config.php';
@@ -15,19 +13,21 @@ require_once '../../models/Usuario.php';
 
 $usuarioModel = new Usuario($connection);
 
-// --- NOVO: LÓGICA DE PAGINAÇÃO ---
-$itens_por_pagina = 10; // Defina quantos usuários você quer por página
+// --- LÓGICA DE FILTRO E PAGINAÇÃO ---
+$itens_por_pagina = 10;
 $pagina_atual = isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1;
 if ($pagina_atual < 1) {
   $pagina_atual = 1;
 }
+// Pega o termo de busca da URL
+$filtro = $_GET['filtro'] ?? '';
 
-// Conta o total de usuários para calcular o número de páginas
-$total_itens = $usuarioModel->contarTotal();
+// Conta o total de itens com base no filtro
+$total_itens = $usuarioModel->contarTotal($filtro);
 $total_paginas = ceil($total_itens / $itens_por_pagina);
 
-// Busca a lista de usuários de forma paginada
-$lista = $usuarioModel->listarPaginadoComImobiliaria($pagina_atual, $itens_por_pagina);
+// Busca os dados paginados com base no filtro
+$lista = $usuarioModel->listarPaginadoComImobiliaria($pagina_atual, $itens_por_pagina, $filtro);
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -36,27 +36,30 @@ $lista = $usuarioModel->listarPaginadoComImobiliaria($pagina_atual, $itens_por_p
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Usuários Cadastrados</title>
-
-  <!-- Bootstrap 5 CSS + FontAwesome -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
-
-  <!-- CSS global -->
   <link href="/assets/css/styles.css" rel="stylesheet" />
 </head>
 
 <body class="bg-light">
 
   <?php
-  // Inclui o dashboard correto com base na permissão do usuário
-  if ($_SESSION['usuario']['permissao'] === 'SuperAdmin') {
-    include_once '../dashboards/dashboard_superadmin.php';
-  } elseif ($_SESSION['usuario']['permissao'] === 'Admin') {
-    include_once '../dashboards/dashboard_admin.php';
-  } elseif ($_SESSION['usuario']['permissao'] === 'Coordenador') {
-    include_once '../dashboards/dashboard_coordenador.php';
-  } else {
-    include_once '../dashboards/dashboard_corretor.php';
+  // Bloco para incluir o dashboard correto
+  if (isset($_SESSION['usuario']['permissao'])) {
+    switch ($_SESSION['usuario']['permissao']) {
+      case 'SuperAdmin':
+        include_once '../dashboards/dashboard_superadmin.php';
+        break;
+      case 'Admin':
+        include_once '../dashboards/dashboard_admin.php';
+        break;
+      case 'Coordenador':
+        include_once '../dashboards/dashboard_coordenador.php';
+        break;
+      default:
+        include_once '../dashboards/dashboard_corretor.php';
+        break;
+    }
   }
   ?>
 
@@ -69,7 +72,7 @@ $lista = $usuarioModel->listarPaginadoComImobiliaria($pagina_atual, $itens_por_p
         </a>
       </div>
 
-      <!-- Bloco para exibir alertas -->
+      <!-- Alertas -->
       <?php if (isset($_SESSION['sucesso'])): ?>
         <div class="alert alert-success alert-dismissible fade show" role="alert">
           <?= htmlspecialchars($_SESSION['sucesso']);
@@ -77,116 +80,95 @@ $lista = $usuarioModel->listarPaginadoComImobiliaria($pagina_atual, $itens_por_p
           <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
         </div>
       <?php endif; ?>
-      <?php if (isset($_SESSION['erro'])): ?>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-          <?= htmlspecialchars($_SESSION['erro']);
-          unset($_SESSION['erro']); ?>
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-        </div>
-      <?php endif; ?>
 
       <div class="card shadow-sm">
         <div class="card-body">
-          <div class="row mb-3">
-            <div class="col-md-4">
-              <div class="input-group">
-                <span class="input-group-text bg-white">
-                  <i class="fas fa-search text-secondary"></i>
-                </span>
-                <input type="text" id="searchInput" class="form-control"
-                  placeholder="Pesquisar usuário..." onkeyup="filterTable()" />
+          <!-- --- FORMULÁRIO DE FILTRO --- -->
+          <form method="GET" action="listar.php" class="mb-4">
+            <div class="row">
+              <div class="col-md-5">
+                <div class="input-group">
+                  <input type="text" id="searchInput" name="filtro" class="form-control"
+                    placeholder="Buscar por nome, email, permissão ou imobiliária..."
+                    value="<?= htmlspecialchars($filtro) ?>">
+                  <button class="btn btn-primary" type="submit">
+                    <i class="fas fa-search"></i>
+                  </button>
+                  <a href="listar.php" class="btn btn-outline-secondary" title="Limpar filtro">
+                    <i class="fas fa-times"></i>
+                  </a>
+                </div>
               </div>
             </div>
-          </div>
+          </form>
 
           <div class="table-responsive">
             <table id="usuarioTable" class="table table-hover table-striped align-middle">
-              <thead class="table-light">
+              <thead>
                 <tr>
-                  <th scope="col">Nome</th>
-                  <th scope="col">Email</th>
-                  <th scope="col">Permissão</th>
-                  <th scope="col">Imobiliária</th>
-                  <th scope="col" class="text-center">Ações</th>
+                  <th>Nome</th>
+                  <th>Email</th>
+                  <th>Permissão</th>
+                  <th>Imobiliária</th>
+                  <th class="text-center">Ações</th>
                 </tr>
               </thead>
               <tbody>
                 <?php if (!empty($lista)): ?>
                   <?php foreach ($lista as $u): ?>
                     <tr>
-                      <td><?= htmlspecialchars($u['nome'], ENT_QUOTES) ?></td>
-                      <td><?= htmlspecialchars($u['email'], ENT_QUOTES) ?></td>
-                      <td><?= htmlspecialchars($u['permissao'], ENT_QUOTES) ?></td>
-                      <td><?= htmlspecialchars($u['nome_imobiliaria'] ?? '---', ENT_QUOTES) ?></td>
+                      <td><?= htmlspecialchars($u['nome']) ?></td>
+                      <td><?= htmlspecialchars($u['email']) ?></td>
+                      <td><?= htmlspecialchars($u['permissao']) ?></td>
+                      <td><?= htmlspecialchars($u['nome_imobiliaria'] ?? '---') ?></td>
                       <td class="text-center">
-                        <div class="btn-group btn-group-sm" role="group" aria-label="Ações">
+                        <div class="btn-group btn-group-sm">
                           <a href="editar.php?id=<?= $u['id_usuario'] ?>"
-                            class="btn btn-outline-warning" title="Editar">
-                            <i class="fas fa-pen"></i>
-                          </a>
+                            class="btn btn-outline-warning" title="Editar"><i
+                              class="fas fa-pen"></i></a>
                           <a href="../../controllers/UsuarioController.php?excluir=<?= $u['id_usuario'] ?>"
                             class="btn btn-outline-danger" title="Excluir"
-                            onclick="return confirm('Deseja realmente excluir este usuário?')">
-                            <i class="fas fa-trash"></i>
-                          </a>
+                            onclick="return confirm('Deseja realmente excluir?')"><i
+                              class="fas fa-trash"></i></a>
                         </div>
                       </td>
                     </tr>
                   <?php endforeach; ?>
                 <?php else: ?>
                   <tr>
-                    <td colspan="5" class="text-center text-muted">
-                      Nenhum usuário encontrado.
-                    </td>
+                    <td colspan="5" class="text-center text-muted">Nenhum usuário encontrado.</td>
                   </tr>
                 <?php endif; ?>
               </tbody>
             </table>
           </div>
 
-          <!-- --- NOVO: CONTROLES DE PAGINAÇÃO --- -->
+          <!-- --- PAGINAÇÃO COM FILTRO --- -->
           <?php if ($total_paginas > 1): ?>
-            <nav aria-label="Navegação da página de usuários">
+            <nav>
               <ul class="pagination justify-content-center mt-4">
                 <li class="page-item <?= $pagina_atual <= 1 ? 'disabled' : '' ?>">
-                  <a class="page-link" href="?pagina=<?= $pagina_atual - 1 ?>">Anterior</a>
+                  <a class="page-link"
+                    href="?pagina=<?= $pagina_atual - 1 ?>&filtro=<?= urlencode($filtro) ?>">Anterior</a>
                 </li>
                 <?php for ($i = 1; $i <= $total_paginas; $i++): ?>
                   <li class="page-item <?= $i == $pagina_atual ? 'active' : '' ?>">
-                    <a class="page-link" href="?pagina=<?= $i ?>"><?= $i ?></a>
+                    <a class="page-link"
+                      href="?pagina=<?= $i ?>&filtro=<?= urlencode($filtro) ?>"><?= $i ?></a>
                   </li>
                 <?php endfor; ?>
                 <li class="page-item <?= $pagina_atual >= $total_paginas ? 'disabled' : '' ?>">
-                  <a class="page-link" href="?pagina=<?= $pagina_atual + 1 ?>">Próxima</a>
+                  <a class="page-link"
+                    href="?pagina=<?= $pagina_atual + 1 ?>&filtro=<?= urlencode($filtro) ?>">Próxima</a>
                 </li>
               </ul>
             </nav>
           <?php endif; ?>
-
         </div>
       </div>
     </div>
   </main>
-
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    function filterTable() {
-      // Essa função de filtro JS só funcionará na página atual.
-      // Uma busca completa no banco exigiria uma requisição AJAX.
-      const input = document.getElementById('searchInput');
-      const filter = input.value.toLowerCase();
-      const rows = document.querySelectorAll('#usuarioTable tbody tr');
-
-      rows.forEach(row => {
-        const nomeCell = row.querySelector('td:nth-child(1)');
-        const emailCell = row.querySelector('td:nth-child(2)');
-        const nomeText = nomeCell.textContent.toLowerCase();
-        const emailText = emailCell.textContent.toLowerCase();
-        row.style.display =
-          nomeText.includes(filter) || emailText.includes(filter) ? '' : 'none';
-      });
-    }
-  </script>
 </body>
 
 </html>
