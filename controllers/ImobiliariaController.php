@@ -1,5 +1,5 @@
 <?php
-// Inicia a sessão para garantir que o usuário está autenticado (se necessário futuramente)
+// Inicia a sessão para usar mensagens de feedback (ex: sucesso, erro)
 session_start();
 
 // Inclui o arquivo de configuração da conexão com o banco de dados
@@ -11,49 +11,54 @@ require_once '../models/Imobiliaria.php';
 // Cria uma instância da classe Imobiliaria, passando a conexão com o banco
 $imobiliaria = new Imobiliaria($connection);
 
-// Verifica se o formulário foi enviado via POST
+// --- ALTERADO ---
+// Rota para lidar com requisições POST (cadastrar, atualizar)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-    // Ação de cadastro de nova imobiliária
-    if ($_POST['action'] === 'cadastrar') {
-        // Obtém e limpa os dados do formulário
+    // Ação de cadastro
+    if (isset($_POST['action']) && $_POST['action'] === 'cadastrar') {
         $nome = trim($_POST['nome']);
         $cnpj = trim($_POST['cnpj']);
-
-        // Tenta cadastrar no banco de dados
         if ($imobiliaria->cadastrar($nome, $cnpj)) {
-            // Redireciona para a listagem com mensagem de sucesso
-            header('Location: ../views/imobiliarias/listar_imobiliaria.php?sucesso=1');
+            $_SESSION['sucesso'] = "Imobiliária cadastrada com sucesso!";
         } else {
-            // Exibe erro se falhar
-            echo "Erro ao cadastrar imobiliária.";
+            $_SESSION['erro'] = "Erro ao cadastrar imobiliária.";
         }
     }
 
-    // Ação de atualização de imobiliária existente
-    if ($_POST['action'] === 'atualizar') {
+    // Ação de atualização
+    if (isset($_POST['action']) && $_POST['action'] === 'atualizar') {
         $id = $_POST['id'];
         $nome = trim($_POST['nome']);
         $cnpj = trim($_POST['cnpj']);
-
-        // Tenta atualizar no banco
         if ($imobiliaria->atualizar($id, $nome, $cnpj)) {
-            header('Location: ../views/imobiliarias/listar_imobiliaria.php?atualizado=1');
+            $_SESSION['sucesso'] = "Imobiliária atualizada com sucesso!";
         } else {
-            echo "Erro ao atualizar imobiliária.";
+            $_SESSION['erro'] = "Erro ao atualizar imobiliária.";
         }
     }
+    // Redireciona para a listagem após a ação
+    header('Location: ../views/imobiliarias/listar_imobiliaria.php');
+    exit;
 }
 
-// Ação para excluir uma imobiliária (passado por GET)
+// --- ALTERADO ---
+// Rota para lidar com requisições GET (excluir)
 if (isset($_GET['excluir'])) {
     $id = $_GET['excluir'];
-    
-    if ($imobiliaria->excluir($id)) {
-        // Redireciona após exclusão
-        header('Location: ../views/imobiliarias/listar_imobiliaria.php?excluido=1');
+
+    // VERIFICAÇÃO: Checa se existem usuários vinculados antes de excluir
+    if ($imobiliaria->temUsuariosVinculados($id)) {
+        // Se houver, define mensagem de erro e não exclui
+        $_SESSION['erro'] = "Não é possível excluir esta imobiliária, pois existem usuários vinculados a ela.";
     } else {
-        echo "Erro ao excluir imobiliária.";
+        // Se não houver, prossegue com a exclusão
+        if ($imobiliaria->excluir($id)) {
+            $_SESSION['sucesso'] = "Imobiliária excluída com sucesso!";
+        } else {
+            $_SESSION['erro'] = "Ocorreu um erro ao tentar excluir a imobiliária.";
+        }
     }
+    // Redireciona para a listagem após a tentativa de exclusão
+    header('Location: ../views/imobiliarias/listar_imobiliaria.php');
+    exit;
 }
-?>
