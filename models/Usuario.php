@@ -1,16 +1,19 @@
 <?php
-class Usuario {
+class Usuario
+{
     private $conn; // Armazena a conexão com o banco de dados
 
     // Construtor que recebe a conexão como parâmetro
-    public function __construct($conn) {
+    public function __construct($conn)
+    {
         $this->conn = $conn;
     }
 
     /**
      * Cadastra um novo usuário no banco
      */
-    public function cadastrar($nome, $email, $cpf, $telefone, $senha, $permissao, $id_imobiliaria, $creci = null, $foto = null) {
+    public function cadastrar($nome, $email, $cpf, $telefone, $senha, $permissao, $id_imobiliaria, $creci = null, $foto = null)
+    {
         $senha_hash = md5($senha); // Criptografa a senha (uso de md5 não é recomendado para produção)
         $stmt = $this->conn->prepare("INSERT INTO usuario (nome, email, cpf, telefone, senha, permissao, id_imobiliaria, creci, foto) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->bind_param("ssssssiss", $nome, $email, $cpf, $telefone, $senha_hash, $permissao, $id_imobiliaria, $creci, $foto);
@@ -20,7 +23,8 @@ class Usuario {
     /**
      * Faz login com email e senha
      */
-    public function login($email, $senha) {
+    public function login($email, $senha)
+    {
         $stmt = $this->conn->prepare("SELECT * FROM usuario WHERE email = ?");
 
         if (!$stmt) {
@@ -47,7 +51,8 @@ class Usuario {
     /**
      * Lista todos os usuários com o nome da imobiliária associada
      */
-    public function listarTodosComImobiliaria() {
+    public function listarTodosComImobiliaria()
+    {
         $query = "
             SELECT u.*, i.nome AS nome_imobiliaria
             FROM usuario u
@@ -61,7 +66,8 @@ class Usuario {
     /**
      * Busca um único usuário pelo ID
      */
-    public function buscarPorId($id) {
+    public function buscarPorId($id)
+    {
         $stmt = $this->conn->prepare("SELECT * FROM usuario WHERE id_usuario = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
@@ -71,16 +77,21 @@ class Usuario {
     /**
      * Atualiza os dados de um usuário existente
      */
-    public function atualizar($id, $nome, $email, $cpf, $telefone, $permissao, $id_imobiliaria, $creci = null, $foto = null) {
+    public function atualizar($id, $nome, $email, $cpf, $telefone, $permissao, $id_imobiliaria, $creci = null, $foto = null)
+    {
         $stmt = $this->conn->prepare("UPDATE usuario SET nome = ?, email = ?, cpf = ?, telefone = ?, permissao = ?, id_imobiliaria = ?, creci = ?, foto = ? WHERE id_usuario = ?");
-        $stmt->bind_param("ssssssssi", $nome, $email, $cpf, $telefone, $permissao, $id_imobiliaria, $creci, $foto, $id);
+
+        // --- CORRIGIDO --- 
+        // O tipo de dado para 'id_imobiliaria' foi ajustado de 's' (string) para 'i' (integer).
+        $stmt->bind_param("sssssissi", $nome, $email, $cpf, $telefone, $permissao, $id_imobiliaria, $creci, $foto, $id);
         return $stmt->execute();
     }
 
     /**
      * Exclui um usuário pelo ID
      */
-    public function excluir($id) {
+    public function excluir($id)
+    {
         $stmt = $this->conn->prepare("DELETE FROM usuario WHERE id_usuario = ?");
         $stmt->bind_param("i", $id);
         return $stmt->execute();
@@ -89,7 +100,8 @@ class Usuario {
     /**
      * Lista todos os usuários de uma determinada imobiliária
      */
-    public function listarPorImobiliaria($id_imobiliaria) {
+    public function listarPorImobiliaria($id_imobiliaria)
+    {
         $stmt = $this->conn->prepare("SELECT * FROM usuario WHERE id_imobiliaria = ? ORDER BY nome ASC");
         $stmt->bind_param("i", $id_imobiliaria);
         $stmt->execute();
@@ -99,7 +111,8 @@ class Usuario {
     /**
      * Retorna todas as imobiliárias que possuem ao menos um usuário
      */
-    public function listarImobiliariasComUsuarios() {
+    public function listarImobiliariasComUsuarios()
+    {
         $query = "
             SELECT i.id_imobiliaria, i.nome 
             FROM imobiliaria i
@@ -116,7 +129,8 @@ class Usuario {
      * @param int $id_usuario
      * @return bool true se atualizou, false caso contrário
      */
-    public function removerImobiliaria($id_usuario) {
+    public function removerImobiliaria($id_usuario)
+    {
         $stmt = $this->conn->prepare("
             UPDATE usuario
             SET id_imobiliaria = NULL
@@ -126,11 +140,12 @@ class Usuario {
         return $stmt->execute();
     }
 
-    
+
     /**
      * Vincula um usuário a uma imobiliária
      */
-    public function vincularImobiliaria($id_usuario, $id_imobiliaria) {
+    public function vincularImobiliaria($id_usuario, $id_imobiliaria)
+    {
         $stmt = $this->conn->prepare("
             UPDATE usuario
             SET id_imobiliaria = ?
@@ -139,8 +154,4 @@ class Usuario {
         $stmt->bind_param("ii", $id_imobiliaria, $id_usuario);
         return $stmt->execute();
     }
-
-
-    
 }
-?>
