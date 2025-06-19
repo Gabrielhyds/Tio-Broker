@@ -11,9 +11,6 @@ class Imobiliaria
 
     /**
      * Cadastra uma nova imobiliária no banco de dados
-     * @param string $nome Nome da imobiliária
-     * @param string $cnpj CNPJ da imobiliária
-     * @return bool Sucesso ou falha no cadastro
      */
     public function cadastrar($nome, $cnpj)
     {
@@ -22,29 +19,50 @@ class Imobiliaria
         return $stmt->execute();
     }
 
+    // --- NOVO ---
     /**
-     * Lista todas as imobiliárias cadastradas
-     * Retorna também a quantidade de usuários vinculados a cada imobiliária
-     * @return array Lista de imobiliárias com total de usuários
+     * Conta o total de imobiliárias cadastradas.
+     * @return int Total de imobiliárias.
      */
-    public function listarTodas()
+    public function contarTotal()
     {
+        $resultado = $this->conn->query("SELECT COUNT(id_imobiliaria) as total FROM imobiliaria");
+        $dados = $resultado->fetch_assoc();
+        return (int)($dados['total'] ?? 0);
+    }
+
+    // --- ALTERADO ---
+    /**
+     * Lista as imobiliárias de forma paginada.
+     * @param int $pagina_atual O número da página atual.
+     * @param int $limite O número de itens por página.
+     * @return array Lista de imobiliárias para a página atual.
+     */
+    public function listarPaginado($pagina_atual, $limite)
+    {
+        // Calcula o offset para a consulta SQL
+        $offset = ($pagina_atual - 1) * $limite;
+
         $query = "
             SELECT i.*, COUNT(u.id_usuario) as total_usuarios
             FROM imobiliaria i
             LEFT JOIN usuario u ON i.id_imobiliaria = u.id_imobiliaria
             GROUP BY i.id_imobiliaria
             ORDER BY i.nome ASC
+            LIMIT ? OFFSET ?
         ";
-        $resultado = $this->conn->query($query);
-        if (!$resultado) return [];
-        return $resultado->fetch_all(MYSQLI_ASSOC);
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bind_param("ii", $limite, $offset);
+        $stmt->execute();
+
+        $resultado = $stmt->get_result();
+        return $resultado ? $resultado->fetch_all(MYSQLI_ASSOC) : [];
     }
+
 
     /**
      * Exclui uma imobiliária pelo ID
-     * @param int $id ID da imobiliária
-     * @return bool Sucesso ou falha na exclusão
      */
     public function excluir($id)
     {
@@ -55,8 +73,6 @@ class Imobiliaria
 
     /**
      * Busca uma imobiliária específica pelo ID
-     * @param int $id ID da imobiliária
-     * @return array|null Dados da imobiliária ou null se não encontrada
      */
     public function buscarPorId($id)
     {
@@ -68,10 +84,6 @@ class Imobiliaria
 
     /**
      * Atualiza os dados de uma imobiliária existente
-     * @param int $id ID da imobiliária
-     * @param string $nome Novo nome
-     * @param string $cnpj Novo CNPJ
-     * @return bool Sucesso ou falha na atualização
      */
     public function atualizar($id, $nome, $cnpj)
     {
@@ -80,11 +92,8 @@ class Imobiliaria
         return $stmt->execute();
     }
 
-    // --- NOVO ---
     /**
      * Verifica se uma imobiliária possui usuários vinculados.
-     * @param int $id_imobiliaria O ID da imobiliária a ser verificada.
-     * @return bool Retorna true se houver usuários, false caso contrário.
      */
     public function temUsuariosVinculados($id_imobiliaria)
     {
@@ -92,7 +101,17 @@ class Imobiliaria
         $stmt->bind_param("i", $id_imobiliaria);
         $stmt->execute();
         $result = $stmt->get_result()->fetch_assoc();
-        // Retorna true se a contagem for maior que 0.
         return $result['total'] > 0;
+    }
+
+    /**
+     * Lista todas as imobiliárias para selects (sem paginação).
+     */
+    public function listarTodas()
+    {
+        $query = "SELECT id_imobiliaria, nome FROM imobiliaria ORDER BY nome ASC";
+        $resultado = $this->conn->query($query);
+        if (!$resultado) return [];
+        return $resultado->fetch_all(MYSQLI_ASSOC);
     }
 }

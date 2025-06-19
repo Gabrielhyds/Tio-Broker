@@ -48,8 +48,45 @@ class Usuario
         return false; // Senha incorreta
     }
 
+    // --- NOVO ---
     /**
-     * Lista todos os usuários com o nome da imobiliária associada
+     * Conta o total de usuários cadastrados.
+     * @return int Total de usuários.
+     */
+    public function contarTotal()
+    {
+        $resultado = $this->conn->query("SELECT COUNT(id_usuario) as total FROM usuario");
+        $dados = $resultado->fetch_assoc();
+        return (int)($dados['total'] ?? 0);
+    }
+
+    // --- ALTERADO ---
+    /**
+     * Lista os usuários de forma paginada com o nome da imobiliária.
+     * @param int $pagina_atual O número da página atual.
+     * @param int $limite O número de itens por página.
+     * @return array Lista de usuários para a página atual.
+     */
+    public function listarPaginadoComImobiliaria($pagina_atual, $limite)
+    {
+        $offset = ($pagina_atual - 1) * $limite;
+        $query = "
+            SELECT u.*, i.nome AS nome_imobiliaria
+            FROM usuario u
+            LEFT JOIN imobiliaria i ON u.id_imobiliaria = i.id_imobiliaria
+            ORDER BY u.nome ASC
+            LIMIT ? OFFSET ?
+        ";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bind_param("ii", $limite, $offset);
+        $stmt->execute();
+        $resultado = $stmt->get_result();
+        return $resultado ? $resultado->fetch_all(MYSQLI_ASSOC) : [];
+    }
+
+
+    /**
+     * Lista todos os usuários com o nome da imobiliária associada (para selects e outros usos sem paginação)
      */
     public function listarTodosComImobiliaria()
     {
@@ -80,9 +117,6 @@ class Usuario
     public function atualizar($id, $nome, $email, $cpf, $telefone, $permissao, $id_imobiliaria, $creci = null, $foto = null)
     {
         $stmt = $this->conn->prepare("UPDATE usuario SET nome = ?, email = ?, cpf = ?, telefone = ?, permissao = ?, id_imobiliaria = ?, creci = ?, foto = ? WHERE id_usuario = ?");
-
-        // --- CORRIGIDO --- 
-        // O tipo de dado para 'id_imobiliaria' foi ajustado de 's' (string) para 'i' (integer).
         $stmt->bind_param("sssssissi", $nome, $email, $cpf, $telefone, $permissao, $id_imobiliaria, $creci, $foto, $id);
         return $stmt->execute();
     }
