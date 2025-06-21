@@ -1,31 +1,51 @@
 /* Caixa principal do chat */
 .chat-box {
-    border: 1px solid #dee2e6;       /* Borda cinza clara */
-    height: 400px;                   /* Altura fixa da caixa */
-    overflow-y: auto;                /* Adiciona rolagem vertical se o conteúdo ultrapassar */
-    padding: 15px;                   /* Espaçamento interno */
-    background: #f8f9fa;             /* Fundo cinza bem claro */
+    border: 1px solid #dee2e6;
+    /* Borda cinza clara */
+    height: 400px;
+    /* Altura fixa da caixa */
+    overflow-y: auto;
+    /* Adiciona rolagem vertical se o conteúdo ultrapassar */
+    padding: 15px;
+    /* Espaçamento interno */
+    background: #f8f9fa;
+    /* Fundo cinza bem claro */
 }
 
 /* Estilo base para cada mensagem */
 .mensagem {
-    margin-bottom: 10px;            /* Espaço entre mensagens */
-    max-width: 75%;                 /* Mensagens não passam de 75% da largura */
-    padding: 10px 15px;             /* Espaço interno na mensagem */
-    border-radius: 15px;            /* Cantos arredondados */
-    clear: both;                    /* Garante que a próxima mensagem não fique ao lado da anterior */
+    margin-bottom: 10px;
+    /* Espaço entre mensagens */
+    max-width: 75%;
+    /* Mensagens não passam de 75% da largura */
+    padding: 10px 15px;
+    /* Espaço interno na mensagem */
+    border-radius: 15px;
+    /* Cantos arredondados */
+    clear: both;
+    /* Garante que a próxima mensagem não fique ao lado da anterior */
 }
 
 /* Estilo das mensagens enviadas pelo usuário logado (alinhadas à direita) */
 .mensagem-direita {
-    background-color: #d1e7dd;      /* Fundo verde claro */
-    float: right;                   /* Alinha à direita */
-    text-align: right;              /* Texto alinhado à direita */
+    background-color: #d1e7dd;
+    /* Fundo verde claro */
+    float: right;
+    /* Alinha à direita */
+    text-align: right;
+    /* Texto alinhado à direita */
 }
 
 /* Estilo das mensagens recebidas (alinhadas à esquerda) */
 .mensagem-esquerda {
-    background-color: #e9ecef;      /* Fundo cinza claro */
-    float: left;                    /* Alinha à esquerda */
-    text-align: left;               /* Texto alinhado à esquerda */
+    background-color: #e9ecef;
+    /* Fundo cinza claro */
+    float: left;
+    /* Alinha à esquerda */
+    text-align: left;
+    /* Texto alinhado à esquerda */
+}
+
+.menu-acao {
+    min-width: 120px;
 }
