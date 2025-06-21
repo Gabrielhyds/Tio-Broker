@@ -52,10 +52,11 @@
 
         <div>
             <label for="id_imobiliaria" class="block font-medium mb-1">Imobiliária</label>
-            <select name="id_imobiliaria" id="id_imobiliaria" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring focus:ring-blue-200" required>
-                <option value="">Selecione a Imobiliária</option>
-                <?php foreach ($listaImobiliarias as $i): ?>
-                    <option value="<?= $i['id_imobiliaria'] ?>"><?= htmlspecialchars($i['nome']) ?></option>
+            <select name="id_imobiliaria" id="id_imobiliaria" class="w-full border rounded px-3 py-2">
+                <?php foreach ($listaImobiliarias as $imob): ?>
+                    <option value="<?= $imob['id_imobiliaria'] ?>">
+                        <?= htmlspecialchars($imob['nome']) ?>
+                    </option>
                 <?php endforeach; ?>
             </select>
         </div>

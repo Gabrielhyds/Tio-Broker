@@ -47,21 +47,31 @@ class Usuario
     /**
      * Conta o total de usuários ativos (não excluídos), com filtro opcional.
      */
-    public function contarTotal($filtro = null)
+    public function contarTotal($filtro = null, $permissao = 'Admin', $id_imobiliaria = null)
     {
-        // --- CORRIGIDO --- Adicionado `i.is_deleted = 0` na junção para mais robustez
         $sql = "SELECT COUNT(u.id_usuario) as total 
-                FROM usuario u
-                LEFT JOIN imobiliaria i ON u.id_imobiliaria = i.id_imobiliaria AND i.is_deleted = 0
-                WHERE u.is_deleted = 0";
+            FROM usuario u
+            LEFT JOIN imobiliaria i ON u.id_imobiliaria = i.id_imobiliaria AND i.is_deleted = 0
+            WHERE u.is_deleted = 0";
+
         $params = [];
         $types = "";
+
+        // Se não for SuperAdmin, restringe por imobiliária
+        if ($permissao !== 'SuperAdmin' && $id_imobiliaria !== null) {
+            $sql .= " AND u.id_imobiliaria = ?";
+            $params[] = $id_imobiliaria;
+            $types .= "i";
+        }
 
         if (!empty($filtro)) {
             $sql .= " AND (u.nome LIKE ? OR u.email LIKE ? OR u.permissao LIKE ? OR i.nome LIKE ?)";
             $searchTerm = "%{$filtro}%";
-            $params = [$searchTerm, $searchTerm, $searchTerm, $searchTerm];
-            $types = "ssss";
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+            $types .= "ssss";
         }
 
         $stmt = $this->conn->prepare($sql);
@@ -76,24 +86,33 @@ class Usuario
     /**
      * Lista os usuários ativos de forma paginada, com filtro opcional.
      */
-    public function listarPaginadoComImobiliaria($pagina_atual, $limite, $filtro = null)
+    public function listarPaginadoComImobiliaria($pagina_atual, $limite, $filtro = null, $permissao = 'Admin', $id_imobiliaria = null)
     {
         $offset = ($pagina_atual - 1) * $limite;
-        // --- CORRIGIDO --- Adicionado `i.is_deleted = 0` na junção para mais robustez
         $sql = "
-            SELECT u.*, i.nome AS nome_imobiliaria
-            FROM usuario u
-            LEFT JOIN imobiliaria i ON u.id_imobiliaria = i.id_imobiliaria AND i.is_deleted = 0
-            WHERE u.is_deleted = 0
-        ";
+        SELECT u.*, i.nome AS nome_imobiliaria
+        FROM usuario u
+        LEFT JOIN imobiliaria i ON u.id_imobiliaria = i.id_imobiliaria AND i.is_deleted = 0
+        WHERE u.is_deleted = 0
+    ";
         $params = [];
         $types = '';
+
+        // Adiciona filtro por imobiliária se não for SuperAdmin
+        if ($permissao !== 'SuperAdmin' && $id_imobiliaria !== null) {
+            $sql .= " AND u.id_imobiliaria = ?";
+            $params[] = $id_imobiliaria;
+            $types .= "i";
+        }
 
         if (!empty($filtro)) {
             $sql .= " AND (u.nome LIKE ? OR u.email LIKE ? OR u.permissao LIKE ? OR i.nome LIKE ?)";
             $searchTerm = "%{$filtro}%";
-            $params = [$searchTerm, $searchTerm, $searchTerm, $searchTerm];
-            $types = "ssss";
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+            $types .= "ssss";
         }
 
         $sql .= " ORDER BY u.nome ASC LIMIT ? OFFSET ?";
@@ -105,8 +124,10 @@ class Usuario
         $stmt->bind_param($types, ...$params);
         $stmt->execute();
         $resultado = $stmt->get_result();
+
         return $resultado ? $resultado->fetch_all(MYSQLI_ASSOC) : [];
     }
+
 
     /**
      * Lista todos os usuários ativos com o nome da imobiliária associada.

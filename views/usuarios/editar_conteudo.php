@@ -69,11 +69,10 @@
 
             <div>
                 <label for="id_imobiliaria" class="block text-sm font-medium text-gray-700">Imobiliária</label>
-                <select id="id_imobiliaria" name="id_imobiliaria" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
-                    <option value="">-- Selecione --</option>
+                <select name="id_imobiliaria">
                     <?php foreach ($listaImobiliarias as $imob): ?>
-                        <option value="<?= $imob['id_imobiliaria'] ?>" <?= $dados['id_imobiliaria'] == $imob['id_imobiliaria'] ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($imob['nome'], ENT_QUOTES) ?>
+                        <option value="<?= $imob['id_imobiliaria'] ?>" <?= $usuario['id_imobiliaria'] == $imob['id_imobiliaria'] ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($imob['nome']) ?>
                         </option>
                     <?php endforeach; ?>
                 </select>

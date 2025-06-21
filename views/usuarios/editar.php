@@ -1,29 +1,29 @@
 <?php
 session_start();
+require_once '../../config/config.php';
+require_once '../../models/Usuario.php';
+require_once '../../models/Imobiliaria.php';
 
-if (!isset($_SESSION['usuario'])) {
-  header('Location: ../auth/login.php');
-  exit;
-}
-
-$activeMenu = 'usuario_listar';
-
-require_once __DIR__ . '/../../config/config.php';
-require_once __DIR__ . '/../../models/Usuario.php';
-require_once __DIR__ . '/../../models/Imobiliaria.php';
+$id = $_GET['id'] ?? null;
+$salvoComSucesso = $_GET['sucesso'] ?? null;
 
 $usuarioModel = new Usuario($connection);
 $imobiliariaModel = new Imobiliaria($connection);
 
-$idUsuario = intval($_GET['id'] ?? 0);
-$dados = $usuarioModel->buscarPorId($idUsuario);
-if (!$dados) {
-  header('Location: listar.php');
-  exit;
+$usuario = $usuarioModel->buscarPorId($id);
+$dados = $usuario; // se o conteúdo usa $dados
+
+$usuarioLogado = $_SESSION['usuario'];
+$permissao = $usuarioLogado['permissao'];
+$id_imobiliaria_usuario = $usuarioLogado['id_imobiliaria'];
+
+if ($permissao === 'SuperAdmin') {
+  $listaImobiliarias = $imobiliariaModel->listarTodas();
+} else {
+  $imob = $imobiliariaModel->buscarPorId($id_imobiliaria_usuario);
+  $listaImobiliarias = $imob ? [$imob] : [];
 }
 
-$listaImobiliarias = $imobiliariaModel->listarTodas();
-$salvoComSucesso = isset($_GET['salvo']) && $_GET['salvo'] == 1;
-
-$conteudo = __DIR__ . '/editar_conteudo.php';
+$activeMenu = 'usuario_listar';
+$conteudo = 'editar_conteudo.php';
 include '../layout/template_base.php';
