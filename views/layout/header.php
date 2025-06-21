@@ -1,3 +1,8 @@
+<?php
+// Caminho ajustado para incluir o arquivo de rotas
+require_once __DIR__ . '/../../config/rotas.php';
+
+?>
 <header class="flex items-center justify-between p-4 bg-white border-b border-gray-200">
     <div class="flex items-center space-x-4">
         <button id="open-sidebar-btn" class="lg:hidden text-gray-600 hover:text-gray-800">
@@ -22,7 +27,7 @@
                 <hr class="my-1">
                 <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Meu Perfil</a>
                 <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Configurações</a>
-                <a href="../../controllers/LogoutController.php" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Sair</a>
+                <a href="<?= BASE_URL ?>controllers/LogoutController.php" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Sair</a>
             </div>
         </div>
     </div>
