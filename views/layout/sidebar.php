@@ -11,16 +11,16 @@
     <nav class="space-y-4 sidebar-scroll h-full pb-20 overflow-y-auto">
         <div>
             <h3 class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Início</h3>
-            <a href="/dashboards/index.php" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
+            <a href="../dashboards/index.php" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
                 <i class="fas fa-plus w-6 text-center"></i><span class="ml-2">Resumo</span>
             </a>
         </div>
         <div>
             <h3 class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Imobiliária</h3>
-            <a href="/imobiliarias/cadastrar_imobiliaria.php" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
+            <a href="../imobiliarias/cadastrar_imobiliaria.php" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
                 <i class="fas fa-plus w-6 text-center"></i><span class="ml-2">Cadastrar</span>
             </a>
-            <a href="/imobiliarias/listar_imobiliaria.php" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
+            <a href="../imobiliarias/listar_imobiliaria.php" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
                 <i class="fas fa-building w-6 text-center"></i><span class="ml-2">Ver Imobiliárias</span>
             </a>
         </div>
