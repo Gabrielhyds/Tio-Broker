@@ -11,7 +11,7 @@ $username = "root";
 $password = "";
 
 
-//atenção
+//atenção crontab ativado
 // Nesse proximo bloco ele cria uma conexão com o banco de dados 
 // aqui usamos uma função do PHP para conectar o banco chamada "mysqli"
 
