@@ -10,11 +10,6 @@ $databasename = "tio_Broker";
 $username = "root";
 $password = "";
 
-///TESTANDO O GIT PULL
-
-///TESTANDO O GIT PULL 2
-
-///TESTANDO a porra do GIT PULL 2
 // Nesse proximo bloco ele cria uma conexão com o banco de dados 
 // aqui usamos uma função do PHP para conectar o banco chamada "mysqli"
 
