@@ -11,6 +11,7 @@ if (!isset($cliente) || empty($cliente)) {
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -27,14 +28,16 @@ if (!isset($cliente) || empty($cliente)) {
             color: #343a40;
             font-size: 0.95rem;
         }
+
         .profile-container {
             background-color: #ffffff;
             padding: 30px 35px;
             border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.07);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
             margin-top: 30px;
             margin-bottom: 30px;
         }
+
         .profile-header {
             display: flex;
             align-items: center;
@@ -42,6 +45,7 @@ if (!isset($cliente) || empty($cliente)) {
             padding-bottom: 25px;
             border-bottom: 1px solid #e9ecef;
         }
+
         .profile-header img {
             width: 100px;
             height: 100px;
@@ -49,8 +53,9 @@ if (!isset($cliente) || empty($cliente)) {
             border-radius: 50%;
             margin-right: 20px;
             border: 3px solid #f8f9fa;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
+
         .profile-header .icon-placeholder {
             width: 100px;
             height: 100px;
@@ -63,23 +68,33 @@ if (!isset($cliente) || empty($cliente)) {
             align-items: center;
             justify-content: center;
             border: 3px solid #f8f9fa;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
+
         .profile-header h2 {
             color: #2c3e50;
             font-weight: 700;
             margin-bottom: 5px;
             font-size: 1.7rem;
         }
+
         .profile-header p {
             color: #6c757d;
             margin-bottom: 5px;
             font-size: 0.88rem;
         }
-        .info-section, .history-section, .documents-section, .actions-section {
-            margin-bottom: 30px; 
+
+        .info-section,
+        .history-section,
+        .documents-section,
+        .actions-section {
+            margin-bottom: 30px;
         }
-        .info-section h5, .history-section h5, .documents-section h5, .actions-section h5 {
+
+        .info-section h5,
+        .history-section h5,
+        .documents-section h5,
+        .actions-section h5 {
             color: #343a40;
             font-weight: 600;
             font-size: 1.05rem;
@@ -88,26 +103,35 @@ if (!isset($cliente) || empty($cliente)) {
             border-bottom: 2px solid #e9ecef;
             display: inline-block;
         }
-        .actions-section .card-header h5 { /* Para o card de ações não ter a borda do título */
-             border-bottom: none;
-             margin-bottom: 0;
+
+        .actions-section .card-header h5 {
+            /* Para o card de ações não ter a borda do título */
+            border-bottom: none;
+            margin-bottom: 0;
         }
-        .info-section h5 i, .history-section h5 i, .documents-section h5 i, .actions-section h5 i {
+
+        .info-section h5 i,
+        .history-section h5 i,
+        .documents-section h5 i,
+        .actions-section h5 i {
             margin-right: 8px;
             color: #495057;
         }
+
         .info-item {
             margin-bottom: 12px;
             line-height: 1.5;
             display: flex;
             flex-wrap: wrap;
         }
+
         .info-item strong {
             color: #495057;
             padding-right: 8px;
             font-weight: 500;
             flex-shrink: 0;
         }
+
         .info-item span {
             word-break: break-word;
         }
@@ -120,29 +144,45 @@ if (!isset($cliente) || empty($cliente)) {
             border-radius: 8px;
             margin-bottom: 15px;
         }
+
         .history-entry .meta {
             font-size: 0.85rem;
             color: #6c757d;
             margin-bottom: 8px;
         }
+
         .history-entry .meta .badge {
             font-size: 0.75rem;
         }
+
         .history-entry p {
             margin-bottom: 0;
             line-height: 1.6;
             white-space: pre-wrap;
         }
-        .border-primary-subtle { border-left-color: #0d6efd !important; }
-        .border-success-subtle { border-left-color: #198754 !important; }
-        .border-warning-subtle { border-left-color: #ffc107 !important; }
+
+        .border-primary-subtle {
+            border-left-color: #0d6efd !important;
+        }
+
+        .border-success-subtle {
+            border-left-color: #198754 !important;
+        }
+
+        .border-warning-subtle {
+            border-left-color: #ffc107 !important;
+        }
+
         .documents-section .card-header h5 {
             border-bottom: none;
             margin-bottom: 0;
             font-size: 1.15rem;
         }
-        .form-container { /* Para os formulários que serão mostrados/ocultos */
-            display: none; /* Começam ocultos */
+
+        .form-container {
+            /* Para os formulários que serão mostrados/ocultos */
+            display: none;
+            /* Começam ocultos */
         }
 
         .action-buttons-footer {
@@ -153,6 +193,7 @@ if (!isset($cliente) || empty($cliente)) {
             justify-content: space-between;
             flex-wrap: wrap;
         }
+
         .action-buttons-footer .btn-group-start a,
         .action-buttons-footer .btn-group-end a {
             margin-left: 8px;
@@ -160,42 +201,111 @@ if (!isset($cliente) || empty($cliente)) {
             font-weight: 500;
             font-size: 0.9rem;
         }
+
         .action-buttons-footer .btn-group-start a:first-child,
         .action-buttons-footer .btn-group-end a:first-child {
             margin-left: 0;
         }
 
-        @media (max-width: 991px) { 
-            .info-item strong { min-width: 130px; }
+        @media (max-width: 991px) {
+            .info-item strong {
+                min-width: 130px;
+            }
         }
 
         @media (max-width: 768px) {
-            .profile-header { flex-direction: column; text-align: center; }
-            .profile-header img, .profile-header .icon-placeholder { margin-right: 0; margin-bottom: 15px; }
-            .info-item { flex-direction: column; }
-            .info-item strong { min-width: auto; margin-bottom: 3px; }
-            .action-buttons-footer { flex-direction: column; }
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .profile-header img,
+            .profile-header .icon-placeholder {
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+
+            .info-item {
+                flex-direction: column;
+            }
+
+            .info-item strong {
+                min-width: auto;
+                margin-bottom: 3px;
+            }
+
+            .action-buttons-footer {
+                flex-direction: column;
+            }
+
             .action-buttons-footer .btn-group-start,
             .action-buttons-footer .btn-group-end {
-                width: 100%; display: flex; flex-direction: column; margin-bottom: 10px;
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                margin-bottom: 10px;
             }
+
             .action-buttons-footer .btn-group-start a,
             .action-buttons-footer .btn-group-end a {
-                width: 100%; margin-left: 0; margin-bottom: 8px;
+                width: 100%;
+                margin-left: 0;
+                margin-bottom: 8px;
             }
         }
-        .badge { font-size: 0.8rem; padding: 0.4em 0.7em; font-weight: 500; }
-        .badge-potencial { background-color: rgba(25, 135, 84, 0.1); color: #0f5132; border: 1px solid rgba(25, 135, 84, 0.3); }
-        .badge-nao-potencial { background-color: rgba(220, 53, 69, 0.1); color: #842029; border: 1px solid rgba(220, 53, 69, 0.3); }
-        
-        .btn-outline-secondary { color: #495057; border-color: #ced4da; }
-        .btn-outline-secondary:hover { background-color: #f8f9fa; color: #2c3e50; border-color: #adb5bd;}
-        .btn-warning { background-color: #ffc107; border-color: #ffc107; color: #212529;}
-        .btn-warning:hover { background-color: #e0a800; border-color: #d39e00;}
-        .btn-danger { background-color: #dc3545; border-color: #dc3545;}
-        .btn-danger:hover { background-color: #bb2d3b; border-color: #b02a37;}
+
+        .badge {
+            font-size: 0.8rem;
+            padding: 0.4em 0.7em;
+            font-weight: 500;
+        }
+
+        .badge-potencial {
+            background-color: rgba(25, 135, 84, 0.1);
+            color: #0f5132;
+            border: 1px solid rgba(25, 135, 84, 0.3);
+        }
+
+        .badge-nao-potencial {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: #842029;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-outline-secondary {
+            color: #495057;
+            border-color: #ced4da;
+        }
+
+        .btn-outline-secondary:hover {
+            background-color: #f8f9fa;
+            color: #2c3e50;
+            border-color: #adb5bd;
+        }
+
+        .btn-warning {
+            background-color: #ffc107;
+            border-color: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background-color: #e0a800;
+            border-color: #d39e00;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background-color: #bb2d3b;
+            border-color: #b02a37;
+        }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="profile-container">
@@ -207,14 +317,14 @@ if (!isset($cliente) || empty($cliente)) {
                     <i class="bi bi-pencil-square"></i> Editar Cliente
                 </a>
                 <a href="index.php?controller=cliente&action=excluir&id_cliente=<?= htmlspecialchars($cliente['id_cliente']) ?>" class="btn btn-sm btn-danger"
-                   onclick="return confirm('Tem certeza que deseja excluir o cliente \'<?= htmlspecialchars(addslashes($cliente['nome'])) ?>\'? Esta ação não pode ser desfeita.');">
-                   <i class="bi bi-trash-fill"></i> Excluir Cliente
+                    onclick="return confirm('Tem certeza que deseja excluir o cliente \'<?= htmlspecialchars(addslashes($cliente['nome'])) ?>\'? Esta ação não pode ser desfeita.');">
+                    <i class="bi bi-trash-fill"></i> Excluir Cliente
                 </a>
             </div>
             <div class="profile-header">
                 <?php if (!empty($cliente['foto'])): ?>
                     <img src="<?= htmlspecialchars($cliente['foto']) ?>" alt="Foto de <?= htmlspecialchars($cliente['nome']) ?>"
-                         onerror="this.style.display='none'; document.getElementById('icon_placeholder_cliente').style.display='flex';">
+                        onerror="this.style.display='none'; document.getElementById('icon_placeholder_cliente').style.display='flex';">
                     <div id="icon_placeholder_cliente" class="icon-placeholder" style="display:none;"><i class="bi bi-person-bounding-box"></i></div>
                 <?php else: ?>
                     <div id="icon_placeholder_cliente" class="icon-placeholder"><i class="bi bi-person-bounding-box"></i></div>
@@ -229,25 +339,25 @@ if (!isset($cliente) || empty($cliente)) {
             </div>
 
             <?php if (isset($_SESSION['mensagem_sucesso'])): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="bi bi-check-circle-fill me-2"></i><?= htmlspecialchars($_SESSION['mensagem_sucesso']); ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-            </div>
-            <?php unset($_SESSION['mensagem_sucesso']); ?>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i><?= htmlspecialchars($_SESSION['mensagem_sucesso']); ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+                <?php unset($_SESSION['mensagem_sucesso']); ?>
             <?php endif; ?>
             <?php if (isset($_SESSION['mensagem_erro'])): ?>
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i><?= htmlspecialchars($_SESSION['mensagem_erro']); ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-            </div>
-            <?php unset($_SESSION['mensagem_erro']); ?>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i><?= htmlspecialchars($_SESSION['mensagem_erro']); ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+                <?php unset($_SESSION['mensagem_erro']); ?>
             <?php endif; ?>
             <?php if (isset($_SESSION['mensagem_info'])): ?>
-            <div class="alert alert-info alert-dismissible fade show" role="alert">
-                <i class="bi bi-info-circle-fill me-2"></i><?= htmlspecialchars($_SESSION['mensagem_info']); ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-            </div>
-            <?php unset($_SESSION['mensagem_info']); ?>
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    <i class="bi bi-info-circle-fill me-2"></i><?= htmlspecialchars($_SESSION['mensagem_info']); ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+                <?php unset($_SESSION['mensagem_info']); ?>
             <?php endif; ?>
 
             <div class="row g-4">
@@ -284,7 +394,7 @@ if (!isset($cliente) || empty($cliente)) {
                 <div class="col-12">
                     <section class="actions-section card shadow-sm">
                         <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                           <h5 class="mb-0"><i class="bi bi-plus-circle-fill me-2"></i>Adicionar Nova Ação</h5>
+                            <h5 class="mb-0"><i class="bi bi-plus-circle-fill me-2"></i>Adicionar Nova Ação</h5>
                             <div class="dropdown">
                                 <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" id="dropdownAcoesCliente" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="bi bi-pencil-fill me-1"></i> Selecionar Ação
@@ -292,7 +402,9 @@ if (!isset($cliente) || empty($cliente)) {
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownAcoesCliente">
                                     <li><a class="dropdown-item" href="#" id="btnMostrarFormInteracao"><i class="bi bi-chat-left-text me-2"></i>Registrar Nova Interação</a></li>
                                     <li><a class="dropdown-item" href="#" id="btnMostrarFormDocumento"><i class="bi bi-file-earmark-arrow-up me-2"></i>Anexar Novo Documento</a></li>
-                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
                                     <li><a class="dropdown-item text-muted" href="#" id="btnEsconderFormularios"><i class="bi bi-x-circle me-2"></i>Fechar Formulário</a></li>
                                 </ul>
                             </div>
@@ -342,7 +454,7 @@ if (!isset($cliente) || empty($cliente)) {
                                     </button>
                                 </form>
                             </div>
-                             <p id="placeholderAcoes" class="text-muted text-center py-3">Selecione uma ação no menu acima para começar.</p>
+                            <p id="placeholderAcoes" class="text-muted text-center py-3">Selecione uma ação no menu acima para começar.</p>
                         </div>
                     </section>
                 </div>
@@ -360,21 +472,21 @@ if (!isset($cliente) || empty($cliente)) {
                         <?php else: ?>
                             <?php foreach ($interacoes as $interacao): ?>
                                 <?php
-                                    $borderClass = 'border-primary-subtle'; 
-                                    $iconClass = 'bi-chat-dots-fill text-primary';
-                                    $tipoLabel = 'Mensagem';
-                                    switch ($interacao['tipo_interacao']) {
-                                        case 'telefone':
-                                            $borderClass = 'border-warning-subtle';
-                                            $iconClass = 'bi-telephone-fill text-warning';
-                                            $tipoLabel = 'Ligação';
-                                            break;
-                                        case 'reuniao':
-                                            $borderClass = 'border-success-subtle';
-                                            $iconClass = 'bi-people-fill text-success';
-                                            $tipoLabel = 'Reunião';
-                                            break;
-                                    }
+                                $borderClass = 'border-primary-subtle';
+                                $iconClass = 'bi-chat-dots-fill text-primary';
+                                $tipoLabel = 'Mensagem';
+                                switch ($interacao['tipo_interacao']) {
+                                    case 'telefone':
+                                        $borderClass = 'border-warning-subtle';
+                                        $iconClass = 'bi-telephone-fill text-warning';
+                                        $tipoLabel = 'Ligação';
+                                        break;
+                                    case 'reuniao':
+                                        $borderClass = 'border-success-subtle';
+                                        $iconClass = 'bi-people-fill text-success';
+                                        $tipoLabel = 'Reunião';
+                                        break;
+                                }
                                 ?>
                                 <div class="history-entry <?= $borderClass ?>">
                                     <div class="meta d-flex flex-wrap justify-content-between align-items-center">
@@ -386,7 +498,7 @@ if (!isset($cliente) || empty($cliente)) {
                                         <span class="text-nowrap"><?= date('d/m/Y H:i', strtotime($interacao['data_interacao'])) ?></span>
                                     </div>
                                     <p class="mt-2 mb-1"><?= nl2br(htmlspecialchars($interacao['descricao'])) ?></p>
-                                     <?php if (!empty($interacao['anexo_interacao_nome_original']) && !empty($interacao['anexo_interacao_caminho'])): ?>
+                                    <?php if (!empty($interacao['anexo_interacao_nome_original']) && !empty($interacao['anexo_interacao_caminho'])): ?>
                                         <div class="mt-1">
                                             <small class="text-muted">Anexo da interação:
                                                 <a href="<?= htmlspecialchars($interacao['anexo_interacao_caminho']) ?>" target="_blank" class="text-decoration-none">
@@ -405,7 +517,7 @@ if (!isset($cliente) || empty($cliente)) {
             <div class="row mt-4">
                 <div class="col-12">
                     <section class="documents-section">
-                         <h5><i class="bi bi-folder2-open me-2"></i>Documentos Anexados</h5>
+                        <h5><i class="bi bi-folder2-open me-2"></i>Documentos Anexados</h5>
                         <?php if (!isset($documentos) || empty($documentos)): ?>
                             <div class="alert alert-light text-center" role="alert">
                                 <i class="bi bi-folder-x me-2"></i>Nenhum documento anexado para este cliente ainda.
@@ -427,13 +539,13 @@ if (!isset($cliente) || empty($cliente)) {
                                             </small>
                                         </div>
                                         <div class="ms-md-auto">
-                                             <a href="index.php?controller=documento&action=baixar&id_documento=<?= htmlspecialchars($documento['id_documento']) ?>" target="_blank" class="btn btn-outline-secondary btn-sm" title="Ver/Baixar Documento">
+                                            <a href="index.php?controller=documento&action=baixar&id_documento=<?= htmlspecialchars($documento['id_documento']) ?>" target="_blank" class="btn btn-outline-secondary btn-sm" title="Ver/Baixar Documento">
                                                 <i class="bi bi-download"></i> Ver / Baixar
                                             </a>
-                                            <a href="index.php?controller=documento&action=excluir&id_documento=<?= $documento['id_documento'] ?>&id_cliente=<?= $cliente['id_cliente'] ?>" 
-                                               class="btn btn-outline-danger btn-sm ms-2" 
-                                               onclick="return confirm('Tem certeza que deseja excluir este documento: \'<?= htmlspecialchars(addslashes($documento['nome_documento'])) ?>\'? Esta ação não pode ser desfeita.');"
-                                               title="Excluir Documento">
+                                            <a href="index.php?controller=documento&action=excluir&id_documento=<?= $documento['id_documento'] ?>&id_cliente=<?= $cliente['id_cliente'] ?>"
+                                                class="btn btn-outline-danger btn-sm ms-2"
+                                                onclick="return confirm('Tem certeza que deseja excluir este documento: \'<?= htmlspecialchars(addslashes($documento['nome_documento'])) ?>\'? Esta ação não pode ser desfeita.');"
+                                                title="Excluir Documento">
                                                 <i class="bi bi-trash-fill"></i>
                                             </a>
                                         </div>
@@ -449,7 +561,7 @@ if (!isset($cliente) || empty($cliente)) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const btnMostrarFormInteracao = document.getElementById('btnMostrarFormInteracao');
             const btnMostrarFormDocumento = document.getElementById('btnMostrarFormDocumento');
             const btnEsconderFormularios = document.getElementById('btnEsconderFormularios');
@@ -473,12 +585,12 @@ if (!isset($cliente) || empty($cliente)) {
                 }
             }
 
-            btnMostrarFormInteracao.addEventListener('click', function (e) {
+            btnMostrarFormInteracao.addEventListener('click', function(e) {
                 e.preventDefault();
                 mostrarFormulario(formInteracaoContainer);
             });
 
-            btnMostrarFormDocumento.addEventListener('click', function (e) {
+            btnMostrarFormDocumento.addEventListener('click', function(e) {
                 e.preventDefault();
                 mostrarFormulario(formDocumentoContainer);
             });
@@ -493,4 +605,5 @@ if (!isset($cliente) || empty($cliente)) {
         });
     </script>
 </body>
-</ht
+
+</html>
