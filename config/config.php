@@ -1,24 +1,26 @@
 <?php
-
-// Conexão com banco de dados
-// Faz a conexão com o banco de dados.
-
-// Nesse bloco de codigo vamos definir as variaveis que serão usadas para fazer a conexão com o banco de dados
-
 $host = "localhost";
 $databasename = "tio_Broker";
 $username = "root";
-$password = "";
 
-// Nesse proximo bloco ele cria uma conexão com o banco de dados 
-// aqui usamos uma função do PHP para conectar o banco chamada "mysqli"
+// Lista de senhas a testar, em ordem de prioridade
+$senhas = ["root", ""];
 
-$connection = new mysqli($host, $username, $password, $databasename);
+// Tenta se conectar com cada senha até funcionar
+foreach ($senhas as $senhaTentada) {
+    $connection = @new mysqli($host, $username, $senhaTentada, $databasename);
 
-// Nesse utimo passso verifica se ocorreu algum erro na conexão com o PHP e o Banco de dados
-//usaremos um if 
-//caso entre no if ele exibe uma mensagem do erro que causou
-if ($connection->connect_error) {
-    //exibe a mensagem de erro e encerra o script
-    die("Erro de conexão:" . $connection->connect_error);
+    if (!$connection->connect_error) {
+        // Conexão bem-sucedida
+        // Define a senha usada para futuras referências, se quiser
+        define('DB_PASSWORD_USADA', $senhaTentada);
+        break;
+    }
 }
+
+// Se ainda houver erro, exibe e encerra
+if ($connection->connect_error) {
+    die("❌ Erro ao conectar no banco de dados: " . $connection->connect_error);
+}
+
+// ✅ Se chegou aqui, está conectado com sucesso!
