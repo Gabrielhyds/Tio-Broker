@@ -4,7 +4,7 @@ if (!isset($cliente) || empty($cliente)) {
     return;
 }
 ?>
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <div class="container mx-auto max-w-5xl bg-white p-8 rounded-lg shadow-md mt-6">
     <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
         <i class="fas fa-pencil-alt text-blue-600"></i> Editar Cliente
@@ -90,3 +90,45 @@ if (!isset($cliente) || empty($cliente)) {
         </div>
     </form>
 </div>
+<?php if (isset($_SESSION['mensagem_erro'])): ?>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: "<?= addslashes($_SESSION['mensagem_erro']) ?>",
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'OK'
+            });
+        });
+    </script>
+    <?php unset($_SESSION['mensagem_erro']); ?>
+<?php endif; ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const cpfInput = document.getElementById('cpf');
+        const telefoneInput = document.getElementById('numero');
+
+        if (cpfInput) {
+            cpfInput.addEventListener('input', function() {
+                let value = cpfInput.value.replace(/\D/g, '');
+                if (value.length > 11) value = value.slice(0, 11);
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                cpfInput.value = value;
+            });
+        }
+
+        if (telefoneInput) {
+            telefoneInput.addEventListener('input', function() {
+                let value = telefoneInput.value.replace(/\D/g, '');
+                if (value.length > 11) value = value.slice(0, 11);
+                value = value.replace(/^(\d{2})(\d)/, '($1) $2');
+                value = value.replace(/(\d{5})(\d{1,4})$/, '$1-$2');
+                telefoneInput.value = value;
+            });
+        }
+    });
+</script>
