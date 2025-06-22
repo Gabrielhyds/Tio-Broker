@@ -11,10 +11,34 @@
             <input type="text" name="nome" id="nome" placeholder="Digite o nome completo"
                 class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 text-gray-900 shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
         </div>
-        <div>
-            <label for="numero" class="block text-sm font-medium text-gray-700">Número de Telefone <span class="text-red-500">*</span></label>
-            <input type="text" name="numero" id="numero" placeholder="(XX) XXXXX-XXXX"
-                class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 text-gray-900 shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label for="nome" class="block text-sm font-medium text-gray-700">Nome Completo <span class="text-red-500">*</span></label>
+                <input type="text" name="nome" id="nome" placeholder="Digite o nome completo"
+                    class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 text-gray-900 shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+            </div>
+
+            <!-- TELEFONE COM DDI E FORMATAÇÃO -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Número de Telefone <span class="text-red-500">*</span></label>
+                <div class="flex gap-2 mt-1">
+                    <select id="codigo_pais" class="w-28 rounded-md border border-gray-300 bg-gray-50 text-gray-900 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm">
+                        <option value="BR" selected>+55 🇧🇷</option>
+                        <option value="US">+1 🇺🇸</option>
+                        <option value="PT">+351 🇵🇹</option>
+                        <option value="AR">+54 🇦🇷</option>
+                        <option value="DE">+49 🇩🇪</option>
+                        <option value="FR">+33 🇫🇷</option>
+                        <option value="IT">+39 🇮🇹</option>
+                        <option value="JP">+81 🇯🇵</option>
+                        <option value="UK">+44 🇬🇧</option>
+                        <option value="IN">+91 🇮🇳</option>
+                        <!-- Adicione mais conforme necessário -->
+                    </select>
+                    <input type="text" name="numero" id="numero" placeholder="Digite o telefone"
+                        class="flex-1 rounded-md border border-gray-300 bg-gray-50 text-gray-900 shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -82,7 +106,6 @@
     </div>
 </form>
 
-<!-- SweetAlert2 - Erros -->
 <?php if (isset($_SESSION['mensagem_erro'])): ?>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -98,27 +121,95 @@
     <?php unset($_SESSION['mensagem_erro']); ?>
 <?php endif; ?>
 
-<!-- Máscaras JS -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const cpfInput = document.getElementById('cpf');
         const telefoneInput = document.getElementById('numero');
+        const paisSelect = document.getElementById('codigo_pais');
 
-        cpfInput.addEventListener('input', function() {
-            let value = cpfInput.value.replace(/\D/g, '');
-            if (value.length > 11) value = value.slice(0, 11);
-            value = value.replace(/(\d{3})(\d)/, '$1.$2');
-            value = value.replace(/(\d{3})(\d)/, '$1.$2');
-            value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-            cpfInput.value = value;
-        });
+        if (cpfInput) {
+            cpfInput.addEventListener('input', function() {
+                let value = cpfInput.value.replace(/\D/g, '');
+                if (value.length > 11) value = value.slice(0, 11);
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                cpfInput.value = value;
+            });
+        }
 
-        telefoneInput.addEventListener('input', function() {
-            let value = telefoneInput.value.replace(/\D/g, '');
-            if (value.length > 11) value = value.slice(0, 11);
-            value = value.replace(/^(\d{2})(\d)/, '($1) $2');
-            value = value.replace(/(\d{5})(\d{1,4})$/, '$1-$2');
-            telefoneInput.value = value;
+        function aplicarMascaraTelefone(pais) {
+            telefoneInput.addEventListener('input', function formatarNumero() {
+                let value = telefoneInput.value.replace(/\D/g, '');
+
+                switch (pais) {
+                    case 'BR':
+                        if (value.length > 11) value = value.slice(0, 11);
+                        value = value.replace(/^(\d{2})(\d)/, '($1) $2');
+                        value = value.replace(/(\d{5})(\d{1,4})$/, '$1-$2');
+                        break;
+                    case 'US':
+                        if (value.length > 10) value = value.slice(0, 10);
+                        value = value.replace(/^(\d{3})(\d)/, '($1) $2');
+                        value = value.replace(/(\d{3})(\d{1,4})$/, '$1-$2');
+                        break;
+                    case 'PT':
+                        value = value.slice(0, 9);
+                        value = value.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3');
+                        break;
+                    case 'AR':
+                        value = value.slice(0, 10);
+                        value = value.replace(/(\d{2})(\d{4})(\d{4})/, '$1 $2-$3');
+                        break;
+                    case 'UK':
+                        value = value.slice(0, 10);
+                        value = value.replace(/(\d{5})(\d{5})/, '$1 $2');
+                        break;
+                    case 'IN':
+                        value = value.slice(0, 10);
+                        value = value.replace(/(\d{5})(\d{5})/, '$1 $2');
+                        break;
+                    case 'DE':
+                        value = value.slice(0, 11);
+                        value = value.replace(/(\d{3})(\d{3})(\d{5})/, '$1 $2 $3');
+                        break;
+                    case 'FR':
+                        value = value.slice(0, 10);
+                        value = value.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
+                        break;
+                    case 'JP':
+                        value = value.slice(0, 11);
+                        value = value.replace(/(\d{2})(\d{4})(\d{5})/, '$1-$2-$3');
+                        break;
+                    case 'CN':
+                        value = value.slice(0, 11);
+                        value = value.replace(/(\d{3})(\d{4})(\d{4})/, '$1 $2 $3');
+                        break;
+                    case 'IT':
+                        value = value.slice(0, 10);
+                        value = value.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3');
+                        break;
+                    case 'ES':
+                        value = value.slice(0, 9);
+                        value = value.replace(/(\d{3})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4');
+                        break;
+                    case 'MX':
+                        value = value.slice(0, 10);
+                        value = value.replace(/(\d{2})(\d{4})(\d{4})/, '$1 $2 $3');
+                        break;
+                    default:
+                        break;
+                }
+
+                telefoneInput.value = value;
+            });
+        }
+
+        aplicarMascaraTelefone(paisSelect.value);
+
+        paisSelect.addEventListener('change', function() {
+            telefoneInput.value = '';
+            aplicarMascaraTelefone(this.value);
         });
     });
 </script>
