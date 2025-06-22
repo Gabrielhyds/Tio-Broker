@@ -1,7 +1,10 @@
 <?php
 $basePath = '/tio-broker/';
 
-// Verifica se a pasta 'app' e 'views' existem
-$temApp = is_dir(__DIR__ . '/../views'); // Caminho relativo a 'app/config/'
+// Caminho absoluto do projeto (do servidor de arquivos)
+$projectRoot = realpath(__DIR__ . '/../..');
+
+// Verifica se a pasta "app/views" existe dentro da estrutura
+$temApp = is_dir($projectRoot . '/app/views');
 
 define('BASE_URL', $basePath . ($temApp ? 'app/' : ''));
