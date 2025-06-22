@@ -1,8 +1,8 @@
 <?php
 session_start();
-require_once '../config/config.php';
-require_once '../models/Usuario.php';
-require_once '../config/rotas.php'; // Garante o uso da BASE_URL
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../models/Usuario.php';
+require_once __DIR__ . '/../config/rotas.php'; // BASE_URL
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'login') {
     $email = $_POST['email'];
