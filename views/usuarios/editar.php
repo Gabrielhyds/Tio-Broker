@@ -7,11 +7,23 @@ require_once '../../models/Imobiliaria.php';
 $id = $_GET['id'] ?? null;
 $salvoComSucesso = $_GET['sucesso'] ?? null;
 
+if (!$id) {
+  $_SESSION['mensagem_erro'] = "Usuário não especificado.";
+  header("Location: listar.php");
+  exit;
+}
+
 $usuarioModel = new Usuario($connection);
 $imobiliariaModel = new Imobiliaria($connection);
 
 $usuario = $usuarioModel->buscarPorId($id);
-$dados = $usuario; // se o conteúdo usa $dados
+if (!$usuario) {
+  $_SESSION['mensagem_erro'] = "Usuário não encontrado.";
+  header("Location: listar.php");
+  exit;
+}
+
+$dados = $usuario;
 
 $usuarioLogado = $_SESSION['usuario'];
 $permissao = $usuarioLogado['permissao'];

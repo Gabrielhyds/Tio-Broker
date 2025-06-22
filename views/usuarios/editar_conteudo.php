@@ -1,3 +1,4 @@
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <div class="max-w-4xl mx-auto">
     <?php if ($salvoComSucesso): ?>
         <div class="bg-green-100 text-green-800 px-4 py-3 rounded mb-6 border border-green-200">
@@ -31,12 +32,16 @@
 
             <div>
                 <label for="cpf" class="block text-sm font-medium text-gray-700">CPF</label>
-                <input type="text" id="cpf" name="cpf" maxlength="14" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" value="<?= htmlspecialchars($dados['cpf'], ENT_QUOTES) ?>" required onkeypress="apenasNumeros(event)" oninput="formatarCPF(this)">
+                <input type="text" id="cpf" name="cpf" maxlength="14" placeholder="000.000.000-00"
+                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                    value="<?= htmlspecialchars($dados['cpf'], ENT_QUOTES) ?>" required>
             </div>
 
             <div>
                 <label for="telefone" class="block text-sm font-medium text-gray-700">Telefone</label>
-                <input type="text" id="telefone" name="telefone" maxlength="15" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" value="<?= htmlspecialchars($dados['telefone'], ENT_QUOTES) ?>" required onkeypress="apenasNumeros(event)" oninput="formatarTelefone(this)">
+                <input type="text" id="telefone" name="telefone" maxlength="15" placeholder="(00) 00000-0000"
+                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                    value="<?= htmlspecialchars($dados['telefone'], ENT_QUOTES) ?>" required>
             </div>
 
             <div>
@@ -87,3 +92,43 @@
         </div>
     </form>
 </div>
+<!-- SweetAlert para erro -->
+<?php if (isset($_SESSION['mensagem_erro'])): ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: "<?= addslashes($_SESSION['mensagem_erro']) ?>",
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'OK'
+            });
+        });
+    </script>
+    <?php unset($_SESSION['mensagem_erro']); ?>
+<?php endif; ?>
+
+<!-- Máscaras de CPF e Telefone -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const cpfInput = document.getElementById('cpf');
+        const telefoneInput = document.getElementById('telefone');
+
+        cpfInput.addEventListener('input', function() {
+            let value = cpfInput.value.replace(/\D/g, '');
+            if (value.length > 11) value = value.slice(0, 11);
+            value = value.replace(/(\d{3})(\d)/, '$1.$2');
+            value = value.replace(/(\d{3})(\d)/, '$1.$2');
+            value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+            cpfInput.value = value;
+        });
+
+        telefoneInput.addEventListener('input', function() {
+            let value = telefoneInput.value.replace(/\D/g, '');
+            if (value.length > 11) value = value.slice(0, 11);
+            value = value.replace(/^(\d{2})(\d)/, '($1) $2');
+            value = value.replace(/(\d{5})(\d{1,4})$/, '$1-$2');
+            telefoneInput.value = value;
+        });
+    });
+</script>

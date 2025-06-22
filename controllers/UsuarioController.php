@@ -5,6 +5,7 @@ session_start();
 // Inclui os arquivos de configuração e do modelo Usuario
 require_once '../config/config.php';
 require_once '../models/Usuario.php';
+require_once '../config/validadores.php';
 
 // Instancia o modelo Usuario com a conexão com o banco
 $usuario = new Usuario($connection);
@@ -13,7 +14,8 @@ $usuario = new Usuario($connection);
  * Função auxiliar para salvar uma foto de perfil enviada via formulário
  * Retorna o caminho do arquivo salvo ou null se nenhuma imagem for enviada
  */
-function salvarFoto($inputName) {
+function salvarFoto($inputName)
+{
     if (isset($_FILES[$inputName]) && $_FILES[$inputName]['error'] === UPLOAD_ERR_OK) {
         $ext = pathinfo($_FILES[$inputName]['name'], PATHINFO_EXTENSION); // Obtém a extensão da imagem
         $novoNome = uniqid('foto_', true) . '.' . $ext; // Cria um nome único
@@ -32,12 +34,16 @@ function salvarFoto($inputName) {
 
 // Verifica se o formulário foi enviado via POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    
+
     // Cadastro de novo usuário
     if ($_POST['action'] === 'cadastrar') {
-        $fotoPath = salvarFoto('foto'); // Salva a foto se houver
+        if (!validarCpf($_POST['cpf'])) {
+            $_SESSION['mensagem_erro'] = "CPF inválido. Verifique e tente novamente.";
+            header('Location: ../views/usuarios/cadastrar.php');
+            exit;
+        }
 
-        // Chama o método de cadastro com os dados do formulário
+        $fotoPath = salvarFoto('foto');
         $usuario->cadastrar(
             $_POST['nome'],
             $_POST['email'],
@@ -50,22 +56,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $fotoPath
         );
 
-        // Redireciona após o cadastro com flag de sucesso
         header('Location: ../views/usuarios/listar.php?sucesso=1');
         exit;
     }
 
+
     // Atualização de usuário existente
     if ($_POST['action'] === 'atualizar') {
-        $fotoPath = salvarFoto('foto'); // Tenta salvar nova foto
+        require_once '../config/validadores.php';
 
-        // Se não houver nova foto, mantém a antiga
+        if (!validarCpf($_POST['cpf'])) {
+            $_SESSION['mensagem_erro'] = "CPF inválido.";
+            header('Location: ../views/usuarios/editar.php?id=' . $_POST['id_usuario']);
+            exit;
+        }
+
+        $fotoPath = salvarFoto('foto');
         if (!$fotoPath) {
             $dadosAntigos = $usuario->buscarPorId($_POST['id_usuario']);
             $fotoPath = $dadosAntigos['foto'] ?? null;
         }
 
-        // Chama o método de atualização com os dados atualizados
         $usuario->atualizar(
             $_POST['id_usuario'],
             $_POST['nome'],
@@ -78,7 +89,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $fotoPath
         );
 
-        // Redireciona com flag de sucesso na edição
         header('Location: ../views/usuarios/listar.php?atualizado=1');
         exit;
     }
@@ -100,8 +110,8 @@ if (isset($_GET['removerImobiliaria']) && isset($_GET['idImobiliaria'])) {
     // Chama método no modelo para desvincular
     if ($usuario->removerImobiliaria($idUsuario)) {
         // Redireciona de volta para a edição da imobiliária com flag de remoção
-       header("Location: ../views/imobiliarias/editar_imobiliaria.php?id={$idImobiliaria}&removido=1");
-       exit;
+        header("Location: ../views/imobiliarias/editar_imobiliaria.php?id={$idImobiliaria}&removido=1");
+        exit;
     } else {
         echo "Erro ao remover vínculo do usuário.";
         exit;
