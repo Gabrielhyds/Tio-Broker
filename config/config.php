@@ -3,24 +3,29 @@ $host = "localhost";
 $databasename = "tio_Broker";
 $username = "root";
 
-// Lista de senhas a testar, em ordem de prioridade
+// Array de senhas possíveis (primeiro tenta com senha 'root', depois em branco)
 $senhas = ["root", ""];
 
-// Tenta se conectar com cada senha até funcionar
-foreach ($senhas as $senhaTentada) {
-    $connection = @new mysqli($host, $username, $senhaTentada, $databasename);
+// Inicializa a variável de conexão como null
+$connection = null;
+$conectado = false;
 
-    if (!$connection->connect_error) {
-        // Conexão bem-sucedida
-        // Define a senha usada para futuras referências, se quiser
-        define('DB_PASSWORD_USADA', $senhaTentada);
-        break;
+// Tenta conectar com cada senha
+foreach ($senhas as $senha) {
+    $conn = @new mysqli($host, $username, $senha, $databasename);
+
+    if (!$conn->connect_error) {
+        $connection = $conn;
+        $conectado = true;
+        define('DB_PASSWORD_USADA', $senha);
+        break; // para o loop ao conectar com sucesso
     }
 }
 
-// Se ainda houver erro, exibe e encerra
-if ($connection->connect_error) {
-    die("❌ Erro ao conectar no banco de dados: " . $connection->connect_error);
+// Verifica se conseguiu conectar
+if (!$conectado || !$connection) {
+    die("❌ Erro ao conectar no banco de dados: " . $conn->connect_error);
 }
 
-// ✅ Se chegou aqui, está conectado com sucesso!
+// ✅ Conectado com sucesso. Opcional: mostrar a senha usada (só para debug).
+// echo "🔐 Conectado com senha: " . (DB_PASSWORD_USADA === "" ? "[vazia]" : DB_PASSWORD_USADA);
