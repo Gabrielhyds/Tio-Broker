@@ -3,68 +3,72 @@
 if (!class_exists('AgendaModel')) {
     
     class AgendaModel {
-        private $pdo;
+        private $connection;
 
-        public function __construct($pdo) {
-            $this->pdo = $pdo;
+        public function __construct($connection) {
+            $this->connection = $connection;
         }
 
         /**
-         * Busca todos os eventos de um usuário, garantindo que todos sejam retornados.
-         * @param int $id_usuario O ID do usuário para buscar os eventos.
-         * @return array Retorna um array com os eventos encontrados.
+         * Busca todos os eventos de um usuário usando mysqli.
+         * @param int $id_usuario O ID do usuário.
+         * @return array Retorna um array com os eventos.
          */
         public function buscarEventosPorUsuario($id_usuario) {
-            // CORRIGIDO: Trocado para LEFT JOIN para garantir que o evento apareça
-            // mesmo que o id_cliente seja inválido ou não exista.
             $sql = "SELECT 
-                        e.id_evento,
-                        e.titulo,
-                        e.data_inicio,
-                        e.data_fim,
-                        e.tipo_evento,
-                        COALESCE(c.nome, 'Cliente não encontrado') as nome_cliente 
+                        e.id_evento, e.titulo, e.data_inicio, e.data_fim, e.tipo_evento, 
+                        COALESCE(c.nome, 'Sem cliente') as nome_cliente 
                     FROM agenda_eventos e
                     LEFT JOIN cliente c ON e.id_cliente = c.id_cliente
-                    WHERE e.id_usuario = :id_usuario";
+                    WHERE e.id_usuario = ?";
             
-            try {
-                $stmt = $this->pdo->prepare($sql);
-                $stmt->execute([':id_usuario' => $id_usuario]);
-                return $stmt->fetchAll(PDO::FETCH_ASSOC);
-            } catch (PDOException $e) {
-                error_log("Erro ao buscar eventos: " . $e->getMessage());
-                return []; 
-            }
+            $stmt = $this->connection->prepare($sql);
+            if ($stmt === false) { return []; }
+
+            $stmt->bind_param("i", $id_usuario);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $stmt->close();
+
+            return $result->fetch_all(MYSQLI_ASSOC);
         }
 
         /**
-         * Cria um novo evento na agenda.
-         * @param array $dados Os dados do evento a ser criado.
-         * @return bool Retorna true em caso de sucesso, false em caso de falha.
+         * Cria um novo evento na agenda usando mysqli.
+         * @param array $dados Os dados do evento.
+         * @return bool Retorna true em caso de sucesso.
          */
         public function criarEvento($dados) {
             $sql = "INSERT INTO agenda_eventos (id_usuario, id_cliente, titulo, descricao, data_inicio, data_fim, tipo_evento, lembrete) 
-                    VALUES (:id_usuario, :id_cliente, :titulo, :descricao, :data_inicio, :data_fim, :tipo_evento, :lembrete)";
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             
-            try {
-                $stmt = $this->pdo->prepare($sql);
-                
-                return $stmt->execute([
-                    ':id_usuario'   => $dados['id_usuario'],
-                    ':id_cliente'   => $dados['id_cliente'],
-                    ':titulo'       => $dados['titulo'],
-                    ':descricao'    => $dados['descricao'],
-                    ':data_inicio'  => $dados['data_inicio'],
-                    ':data_fim'     => $dados['data_fim'],
-                    ':tipo_evento'  => $dados['tipo_evento'],
-                    ':lembrete'     => $dados['lembrete'] ?? 0
-                ]);
-            } catch (PDOException $e) {
-                // Loga o erro específico (ex: falha de chave estrangeira)
-                error_log('Erro ao criar evento: ' . $e->getMessage());
+            $stmt = $this->connection->prepare($sql);
+            if ($stmt === false) {
+                error_log("Erro de preparação no SQL: " . $this->connection->error);
                 return false;
             }
+
+            // O tipo 'i' para um valor null será convertido para 0, o que é aceitável
+            // pois a coluna id_cliente agora permite nulos.
+            $stmt->bind_param(
+                "iisssssi",
+                $dados['id_usuario'],
+                $dados['id_cliente'],
+                $dados['titulo'],
+                $dados['descricao'],
+                $dados['data_inicio'],
+                $dados['data_fim'],
+                $dados['tipo_evento'],
+                $dados['lembrete']
+            );
+            
+            $success = $stmt->execute();
+            if (!$success) {
+                error_log("Erro de execução do evento: " . $stmt->error);
+            }
+            $stmt->close();
+
+            return $success;
         }
     }
 }

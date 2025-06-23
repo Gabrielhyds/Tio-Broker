@@ -1,13 +1,11 @@
 <?php
-// Define que a resposta será em formato JSON
 header('Content-Type: application/json');
-
 if (session_status() === PHP_SESSION_NONE) session_start();
 
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/config.php'; 
+// CORRIGIDO: O nome do ficheiro agora está com as maiúsculas corretas.
 require_once __DIR__ . '/../models/AgendaModel.php';
 
-// Função para enviar resposta JSON e terminar o script
 function responder_json($sucesso, $mensagem) {
     echo json_encode(['success' => $sucesso, 'message' => $mensagem]);
     exit;
@@ -16,7 +14,7 @@ function responder_json($sucesso, $mensagem) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if (!isset($_SESSION['usuario']['id_usuario'])) {
-        responder_json(false, 'Acesso negado. Sua sessão pode ter expirado.');
+        responder_json(false, 'Acesso negado. A sua sessão pode ter expirado.');
     }
 
     $action = $_POST['action'] ?? '';
@@ -29,10 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($_POST['data_fim'] < $_POST['data_inicio']) {
             responder_json(false, 'A data final do evento não pode ser anterior à data inicial.');
         }
-
-        $database = new Database();
-        $pdo = $database->getConnection();
-        $agendaModel = new AgendaModel($pdo);
+        
+        $agendaModel = new AgendaModel($connection); 
 
         $dadosEvento = [
             'id_usuario'  => $_SESSION['usuario']['id_usuario'],
@@ -48,10 +44,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($agendaModel->criarEvento($dadosEvento)) {
             responder_json(true, 'Evento agendado com sucesso!');
         } else {
-            responder_json(false, 'Ocorreu um erro ao salvar no banco. Verifique se o ID do cliente (se informado) é válido.');
+            responder_json(false, 'Ocorreu um erro ao guardar no banco. Verifique os dados e tente novamente.');
         }
     }
 }
 
-// Resposta padrão para métodos não permitidos
 responder_json(false, 'Método de requisição inválido.');
