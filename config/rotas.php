@@ -1,5 +1,5 @@
 <?php
-$basePath = '/tio-broker/';
+$basePath = '/cr7/tio-broker/';
 
 // Caminho absoluto do projeto (do servidor de arquivos)
 $projectRoot = realpath(__DIR__ . '/../..');

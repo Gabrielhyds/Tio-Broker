@@ -1,6 +1,10 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 $permissao = $_SESSION['usuario']['permissao'] ?? '';
+
+// Garante que a variável $activeMenu exista para evitar erros de 'undefined variable'
+$activeMenu = $activeMenu ?? ''; 
+
 require_once __DIR__ . '/../../config/rotas.php';
 ?>
 
@@ -19,7 +23,7 @@ require_once __DIR__ . '/../../config/rotas.php';
         <!-- Início -->
         <div>
             <h3 class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Início</h3>
-            <a href="<?= BASE_URL ?>views/dashboards/dashboard_unificado.php" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
+            <a href="<?= BASE_URL ?>views/dashboards/dashboard_unificado.php" class="sidebar-link <?= $activeMenu === 'dashboard' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
                 <i class="fas fa-home w-6 text-center"></i><span class="ml-2">Resumo</span>
             </a>
         </div>
@@ -28,10 +32,10 @@ require_once __DIR__ . '/../../config/rotas.php';
         <?php if ($permissao === 'SuperAdmin'): ?>
             <div>
                 <h3 class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Imobiliária</h3>
-                <a href="<?= BASE_URL ?>views/imobiliarias/cadastrar_imobiliaria.php" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
+                <a href="<?= BASE_URL ?>views/imobiliarias/cadastrar_imobiliaria.php" class="sidebar-link <?= $activeMenu === 'imobiliaria_cadastrar' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
                     <i class="fas fa-plus w-6 text-center"></i><span class="ml-2">Cadastrar</span>
                 </a>
-                <a href="<?= BASE_URL ?>views/imobiliarias/listar_imobiliaria.php" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
+                <a href="<?= BASE_URL ?>views/imobiliarias/listar_imobiliaria.php" class="sidebar-link <?= $activeMenu === 'imobiliaria_listar' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
                     <i class="fas fa-building w-6 text-center"></i><span class="ml-2">Ver Imobiliárias</span>
                 </a>
             </div>
@@ -41,10 +45,10 @@ require_once __DIR__ . '/../../config/rotas.php';
         <?php if (in_array($permissao, ['SuperAdmin', 'Admin'])): ?>
             <div>
                 <h3 class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Usuário</h3>
-                <a href="<?= BASE_URL ?>views/usuarios/cadastrar.php" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
+                <a href="<?= BASE_URL ?>views/usuarios/cadastrar.php" class="sidebar-link <?= $activeMenu === 'usuario_cadastrar' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
                     <i class="fas fa-user-plus w-6 text-center"></i><span class="ml-2">Cadastrar Usuário</span>
                 </a>
-                <a href="<?= BASE_URL ?>views/usuarios/listar.php" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
+                <a href="<?= BASE_URL ?>views/usuarios/listar.php" class="sidebar-link <?= $activeMenu === 'usuario_listar' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
                     <i class="fas fa-users w-6 text-center"></i><span class="ml-2">Gerenciar Usuários</span>
                 </a>
             </div>
@@ -54,17 +58,17 @@ require_once __DIR__ . '/../../config/rotas.php';
         <?php if (in_array($permissao, ['SuperAdmin', 'Admin', 'Coordenador', 'Corretor'])): ?>
             <div>
                 <h3 class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Ferramentas</h3>
-                <a href="<?= BASE_URL ?>views/chat/chat.php" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
+                <a href="<?= BASE_URL ?>views/chat/chat.php" class="sidebar-link <?= $activeMenu === 'chat' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
                     <i class="fas fa-comments w-6 text-center"></i><span class="ml-2">Chat</span>
                 </a>
-                <a href="<?= BASE_URL ?>views/contatos/index.php?controller=cliente&action=listar" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
+                <a href="<?= BASE_URL ?>views/contatos/index.php?controller=cliente&action=listar" class="sidebar-link <?= $activeMenu === 'contatos' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
                     <i class="fas fa-address-book w-6 text-center"></i><span class="ml-2">Agenda de Contatos</span>
                 </a>
-                <a href="#" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
+                <a href="#" class="sidebar-link <?= $activeMenu === 'tarefas' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
                     <i class="fas fa-tasks w-6 text-center"></i><span class="ml-2">Tarefas</span>
                 </a>
-                <a href="#" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
-                    <i class="fas fa-calendar-alt w-6 text-center"></i><span class="ml-2">Calendário</span>
+                <a href="<?= BASE_URL ?>views/agenda/agenda.php" class="sidebar-link <?= $activeMenu === 'agenda' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
+                    <i class="fas fa-calendar-alt w-6 text-center"></i><span class="ml-2">Agenda</span>
                 </a>
             </div>
         <?php endif; ?>
