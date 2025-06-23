@@ -65,20 +65,20 @@ class Cliente
                 LEFT JOIN usuario u ON c.id_usuario = u.id_usuario 
                 LEFT JOIN imobiliaria im ON c.id_imobiliaria = im.id_imobiliaria
                 {$orderBy}";
-        
+
         $stmt = $this->db->prepare($sql);
 
         if (!$stmt) {
-             error_log("Falha no prepare (listar todos os clientes): (" . $this->db->errno . ") " . $this->db->error . " SQL: " . $sql);
-             return $clientes;
+            error_log("Falha no prepare (listar todos os clientes): (" . $this->db->errno . ") " . $this->db->error . " SQL: " . $sql);
+            return $clientes;
         }
 
-        if(!$stmt->execute()){
+        if (!$stmt->execute()) {
             error_log("Falha na execução (listar todos os clientes): (" . $stmt->errno . ") " . $stmt->error);
             $stmt->close();
             return $clientes;
         }
-        
+
         $result = $stmt->get_result();
 
         while ($row = $result->fetch_assoc()) {
@@ -102,8 +102,8 @@ class Cliente
             return null;
         }
         $stmt->bind_param("i", $idCliente);
-        
-        if(!$stmt->execute()){
+
+        if (!$stmt->execute()) {
             error_log("Falha na execução (buscarPorId): (" . $stmt->errno . ") " . $stmt->error);
             $stmt->close();
             return null;
@@ -138,7 +138,7 @@ class Cliente
                     foto = ?, 
                     tipo_lista = ?
                 WHERE id_cliente = ?";
-        
+
         $stmt = $this->db->prepare($sql);
         if (!$stmt) {
             error_log("Falha no prepare (atualizar): (" . $this->db->errno . ") " . $this->db->error . " SQL: " . $sql);
@@ -188,9 +188,24 @@ class Cliente
         $stmt->bind_param("i", $idCliente);
         $success = $stmt->execute();
         if (!$success) {
-             error_log("Falha na execução (excluir): (" . $stmt->errno . ") " . $stmt->error);
+            error_log("Falha na execução (excluir): (" . $stmt->errno . ") " . $stmt->error);
         }
         $stmt->close();
         return $success;
+    }
+    public function listarTodos()
+    {
+        $clientes = [];
+
+        $sql = "SELECT id_cliente, nome FROM cliente ORDER BY nome";
+        $result = $this->db->query($sql);
+
+        if ($result && $result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                $clientes[] = $row;
+            }
+        }
+
+        return $clientes;
     }
 }

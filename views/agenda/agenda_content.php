@@ -5,23 +5,41 @@
 <style>
     /* Estilos (sem alterações) */
     :root {
-      --fc-border-color: #e2e8f0;
-      --fc-daygrid-event-dot-width: 8px;
-      --fc-list-event-dot-width: 10px;
-      --fc-event-bg-color: #3788d8;
-      --fc-event-border-color: #3788d8;
-      --fc-event-text-color: #fff;
-      --fc-page-bg-color: #fff;
-      --fc-neutral-bg-color: rgba(208, 208, 208, 0.3);
+        --fc-border-color: #e2e8f0;
+        --fc-daygrid-event-dot-width: 8px;
+        --fc-list-event-dot-width: 10px;
+        --fc-event-bg-color: #3788d8;
+        --fc-event-border-color: #3788d8;
+        --fc-event-text-color: #fff;
+        --fc-page-bg-color: #fff;
+        --fc-neutral-bg-color: rgba(208, 208, 208, 0.3);
     }
+
     .fc {
-        background-color: white; padding: 1.5rem; border-radius: 0.75rem;
+        background-color: white;
+        padding: 1.5rem;
+        border-radius: 0.75rem;
         box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     }
-    .fc .fc-toolbar-title { font-size: 1.5rem; font-weight: 600; }
-    .fc .fc-button-primary { background-color: #3b82f6; border-color: #3b82f6; }
-    .fc .fc-button-primary:hover { background-color: #2563eb; border-color: #2563eb; }
-    .fc .fc-daygrid-day.fc-day-today { background-color: #eff6ff; }
+
+    .fc .fc-toolbar-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+    .fc .fc-button-primary {
+        background-color: #3b82f6;
+        border-color: #3b82f6;
+    }
+
+    .fc .fc-button-primary:hover {
+        background-color: #2563eb;
+        border-color: #2563eb;
+    }
+
+    .fc .fc-daygrid-day.fc-day-today {
+        background-color: #eff6ff;
+    }
 </style>
 
 <!-- Elemento onde o calendário será renderizado -->
@@ -36,7 +54,7 @@
                 <i class="fas fa-times text-2xl"></i>
             </button>
         </div>
-        
+
         <div id="modalError" class="hidden mb-4 p-3 bg-red-100 text-red-700 rounded-lg"></div>
         <div id="modalSuccess" class="hidden mb-4 p-3 bg-green-100 text-green-700 rounded-lg"></div>
 
@@ -49,8 +67,10 @@
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label for="id_cliente" class="block text-sm font-medium text-gray-700">Cliente (ID)</label>
-                        <input type="number" id="id_cliente" name="id_cliente" class="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        <label for="id_cliente" class="block text-sm font-medium text-gray-700">Cliente</label>
+                        <select id="id_cliente" name="id_cliente" class="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+                            <option value="">Selecione um cliente</option>
+                        </select>
                     </div>
                     <div>
                         <label for="tipo_evento" class="block text-sm font-medium text-gray-700">Tipo*</label>
@@ -61,7 +81,7 @@
                         </select>
                     </div>
                 </div>
-                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label for="data_inicio" class="block text-sm font-medium text-gray-700">Início*</label>
                         <input type="datetime-local" id="data_inicio" name="data_inicio" class="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" required>
@@ -75,7 +95,7 @@
                     <label for="descricao" class="block text-sm font-medium text-gray-700">Descrição</label>
                     <textarea id="descricao" name="descricao" rows="3" class="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"></textarea>
                 </div>
-                 <div class="flex items-center">
+                <div class="flex items-center">
                     <input type="checkbox" id="lembrete" name="lembrete" value="1" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
                     <label for="lembrete" class="ml-2 block text-sm text-gray-900">Ativar lembrete</label>
                 </div>
@@ -110,12 +130,23 @@
                 center: 'title',
                 right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
             },
-            dayHeaderFormat: { weekday: 'short', day: 'numeric', month: 'numeric', omitCommas: true },
-            eventTimeFormat: { hour: '2-digit', minute: '2-digit', meridiem: false },
+            dayHeaderFormat: {
+                weekday: 'short',
+                day: 'numeric',
+                month: 'numeric',
+                omitCommas: true
+            },
+            eventTimeFormat: {
+                hour: '2-digit',
+                minute: '2-digit',
+                meridiem: false
+            },
             events: '../../controllers/api_eventos.php',
             editable: true,
             selectable: true,
-            select: function(info) { openModal(info); },
+            select: function(info) {
+                openModal(info);
+            },
             eventClick: function(info) {
                 const start = info.event.start.toLocaleString('pt-BR');
                 const end = info.event.end ? info.event.end.toLocaleString('pt-BR') : 'Sem data final';
@@ -134,6 +165,28 @@
             eventoForm.reset();
             modalError.classList.add('hidden');
             modalSuccess.classList.add('hidden');
+
+            // Carrega os clientes do banco
+            fetch('../../controllers/api_clientes.php')
+                .then(res => res.json())
+                .then(data => {
+                    const selectCliente = document.getElementById('id_cliente');
+                    selectCliente.innerHTML = '<option value="">Selecione um cliente</option>';
+                    if (data.success) {
+                        data.clientes.forEach(cliente => {
+                            const opt = document.createElement('option');
+                            opt.value = cliente.id_cliente;
+                            opt.textContent = cliente.nome;
+                            selectCliente.appendChild(opt);
+                        });
+                    } else {
+                        const opt = document.createElement('option');
+                        opt.value = "";
+                        opt.textContent = "Erro ao carregar clientes";
+                        selectCliente.appendChild(opt);
+                    }
+                });
+
             const startDate = info.allDay ? new Date(info.startStr + 'T09:00:00') : new Date(info.start);
             const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
             document.getElementById('data_inicio').value = toLocalISOString(startDate);
@@ -164,29 +217,29 @@
             }
 
             const formData = new FormData(eventoForm);
-            
+
             fetch('../../controllers/AgendaController.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json()) // Espera uma resposta JSON do servidor
-            .then(data => {
-                if (data.success) {
-                    // Sucesso! Atualiza o calendário e fecha o modal.
-                    calendar.refetchEvents();
-                    closeModal();
-                    // Opcional: mostrar uma notificação de sucesso "toast"
-                } else {
-                    // Erro! Mostra a mensagem de erro vinda do PHP.
-                    modalError.textContent = data.message || 'Ocorreu um erro desconhecido.';
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json()) // Espera uma resposta JSON do servidor
+                .then(data => {
+                    if (data.success) {
+                        // Sucesso! Atualiza o calendário e fecha o modal.
+                        calendar.refetchEvents();
+                        closeModal();
+                        // Opcional: mostrar uma notificação de sucesso "toast"
+                    } else {
+                        // Erro! Mostra a mensagem de erro vinda do PHP.
+                        modalError.textContent = data.message || 'Ocorreu um erro desconhecido.';
+                        modalError.classList.remove('hidden');
+                    }
+                })
+                .catch(error => {
+                    modalError.textContent = 'Erro de comunicação com o servidor. Verifique o console (F12).';
                     modalError.classList.remove('hidden');
-                }
-            })
-            .catch(error => {
-                modalError.textContent = 'Erro de comunicação com o servidor. Verifique o console (F12).';
-                modalError.classList.remove('hidden');
-                console.error('Fetch Error:', error);
-            });
+                    console.error('Fetch Error:', error);
+                });
         });
     });
 </script>

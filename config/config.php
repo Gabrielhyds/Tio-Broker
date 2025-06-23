@@ -8,7 +8,7 @@
 $host = "localhost";
 $databasename = "tio_Broker";
 $username = "root";
-$password = "";
+$password = "root";
 
 
 //atenção crontab ativado
