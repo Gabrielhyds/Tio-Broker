@@ -1,26 +1,37 @@
 <?php
 
-// Conexão com banco de dados
-// Faz a conexão com o banco de dados.
+// Função para conectar ao banco de dados automaticamente
+function conectarBanco()
+{
+    // Define o host do banco de dados (geralmente localhost)
+    $host = "localhost";
 
-// Nesse bloco de codigo vamos definir as variaveis que serão usadas para fazer a conexão com o banco de dados
+    // Nome do banco de dados
+    $databasename = "tio_Broker";
 
-$host = "localhost";
-$databasename = "tio_Broker";
-$username = "root";
-$password = "root";
+    // Nome de usuário do MySQL
+    $username = "root";
 
+    // Lista de senhas para tentar — primeiro com "root", depois sem senha
+    $senhaTentativas = ["root", ""];
 
-//atenção crontab ativado
-// Nesse proximo bloco ele cria uma conexão com o banco de dados 
-// aqui usamos uma função do PHP para conectar o banco chamada "mysqli"
+    // Loop para tentar cada senha até conseguir conectar
+    foreach ($senhaTentativas as $senha) {
 
-$connection = new mysqli($host, $username, $password, $databasename);
+        // Tenta estabelecer a conexão com a senha atual
+        // O "@" suprime mensagens de erro caso a tentativa falhe
+        $connection = @new mysqli($host, $username, $senha, $databasename);
 
-// Nesse utimo passso verifica se ocorreu algum erro na conexão com o PHP e o Banco de dados
-//usaremos um if 
-//caso entre no if ele exibe uma mensagem do erro que causou
-if ($connection->connect_error) {
-    //exibe a mensagem de erro e encerra o script
-    die("Erro de conexão:" . $connection->connect_error);
+        // Verifica se a conexão foi bem-sucedida
+        if (!$connection->connect_error) {
+            // Se conectou com sucesso, retorna a conexão
+            return $connection;
+        }
+    }
+
+    // Se nenhuma senha funcionou, exibe uma mensagem de erro e encerra o script
+    die("❌ Não foi possível conectar ao banco de dados com nenhuma das senhas testadas.");
 }
+
+// Usa a função para obter a conexão
+$connection = conectarBanco();
