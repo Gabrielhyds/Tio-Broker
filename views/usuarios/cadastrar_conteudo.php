@@ -1,13 +1,19 @@
+<!-- Importa a biblioteca SweetAlert2 para exibir alertas mais bonitos e interativos. -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+<!-- Contêiner principal com largura máxima, centralizado e com estilo de cartão. -->
 <div class="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow-md">
+    <!-- Título da página de cadastro. -->
     <h2 class="text-2xl font-bold mb-6 flex items-center gap-2 text-gray-800">
         <i class="fas fa-user-plus text-blue-500"></i> Cadastrar Novo Usuário
     </h2>
 
+    <!-- Formulário de cadastro de usuário. `enctype="multipart/form-data"` é essencial para o upload de arquivos. -->
     <form action="../../controllers/UsuarioController.php" method="POST" enctype="multipart/form-data" class="space-y-6">
+        <!-- Campo oculto para indicar ao controller que a ação é 'cadastrar'. -->
         <input type="hidden" name="action" value="cadastrar">
 
+        <!-- Grid para organizar os campos do formulário em colunas. -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label for="nome" class="block text-sm font-medium text-gray-700">Nome</label>
@@ -62,11 +68,13 @@
                 </select>
             </div>
 
+            <!-- Este campo ocupa duas colunas em telas médias ou maiores. -->
             <div class="md:col-span-2">
                 <label for="id_imobiliaria" class="block text-sm font-medium text-gray-700">Imobiliária</label>
                 <select name="id_imobiliaria" id="id_imobiliaria"
                     class="mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring focus:ring-blue-200" required>
                     <option disabled selected>Selecione uma imobiliária</option>
+                    <!-- Loop PHP para popular o select com a lista de imobiliárias carregada pelo controller. -->
                     <?php foreach ($listaImobiliarias as $imob): ?>
                         <option value="<?= $imob['id_imobiliaria'] ?>">
                             <?= htmlspecialchars($imob['nome']) ?>
@@ -76,6 +84,7 @@
             </div>
         </div>
 
+        <!-- Botões de ação do formulário. -->
         <div class="flex justify-between mt-6">
             <a href="listar.php"
                 class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow">
@@ -89,40 +98,46 @@
     </form>
 </div>
 
-<!-- Erro com SweetAlert -->
+<!-- Script para exibir um alerta de erro do SweetAlert, se houver uma mensagem de erro na sessão. -->
 <?php if (isset($_SESSION['mensagem_erro'])): ?>
     <script>
+        // Adiciona um ouvinte para executar o script quando o conteúdo da página estiver totalmente carregado.
         document.addEventListener('DOMContentLoaded', function() {
             Swal.fire({
                 icon: 'error',
                 title: 'Erro',
-                text: "<?= addslashes($_SESSION['mensagem_erro']) ?>",
+                text: "<?= addslashes($_SESSION['mensagem_erro']) ?>", // `addslashes` evita que aspas na mensagem quebrem o JS.
                 confirmButtonColor: '#3085d6',
                 confirmButtonText: 'OK'
             });
         });
     </script>
-    <?php unset($_SESSION['mensagem_erro']); ?>
+    <?php unset($_SESSION['mensagem_erro']); // Limpa a mensagem da sessão para não ser exibida novamente. 
+    ?>
 <?php endif; ?>
 
-<!-- Máscaras para CPF e Telefone -->
+<!-- Script para aplicar máscaras de formatação nos campos de CPF e Telefone. -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const cpfInput = document.getElementById('cpf');
         const telefoneInput = document.getElementById('telefone');
 
+        // Adiciona um ouvinte de evento para o campo de CPF que dispara a cada entrada de dados.
         cpfInput.addEventListener('input', function() {
-            let value = cpfInput.value.replace(/\D/g, '');
-            if (value.length > 11) value = value.slice(0, 11);
+            let value = cpfInput.value.replace(/\D/g, ''); // Remove tudo que não for dígito.
+            if (value.length > 11) value = value.slice(0, 11); // Limita a 11 dígitos.
+            // Aplica a máscara de CPF (000.000.000-00) usando expressões regulares.
             value = value.replace(/(\d{3})(\d)/, '$1.$2');
             value = value.replace(/(\d{3})(\d)/, '$1.$2');
             value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
             cpfInput.value = value;
         });
 
+        // Adiciona um ouvinte de evento para o campo de telefone.
         telefoneInput.addEventListener('input', function() {
-            let value = telefoneInput.value.replace(/\D/g, '');
-            if (value.length > 11) value = value.slice(0, 11);
+            let value = telefoneInput.value.replace(/\D/g, ''); // Remove tudo que não for dígito.
+            if (value.length > 11) value = value.slice(0, 11); // Limita a 11 dígitos.
+            // Aplica a máscara de telefone ( (00) 00000-0000 ) usando expressões regulares.
             value = value.replace(/^(\d{2})(\d)/, '($1) $2');
             value = value.replace(/(\d{5})(\d{1,4})$/, '$1-$2');
             telefoneInput.value = value;

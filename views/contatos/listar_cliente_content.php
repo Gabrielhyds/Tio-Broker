@@ -1,33 +1,43 @@
+<!-- Contêiner principal da página com um estilo de cartão. -->
 <div class="p-6 bg-white rounded-lg shadow">
+    <!-- Cabeçalho da página com título e botões de ação. -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <h2 class="text-2xl font-semibold text-gray-800 flex items-center gap-2">
-            <i class="bi bi-people-fill"></i>
+            <i class="bi bi-people-fill"></i> <!-- Ícone do Bootstrap Icons -->
             Clientes Cadastrados
         </h2>
+        <!-- Contêiner para os botões, para melhor responsividade. -->
         <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <!-- Link para voltar ao dashboard principal. -->
             <a href="<?= htmlspecialchars($dashboardUrl ?? '../../index.php') ?>" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium border rounded-md text-gray-700 bg-white hover:bg-gray-100">
                 <i class="bi bi-house-door-fill mr-2"></i> Voltar ao Início
             </a>
+            <!-- Link para a página de cadastro de um novo cliente. -->
             <a href="index.php?controller=cliente&action=cadastrar" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md">
                 <i class="bi bi-plus-circle mr-2"></i> Novo Cliente
             </a>
         </div>
     </div>
 
+    <!-- Bloco PHP para exibir uma mensagem de sucesso, se existir na sessão. -->
     <?php if (isset($_SESSION['mensagem_sucesso'])): ?>
         <div class="mb-4 p-4 text-green-800 bg-green-100 border border-green-200 rounded">
             <i class="bi bi-check-circle-fill mr-2"></i> <?= htmlspecialchars($_SESSION['mensagem_sucesso']); ?>
         </div>
-        <?php unset($_SESSION['mensagem_sucesso']); ?>
+        <?php unset($_SESSION['mensagem_sucesso']); // Remove a mensagem da sessão para não exibi-la novamente. 
+        ?>
     <?php endif; ?>
 
+    <!-- Bloco PHP para exibir uma mensagem de erro, se existir na sessão. -->
     <?php if (isset($_SESSION['mensagem_erro'])): ?>
         <div class="mb-4 p-4 text-red-800 bg-red-100 border border-red-200 rounded">
             <i class="bi bi-exclamation-triangle-fill mr-2"></i> <?= htmlspecialchars($_SESSION['mensagem_erro']); ?>
         </div>
-        <?php unset($_SESSION['mensagem_erro']); ?>
+        <?php unset($_SESSION['mensagem_erro']); // Remove a mensagem da sessão. 
+        ?>
     <?php endif; ?>
 
+    <!-- Seção exibida quando não há clientes cadastrados. -->
     <?php if (empty($clientes)): ?>
         <div class="text-center py-10">
             <i class="bi bi-journal-x text-5xl text-gray-400 mb-4"></i>
@@ -37,18 +47,22 @@
                 <i class="bi bi-person-plus-fill mr-1"></i> Adicionar Primeiro Cliente
             </a>
         </div>
+        <!-- Seção exibida quando há clientes para listar. -->
     <?php else: ?>
+        <!-- Contêiner da tabela que permite rolagem horizontal em telas pequenas. -->
         <div class="overflow-x-auto">
             <table class="min-w-full table-auto border-collapse">
+                <!-- Cabeçalho da tabela. -->
                 <thead>
                     <tr class="bg-gray-100 text-left text-sm font-semibold text-gray-700">
                         <th class="p-3">Nome</th>
                         <th class="p-3">Telefone</th>
-                        <th class="p-3 hidden lg:table-cell">CPF</th>
-                        <th class="p-3 hidden md:table-cell">Empreendimento</th>
+                        <th class="p-3 hidden lg:table-cell">CPF</th> <!-- Coluna visível apenas em telas grandes (lg). -->
+                        <th class="p-3 hidden md:table-cell">Empreendimento</th> <!-- Coluna visível apenas em telas médias e maiores (md). -->
                         <th class="p-3 text-center">Classificação</th>
                         <th class="p-3 text-center">Foto</th>
                         <th class="p-3 hidden md:table-cell">Corretor</th>
+                        <!-- A coluna "Imobiliária" só é exibida para o SuperAdmin. -->
                         <?php if ($_SESSION['usuario']['permissao'] === 'SuperAdmin'): ?>
                             <th class="p-3 hidden md:table-cell">Imobiliária</th>
                         <?php endif; ?>
@@ -56,7 +70,9 @@
                         <th class="p-3 text-center">Ações</th>
                     </tr>
                 </thead>
+                <!-- Corpo da tabela onde os dados são preenchidos. -->
                 <tbody class="text-sm text-gray-800">
+                    <!-- Loop PHP para percorrer a lista de clientes. -->
                     <?php foreach ($clientes as $cliente): ?>
                         <tr class="border-b border-gray-200 hover:bg-gray-50">
                             <td class="p-3 font-medium"><?= htmlspecialchars($cliente['nome']) ?></td>
@@ -64,6 +80,7 @@
                             <td class="p-3 hidden lg:table-cell"><?= htmlspecialchars($cliente['cpf'] ?? '-') ?></td>
                             <td class="p-3 hidden md:table-cell"><?= htmlspecialchars($cliente['empreendimento'] ?? '-') ?></td>
                             <td class="p-3 text-center">
+                                <!-- Lógica PHP para definir a cor do badge de classificação. -->
                                 <?php
                                 switch ($cliente['tipo_lista']) {
                                     case 'Potencial':
@@ -77,11 +94,13 @@
                                         break;
                                 }
                                 ?>
+                                <!-- Badge de classificação com a cor definida dinamicamente. -->
                                 <span class="px-2 py-1 border text-xs font-medium rounded <?= $tipoListaClass ?>">
                                     <?= htmlspecialchars($cliente['tipo_lista']) ?>
                                 </span>
                             </td>
                             <td class="p-3 text-center">
+                                <!-- Exibe a foto do cliente ou um ícone padrão se não houver foto. -->
                                 <?php if (!empty($cliente['foto'])): ?>
                                     <img src="<?= htmlspecialchars($cliente['foto']) ?>" alt="Foto" class="w-10 h-10 rounded object-cover inline-block border" onerror="this.src='https://via.placeholder.com/40';">
                                 <?php else: ?>
@@ -89,14 +108,17 @@
                                 <?php endif; ?>
                             </td>
                             <td class="p-3 hidden md:table-cell"><?= htmlspecialchars($cliente['nome_corretor'] ?? 'N/A') ?></td>
+                            <!-- Exibe a imobiliária apenas para SuperAdmin. -->
                             <?php if ($_SESSION['usuario']['permissao'] === 'SuperAdmin'): ?>
                                 <td class="p-3 hidden md:table-cell"><?= htmlspecialchars($cliente['nome_imobiliaria'] ?? 'N/A') ?></td>
                             <?php endif; ?>
                             <td class="p-3 hidden lg:table-cell">
+                                <!-- Formata e exibe a data e a hora do cadastro. -->
                                 <div><?= isset($cliente['criado_em']) ? date('d/m/Y', strtotime($cliente['criado_em'])) : '-' ?></div>
                                 <small class="text-gray-500"><?= isset($cliente['criado_em']) ? date('H:i', strtotime($cliente['criado_em'])) : '' ?></small>
                             </td>
                             <td class="p-3 text-center">
+                                <!-- Link para a página de detalhes do cliente. -->
                                 <a href="index.php?controller=cliente&action=mostrar&id_cliente=<?= $cliente['id_cliente'] ?>" class="text-blue-600 hover:text-blue-800 text-sm">
                                     <i class="bi bi-eye-fill"></i> <span class="hidden md:inline">Detalhes</span>
                                 </a>

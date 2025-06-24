@@ -1,17 +1,22 @@
+<!-- Contêiner para o cabeçalho do dashboard. -->
 <div class="mb-6">
+    <!-- Título que exibe dinamicamente o nível de permissão do usuário logado. -->
     <h2 class="text-2xl font-semibold text-gray-800">Dashboard - <?= htmlspecialchars($permissao) ?></h2>
 </div>
-<!--TODO : AQUI FICARÁ OS DASHBOARDS---->
+<!-- TODO: Um comentário indicando que a área de dashboards será implementada aqui. -->
+<!-- Grid para organizar os cartões (cards) do dashboard. -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    <!-- Cartão exemplo -->
+    <!-- Cartão de exemplo que exibe o nome do usuário logado. -->
     <div class="bg-white rounded-xl shadow p-4">
         <div class="flex items-center justify-between mb-2">
             <span class="text-sm text-gray-500">Usuário logado</span>
             <i class="fas fa-user text-blue-600"></i>
         </div>
+        <!-- Exibe o nome do usuário com segurança, prevenindo ataques XSS. -->
         <p class="text-xl font-bold text-gray-800"><?= htmlspecialchars($nomeUsuario) ?></p>
     </div>
 
+    <!-- Bloco PHP: Este cartão só será exibido se a permissão do usuário for 'Admin'. -->
     <?php if ($permissao === 'Admin'): ?>
         <div class="bg-white rounded-xl shadow p-4">
             <div class="flex items-center justify-between mb-2">
@@ -22,6 +27,7 @@
         </div>
     <?php endif; ?>
 
+    <!-- Bloco PHP: Este cartão só será exibido se a permissão do usuário for 'Coordenador'. -->
     <?php if ($permissao === 'Coordenador'): ?>
         <div class="bg-white rounded-xl shadow p-4">
             <div class="flex items-center justify-between mb-2">
@@ -32,6 +38,7 @@
         </div>
     <?php endif; ?>
 
+    <!-- Bloco PHP: Este cartão só será exibido se a permissão do usuário for 'Corretor'. -->
     <?php if ($permissao === 'Corretor'): ?>
         <div class="bg-white rounded-xl shadow p-4">
             <div class="flex items-center justify-between mb-2">
