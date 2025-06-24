@@ -93,8 +93,8 @@
         <nav class="flex space-x-2">
             <!-- Loop para criar um link para cada página. -->
             <?php for ($i = 1; $i <= $total_paginas; $i++): ?>
+                <!-- Aplica classes diferentes para destacar a página atual -->
                 <a href="?pagina=<?= $i ?>&filtro=<?= urlencode($filtro) ?>"
-                    <!-- Aplica classes diferentes para destacar a página atual. -->
                     class="px-3 py-1 rounded border <?= $i == $pagina_atual ? 'bg-blue-600 text-white' : 'text-gray-700 bg-white hover:bg-gray-100' ?>">
                     <?= $i ?>
                 </a>
