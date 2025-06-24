@@ -1,37 +1,32 @@
 <?php
 
-// Função para conectar ao banco de dados automaticamente
 function conectarBanco()
 {
-    // Define o host do banco de dados (geralmente localhost)
     $host = "localhost";
-
-    // Nome do banco de dados
     $databasename = "tio_Broker";
-
-    // Nome de usuário do MySQL
     $username = "root";
 
-    // Lista de senhas para tentar — primeiro com "root", depois sem senha
-    $senhaTentativas = ["root", ""];
+    // Lista de senhas para tentar: primeiro sem senha, depois com 'root'
+    $senhaTentativas = ["", "root"];
 
-    // Loop para tentar cada senha até conseguir conectar
     foreach ($senhaTentativas as $senha) {
+        try {
+            // Tenta conectar com a senha atual
+            $conexao = new mysqli($host, $username, $senha, $databasename);
 
-        // Tenta estabelecer a conexão com a senha atual
-        // O "@" suprime mensagens de erro caso a tentativa falhe
-        $connection = @new mysqli($host, $username, $senha, $databasename);
-
-        // Verifica se a conexão foi bem-sucedida
-        if (!$connection->connect_error) {
-            // Se conectou com sucesso, retorna a conexão
-            return $connection;
+            // Verifica se conectou
+            if (!$conexao->connect_error) {
+                return $conexao; // sucesso
+            }
+        } catch (mysqli_sql_exception $e) {
+            // Ignora a exceção e tenta a próxima senha
+            continue;
         }
     }
 
-    // Se nenhuma senha funcionou, exibe uma mensagem de erro e encerra o script
-    die("❌ Não foi possível conectar ao banco de dados com nenhuma das senhas testadas.");
+    // Se chegou aqui, nenhuma tentativa funcionou
+    die("❌ Falha ao conectar ao banco de dados. Verifique as credenciais.");
 }
 
-// Usa a função para obter a conexão
+// Usa a função para conectar
 $connection = conectarBanco();
