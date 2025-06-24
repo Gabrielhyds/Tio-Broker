@@ -35,7 +35,7 @@ if ($permissao === 'SuperAdmin') {
 }
 
 // Define qual item do menu de navegação deve ser marcado como "ativo".
-$activeMenu = 'usuario_listar';
+$activeMenu = 'usuario_cadastrar';
 // Define o nome do arquivo que contém o formulário de cadastro.
 $conteudo = 'cadastrar_conteudo.php';
 // Inclui o template base da página, que usará a variável $conteudo para carregar o HTML correto.

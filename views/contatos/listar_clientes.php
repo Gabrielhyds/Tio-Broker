@@ -11,7 +11,7 @@ if (!isset($_SESSION['usuario'])) {
 }
 
 // Define uma variável para identificar o menu ativo. Isto será usado na 'sidebar' para destacar o link correto.
-$activeMenu = 'cliente_listar';
+$activeMenu = 'contatos';
 // Define o nome do arquivo que contém o conteúdo principal desta página (a lista de clientes).
 $conteudo = 'listar_cliente_content.php';
 // Inclui o arquivo de layout base, que montará a estrutura da página (cabeçalho, rodapé, etc.) e incluirá o arquivo de conteúdo definido acima.

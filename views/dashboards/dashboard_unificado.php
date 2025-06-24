@@ -8,6 +8,9 @@ $permissao = $usuario['permissao'] ?? 'Desconhecido';
 // Obtém o nome do usuário, com 'Usuário' como padrão.
 $nomeUsuario = $usuario['nome'] ?? 'Usuário';
 
+// Define qual item do menu de navegação deve ser marcado como "ativo".
+$activeMenu = 'dashboard';
+
 // Define o caminho para o arquivo que contém o conteúdo visual do dashboard.
 $conteudo = __DIR__ . '/dashboard_unificado_content.php';
 // Inclui o template base da página, que por sua vez carregará o arquivo de conteúdo definido acima.
