@@ -63,7 +63,7 @@ require_once __DIR__ . '/../../config/rotas.php';
             </div>
         <?php endif; ?>
 
-        <!-- Seção de menu: Ferramentas (visível para todos os perfis). -->
+        <!-- Seção de menu: Ferramentas (todos) -->
         <?php if (in_array($permissao, ['SuperAdmin', 'Admin', 'Coordenador', 'Corretor'])): ?>
             <div>
                 <h3 class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Ferramentas</h3>
@@ -73,7 +73,7 @@ require_once __DIR__ . '/../../config/rotas.php';
                 <a href="<?= BASE_URL ?>views/contatos/index.php?controller=cliente&action=listar" class="sidebar-link <?= $activeMenu === 'contatos' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
                     <i class="fas fa-address-book w-6 text-center"></i><span class="ml-2">Agenda de Contatos</span>
                 </a>
-                <a href="#" class="sidebar-link <?= $activeMenu === 'tarefas' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
+                <a href="<?= BASE_URL ?>views/tarefas/listar_tarefa.php" class="sidebar-link <?= $activeMenu === 'tarefas' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
                     <i class="fas fa-tasks w-6 text-center"></i><span class="ml-2">Tarefas</span>
                 </a>
                 <a href="<?= BASE_URL ?>views/agenda/agenda.php" class="sidebar-link <?= $activeMenu === 'agenda' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
