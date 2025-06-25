@@ -1,3 +1,10 @@
+<?php
+
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+?>
 <!-- Importa a biblioteca SweetAlert2 para exibir alertas mais bonitos. -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <!-- Título da página de cadastro. -->
