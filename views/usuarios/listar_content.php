@@ -90,7 +90,7 @@
 <!-- Seção de paginação, exibida apenas se houver mais de uma página. -->
 <?php if ($total_paginas > 1): ?>
     <div class="flex justify-center mt-6">
-        <nav class="flex space-x-2">
+        <nav class="flex space-x-2  ">
             <!-- Loop para criar um link para cada página. -->
             <?php for ($i = 1; $i <= $total_paginas; $i++): ?>
                 <!-- Aplica classes diferentes para destacar a página atual -->

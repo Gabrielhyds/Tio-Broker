@@ -1,22 +1,10 @@
 <?php
-
-// O '@' suprime erros caso a sessão já tenha sido iniciada. Garante que podemos usar a superglobal $_SESSION.
-@session_start();
-
-// Verifica se não há um usuário na sessão, o que significa que o usuário não está logado.
-if (!isset($_SESSION['usuario'])) {
-    // Se não estiver logado, redireciona o navegador para a página de login.
-    header('Location: ../auth/login.php');
-    // Encerra a execução do script para garantir que o redirecionamento ocorra imediatamente.
-    exit;
-}
-
-
 require_once '../../config/config.php';
-require_once '../../controllers/TarefaController.php';
+require_once '../../models/Tarefa.php';
+session_start();
 
-$controller = new TarefaController($connection);
-$tarefas = $controller->listarInterno(); // função que apenas retorna array (sem HTML)
+$tarefaModel = new Tarefa($connection);
+$tarefas = $tarefaModel->listar();
 
 $activeMenu = 'tarefas';
 $conteudo = 'listar_tarefa_content.php';

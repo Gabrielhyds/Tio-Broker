@@ -1,7 +1,7 @@
 <?php
 
 // Define o caminho base da URL do sistema (usado para montar links no frontend)
-$basePath = '/cr7/tio-broker/';
+$basePath = '/tio-broker/';
 
 // Obtém o caminho absoluto da raiz do projeto
 // __DIR__ representa o diretório atual (normalmente /app/config), então voltamos dois níveis para chegar à raiz

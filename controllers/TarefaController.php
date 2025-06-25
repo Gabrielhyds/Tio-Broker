@@ -1,154 +1,105 @@
 <?php
+require_once '../config/config.php';
+require_once '../models/Tarefa.php';
 
-require_once __DIR__ . '/../models/Tarefa.php';
+session_start();
 
-class TarefaController
-{
-    private $db;
-    private $tarefaModel;
-    private $baseUrl;
+$tarefaModel = new Tarefa($connection);
 
-    public function __construct($db)
-    {
-        $this->db = $db;
-        $this->tarefaModel = new Tarefa($this->db);
+// Obtem a ação
+$action = $_POST['action'] ?? $_GET['action'] ?? null;
 
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+if ($action === 'cadastrar') {
+    $id_usuario = $_POST['id_usuario'];
+    $tipo_tarefa = $_POST['tipo_tarefa'];
+    $descricao = trim($_POST['descricao']);
+    $status = $_POST['status'];
+    $prioridade = $_POST['prioridade'] ?? 'media';
+    $prazo = $_POST['prazo'] ?? null;
 
-        $this->baseUrl = 'index.php?controller=tarefa&action=listar';
-    }
-
-    private function verificarLogin()
-    {
-        if (!isset($_SESSION['usuario'])) {
-            $_SESSION['mensagem_erro'] = "Você precisa estar logado para acessar esta página.";
-            header('Location: index.php?controller=auth&action=login');
+    if ($tipo_tarefa === 'cliente') {
+        $id_cliente = $_POST['id_cliente'] ?? null;
+        if (!$id_cliente) {
+            $_SESSION['erro'] = 'Selecione um cliente.';
+            header('Location: ../views/tarefas/cadastrar_tarefa.php');
             exit;
         }
-    }
-
-    public function listar()
-    {
-        $this->verificarLogin();
-
-        $id_usuario = $_SESSION['usuario']['id_usuario'];
-        $tarefas = $this->tarefaModel->listarPorUsuario($id_usuario);
-
-        $activeMenu = 'tarefas';
-        $conteudo = '../views/tarefas/listar_tarefa_content.php';
-        include '../template_base_dashboard.php';
-    }
-
-    public function cadastrar()
-    {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $id_usuario = $_SESSION['usuario']['id_usuario'];
-            $id_cliente = $_POST['id_cliente'] ?? null;
-            $descricao = $_POST['descricao'] ?? '';
-            $status = $_POST['status'] ?? 'pendente';
-
-            $ok = $this->tarefaModel->cadastrar($id_usuario, $id_cliente, $descricao, $status);
-
-            if ($ok) {
-                $_SESSION['mensagem_sucesso'] = "Tarefa cadastrada!";
-                header("Location: index.php?controller=tarefa&action=listar");
-                exit;
-            } else {
-                echo "Erro ao cadastrar: " . $this->db->error;
-                exit;
-            }
-        }
-
-        $activeMenu = 'tarefas';
-        $conteudo = '../views/tarefas/cadastrar_tarefa_content.php';
-        include '../template_base_dashboard.php';
-    }
-
-    public function editar()
-    {
-        $this->verificarLogin();
-
-        if (!isset($_GET['id_tarefa']) || !is_numeric($_GET['id_tarefa'])) {
-            $_SESSION['mensagem_erro'] = "ID da tarefa inválido.";
-            header('Location: ' . $this->baseUrl);
+        $outro_tipo = null;
+    } elseif ($tipo_tarefa === 'outro') {
+        $id_cliente = null;
+        $outro_tipo = trim($_POST['outro_tipo']);
+        if (empty($outro_tipo)) {
+            $_SESSION['erro'] = 'Preencha o campo "Outro Tipo".';
+            header('Location: ../views/tarefas/cadastrar_tarefa.php');
             exit;
         }
-
-        $id_tarefa = (int)$_GET['id_tarefa'];
-
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $descricao = trim($_POST['descricao'] ?? '');
-            $status = $_POST['status'] ?? 'pendente';
-            $data_conclusao = ($status === 'concluida') ? date('Y-m-d H:i:s') : null;
-
-            if (empty($descricao)) {
-                $_SESSION['mensagem_erro'] = "Descrição obrigatória.";
-                $tarefa = ['id_tarefa' => $id_tarefa, 'descricao' => $descricao, 'status' => $status];
-                $activeMenu = 'tarefas';
-                $conteudo = '../views/tarefas/editar_tarefa_content.php';
-                include '../template_base_dashboard.php';
-                return;
-            }
-
-            if ($this->tarefaModel->atualizar($id_tarefa, $descricao, $status, $data_conclusao)) {
-                $_SESSION['mensagem_sucesso'] = "Tarefa atualizada com sucesso!";
-                header('Location: ' . $this->baseUrl);
-            } else {
-                $_SESSION['mensagem_erro'] = "Erro ao atualizar tarefa.";
-                $tarefa = ['id_tarefa' => $id_tarefa, 'descricao' => $descricao, 'status' => $status];
-                $activeMenu = 'tarefas';
-                $conteudo = '../views/tarefas/editar_tarefa_content.php';
-                include '../template_base_dashboard.php';
-            }
-            return;
-        }
-
-        $tarefa = $this->tarefaModel->buscarPorId($id_tarefa);
-        if (!$tarefa) {
-            $_SESSION['mensagem_erro'] = "Tarefa não encontrada.";
-            header('Location: ' . $this->baseUrl);
-            exit;
-        }
-
-        $activeMenu = 'tarefas';
-        $conteudo = '../views/tarefas/editar_tarefa_content.php';
-        include '../template_base_dashboard.php';
-    }
-
-    public function excluir()
-    {
-        $this->verificarLogin();
-
-        if (!isset($_GET['id_tarefa']) || !is_numeric($_GET['id_tarefa'])) {
-            $_SESSION['mensagem_erro'] = "ID inválido para exclusão.";
-            header('Location: ' . $this->baseUrl);
-            exit;
-        }
-
-        $id_tarefa = (int)$_GET['id_tarefa'];
-
-        if ($this->tarefaModel->excluir($id_tarefa)) {
-            $_SESSION['mensagem_sucesso'] = "Tarefa excluída com sucesso!";
-        } else {
-            $_SESSION['mensagem_erro'] = "Erro ao excluir tarefa.";
-        }
-
-        header('Location: ' . $this->baseUrl);
+    } else {
+        $_SESSION['erro'] = 'Tipo de tarefa inválido.';
+        header('Location: ../views/tarefas/cadastrar_tarefa.php');
         exit;
     }
 
-    // Métodos auxiliares (internos para views)
-    public function listarInterno()
-    {
-        $id_usuario = $_SESSION['usuario']['id_usuario'] ?? null;
-        if (!$id_usuario) return [];
-        return $this->tarefaModel->listarPorUsuario($id_usuario);
+    // Substitui descrição se for tipo "outro"
+    $descricaoFinal = ($tipo_tarefa === 'outro') ? $outro_tipo : $descricao;
+
+    $ok = $tarefaModel->criar($id_usuario, $id_cliente, $descricaoFinal, $status, $prioridade, $prazo);
+
+    $_SESSION[$ok ? 'sucesso' : 'erro'] = $ok ? 'Tarefa cadastrada com sucesso!' : 'Erro ao cadastrar tarefa.';
+    header('Location: ../views/tarefas/listar_tarefa.php');
+    exit;
+}
+
+if ($action === 'editar') {
+    $id_tarefa = $_POST['id_tarefa'];
+    $id_usuario = $_POST['id_usuario'];
+    $tipo_tarefa = $_POST['tipo_tarefa'];
+    $descricao = trim($_POST['descricao']);
+    $status = $_POST['status'];
+    $prioridade = $_POST['prioridade'] ?? 'media';
+    $prazo = $_POST['prazo'] ?? null;
+
+    if ($tipo_tarefa === 'cliente') {
+        $id_cliente = $_POST['id_cliente'] ?? null;
+        if (!$id_cliente) {
+            $_SESSION['erro'] = 'Selecione um cliente.';
+            header("Location: ../views/tarefas/editar_tarefa.php?id=$id_tarefa");
+            exit;
+        }
+        $outro_tipo = null;
+    } elseif ($tipo_tarefa === 'outro') {
+        $id_cliente = null;
+        $outro_tipo = trim($_POST['outro_tipo']);
+        if (empty($outro_tipo)) {
+            $_SESSION['erro'] = 'Preencha o campo "Outro Tipo".';
+            header("Location: ../views/tarefas/editar_tarefa.php?id=$id_tarefa");
+            exit;
+        }
+    } else {
+        $_SESSION['erro'] = 'Tipo de tarefa inválido.';
+        header("Location: ../views/tarefas/editar_tarefa.php?id=$id_tarefa");
+        exit;
     }
 
-    public function buscarInterno($id_tarefa)
-    {
-        return $this->tarefaModel->buscarPorId($id_tarefa);
+    $descricaoFinal = ($tipo_tarefa === 'outro') ? $outro_tipo : $descricao;
+
+    $ok = $tarefaModel->atualizar($id_tarefa, $id_usuario, $id_cliente, $descricaoFinal, $status, $prioridade, $prazo);
+
+    $_SESSION[$ok ? 'sucesso' : 'erro'] = $ok ? 'Tarefa atualizada com sucesso!' : 'Erro ao atualizar tarefa.';
+    header('Location: ../views/tarefas/listar_tarefa.php');
+    exit;
+}
+
+if ($action === 'excluir') {
+    $id = $_GET['id'] ?? null;
+
+    if (!$id) {
+        $_SESSION['erro'] = 'ID da tarefa inválido.';
+        header('Location: ../views/tarefas/listar_tarefa.php');
+        exit;
     }
+
+    $ok = $tarefaModel->excluir($id);
+    $_SESSION[$ok ? 'sucesso' : 'erro'] = $ok ? 'Tarefa excluída com sucesso!' : 'Erro ao excluir tarefa.';
+    header('Location: ../views/tarefas/listar_tarefa.php');
+    exit;
 }

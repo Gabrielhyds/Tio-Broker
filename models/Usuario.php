@@ -334,4 +334,13 @@ class Usuario
         $resultado = $stmt->get_result();
         return $resultado ? $resultado->fetch_all(MYSQLI_ASSOC) : [];
     }
+    /**
+     * Lista todos os usuários ativos (sem imobiliária, sem filtros extras).
+     */
+    public function listarTodos()
+    {
+        $sql = "SELECT * FROM usuario WHERE is_deleted = 0 ORDER BY nome ASC";
+        $resultado = $this->conn->query($sql);
+        return $resultado ? $resultado->fetch_all(MYSQLI_ASSOC) : [];
+    }
 }

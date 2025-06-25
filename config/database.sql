@@ -107,14 +107,17 @@ CREATE TABLE documentos (
 CREATE TABLE tarefas (
     id_tarefa INT AUTO_INCREMENT PRIMARY KEY,
     id_usuario INT NOT NULL,
-    id_cliente INT NOT NULL,
+    id_cliente INT, -- Agora pode ser NULL caso seja "Outro"
     descricao TEXT NOT NULL,
     status ENUM('pendente', 'em andamento', 'concluida') NOT NULL DEFAULT 'pendente',
+    prioridade ENUM('baixa', 'média', 'alta') DEFAULT 'média',
+    prazo DATE DEFAULT NULL,
     data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
-    data_conclusao DATETIME,
+    data_conclusao DATETIME DEFAULT NULL,
+    
     FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE,
-    FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente) ON DELETE CASCADE
-);
+    FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente) ON DELETE SET NULL
+);  
 
 -- Tabela de Ranking de Desempenho
 CREATE TABLE ranking_desempenho (
