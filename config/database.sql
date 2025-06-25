@@ -77,6 +77,8 @@ CREATE TABLE agenda_eventos (
     id_evento INT AUTO_INCREMENT PRIMARY KEY,
     id_usuario INT NOT NULL,
     id_cliente INT NOT NULL,
+    id_imovel INT NULL DEFAULT NULL AFTER id_cliente,
+    feedback TEXT NULL DEFAULT NULL AFTER lembrete
     titulo VARCHAR(255) NOT NULL,
     descricao TEXT,
     data_inicio DATETIME NOT NULL,
