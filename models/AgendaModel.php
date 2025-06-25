@@ -17,67 +17,73 @@ if (!class_exists('AgendaModel')) {
         }
 
         /**
-         * Busca todos os eventos de um usuário específico usando mysqli.
+         * Busca todos os eventos de um usuário específico.
+         * A consulta foi atualizada para trazer todos os dados necessários para a edição.
          * @param int $id_usuario O ID do usuário cujos eventos serão buscados.
          * @return array Retorna um array associativo com os eventos encontrados.
          */
         public function buscarEventosPorUsuario($id_usuario)
         {
-            // Define a consulta SQL para selecionar eventos, juntando com a tabela de clientes.
             $sql = "SELECT 
-                        e.id_evento, e.titulo, e.data_inicio, e.data_fim, e.tipo_evento, 
+                        e.id_evento, e.titulo, e.descricao, e.data_inicio, e.data_fim, e.tipo_evento, e.lembrete,
+                        e.id_cliente,
                         COALESCE(c.nome, 'Sem cliente') as nome_cliente 
                     FROM agenda_eventos e
                     LEFT JOIN cliente c ON e.id_cliente = c.id_cliente
                     WHERE e.id_usuario = ?";
 
-            // Prepara a consulta SQL para execução.
             $stmt = $this->connection->prepare($sql);
-            // Se a preparação falhar, retorna um array vazio para evitar erros.
-            if ($stmt === false) {
-                return [];
-            }
-
-            // Associa o parâmetro (ID do usuário) à consulta preparada. 'i' significa que é um inteiro.
+            if ($stmt === false) return [];
+            
             $stmt->bind_param("i", $id_usuario);
-            // Executa a consulta.
             $stmt->execute();
-            // Obtém o conjunto de resultados da consulta.
             $result = $stmt->get_result();
-            // Fecha o statement para liberar recursos.
             $stmt->close();
 
-            // Retorna todos os resultados como um array de arrays associativos.
             return $result->fetch_all(MYSQLI_ASSOC);
         }
 
         /**
-         * Cria um novo evento na agenda usando mysqli.
+         * (NOVO) Busca um único evento pelo seu ID, garantindo que ele pertence ao usuário.
+         * Essencial para a funcionalidade de edição.
+         * @param int $id_evento O ID do evento a ser buscado.
+         * @param int $id_usuario O ID do usuário para verificação de permissão.
+         * @return array|null Retorna o evento ou nulo se não encontrado.
+         */
+        public function buscarEventoPorId($id_evento, $id_usuario)
+        {
+            $sql = "SELECT * FROM agenda_eventos WHERE id_evento = ? AND id_usuario = ?";
+            $stmt = $this->connection->prepare($sql);
+             if ($stmt === false) return null;
+
+            $stmt->bind_param("ii", $id_evento, $id_usuario);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $stmt->close();
+
+            return $result->fetch_assoc();
+        }
+
+        /**
+         * Cria um novo evento na agenda.
          * @param array $dados Os dados do evento a ser inserido.
          * @return bool Retorna true se o evento foi criado com sucesso, false caso contrário.
          */
         public function criarEvento($dados)
         {
-            // Define a consulta SQL para inserir um novo evento na tabela.
             $sql = "INSERT INTO agenda_eventos (id_usuario, id_cliente, titulo, descricao, data_inicio, data_fim, tipo_evento, lembrete) 
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-
-            // Prepara a consulta SQL para execução.
+            
             $stmt = $this->connection->prepare($sql);
-            // Se a preparação da consulta falhar.
             if ($stmt === false) {
-                // Registra o erro no log do servidor para depuração.
-                error_log("Erro de preparação no SQL: " . $this->connection->error);
-                // Retorna false para indicar que a operação falhou.
+                error_log("Erro de preparação no SQL (criarEvento): " . $this->connection->error);
                 return false;
             }
 
-            // Associa os parâmetros do array $dados à consulta preparada.
-            // A string "iisssssi" especifica os tipos de dados de cada parâmetro (integer, integer, string, string, etc.).
             $stmt->bind_param(
                 "iisssssi",
                 $dados['id_usuario'],
-                $dados['id_cliente'], // Se for nulo, será tratado como 0, o que é aceitável pela coluna.
+                $dados['id_cliente'],
                 $dados['titulo'],
                 $dados['descricao'],
                 $dados['data_inicio'],
@@ -86,17 +92,91 @@ if (!class_exists('AgendaModel')) {
                 $dados['lembrete']
             );
 
-            // Executa a instrução de inserção.
             $success = $stmt->execute();
-            // Se a execução falhar.
             if (!$success) {
-                // Registra o erro específico da execução no log.
-                error_log("Erro de execução do evento: " . $stmt->error);
+                error_log("Erro de execução do evento (criarEvento): " . $stmt->error);
             }
-            // Fecha o statement para liberar recursos do servidor.
             $stmt->close();
+            return $success;
+        }
 
-            // Retorna o status de sucesso (true ou false) da execução.
+        /**
+         * (NOVO) Atualiza um evento existente no banco de dados.
+         * @param int $id_evento O ID do evento a ser atualizado.
+         * @param array $dados Os novos dados do evento.
+         * @return bool Retorna true se a atualização foi bem-sucedida.
+         */
+        public function atualizarEvento($id_evento, $dados)
+        {
+            $sql = "UPDATE agenda_eventos SET 
+                        id_cliente = ?, titulo = ?, descricao = ?, data_inicio = ?, 
+                        data_fim = ?, tipo_evento = ?, lembrete = ?
+                    WHERE id_evento = ? AND id_usuario = ?";
+
+            $stmt = $this->connection->prepare($sql);
+            if ($stmt === false) {
+                error_log("Erro de preparação no SQL (atualizarEvento): " . $this->connection->error);
+                return false;
+            }
+            
+            $stmt->bind_param(
+                "isssssiii",
+                $dados['id_cliente'],
+                $dados['titulo'],
+                $dados['descricao'],
+                $dados['data_inicio'],
+                $dados['data_fim'],
+                $dados['tipo_evento'],
+                $dados['lembrete'],
+                $id_evento,
+                $dados['id_usuario']
+            );
+            
+            $success = $stmt->execute();
+             if (!$success) {
+                error_log("Erro de execução do evento (atualizarEvento): " . $stmt->error);
+            }
+            $stmt->close();
+            return $success;
+        }
+
+        /**
+         * (NOVO) Atualiza apenas a data de início e fim de um evento (para drag & drop).
+         * @param int $id_evento O ID do evento.
+         * @param string $data_inicio A nova data de início.
+         * @param string $data_fim A nova data de fim.
+         * @param int $id_usuario O ID do usuário para segurança.
+         * @return bool Retorna true se a atualização foi bem-sucedida.
+         */
+        public function atualizarDataEvento($id_evento, $data_inicio, $data_fim, $id_usuario)
+        {
+            $sql = "UPDATE agenda_eventos SET data_inicio = ?, data_fim = ? 
+                    WHERE id_evento = ? AND id_usuario = ?";
+
+            $stmt = $this->connection->prepare($sql);
+            if ($stmt === false) return false;
+
+            $stmt->bind_param("ssii", $data_inicio, $data_fim, $id_evento, $id_usuario);
+            $success = $stmt->execute();
+            $stmt->close();
+            return $success;
+        }
+
+        /**
+         * (NOVO) Exclui um evento do banco de dados.
+         * @param int $id_evento O ID do evento a ser excluído.
+         * @param int $id_usuario O ID do usuário para segurança.
+         * @return bool Retorna true se a exclusão foi bem-sucedida.
+         */
+        public function excluirEvento($id_evento, $id_usuario)
+        {
+            $sql = "DELETE FROM agenda_eventos WHERE id_evento = ? AND id_usuario = ?";
+            $stmt = $this->connection->prepare($sql);
+            if ($stmt === false) return false;
+
+            $stmt->bind_param("ii", $id_evento, $id_usuario);
+            $success = $stmt->execute();
+            $stmt->close();
             return $success;
         }
     }
