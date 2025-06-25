@@ -1,4 +1,4 @@
-<!-- Importação das bibliotecas e estilos permanecem os mesmos -->
+<!-- Importação das bibliotecas e estilos -->
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
 <script src='https://cdn.jsdelivr.net/npm/@fullcalendar/core/locales/pt-br.global.js'></script>
 <style>
@@ -12,7 +12,7 @@
         background-color: white; color: #3b82f6;
         box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
     }
-    /* (NOVO) Estilo para eventos que já aconteceram */
+    /* Estilo para eventos que já aconteceram, deixando-os semi-transparentes */
     .fc-event-past {
         opacity: 0.6;
     }
@@ -54,12 +54,12 @@
         <div class="space-y-4">
             <div>
               <label for="titulo" class="block text-sm font-medium text-gray-700">Título*</label>
-              <input type="text" id="titulo" name="titulo" class="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+              <input type="text" id="titulo" name="titulo" class="mt-1 w-full px-4 py-2 border rounded-lg" required>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                   <label for="tipo_evento" class="block text-sm font-medium text-gray-700">Tipo*</label>
-                  <select id="tipo_evento" name="tipo_evento" class="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+                  <select id="tipo_evento" name="tipo_evento" class="mt-1 w-full px-4 py-2 border rounded-lg" required>
                       <option value="reuniao">Reunião</option>
                       <option value="visita">Visita</option>
                       <option value="outro">Outro</option>
@@ -67,35 +67,35 @@
               </div>
               <div>
                   <label for="id_cliente" class="block text-sm font-medium text-gray-700">Cliente</label>
-                  <select id="id_cliente" name="id_cliente" class="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"></select>
+                  <select id="id_cliente" name="id_cliente" class="mt-1 w-full px-4 py-2 border rounded-lg"></select>
               </div>
             </div>
             <!-- (NOVO) Campo para selecionar o imóvel, escondido por padrão -->
             <div id="imovel-container" class="hidden">
                 <label for="id_imovel" class="block text-sm font-medium text-gray-700">Imóvel da Visita</label>
-                <select id="id_imovel" name="id_imovel" class="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"></select>
+                <select id="id_imovel" name="id_imovel" class="mt-1 w-full px-4 py-2 border rounded-lg"></select>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                   <label for="data_inicio" class="block text-sm font-medium text-gray-700">Início*</label>
-                  <input type="datetime-local" id="data_inicio" name="data_inicio" class="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+                  <input type="datetime-local" id="data_inicio" name="data_inicio" class="mt-1 w-full px-4 py-2 border rounded-lg" required>
               </div>
               <div>
                   <label for="data_fim" class="block text-sm font-medium text-gray-700">Fim*</label>
-                  <input type="datetime-local" id="data_fim" name="data_fim" class="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+                  <input type="datetime-local" id="data_fim" name="data_fim" class="mt-1 w-full px-4 py-2 border rounded-lg" required>
               </div>
             </div>
             <div>
               <label for="descricao" class="block text-sm font-medium text-gray-700">Descrição</label>
-              <textarea id="descricao" name="descricao" rows="3" class="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"></textarea>
+              <textarea id="descricao" name="descricao" rows="3" class="mt-1 w-full px-4 py-2 border rounded-lg"></textarea>
             </div>
             <!-- (NOVO) Campo para feedback da visita, escondido por padrão -->
             <div id="feedback-container" class="hidden">
                 <label for="feedback" class="block text-sm font-medium text-gray-700">Feedback da Visita</label>
-                <textarea id="feedback" name="feedback" rows="3" placeholder="O que o cliente achou do imóvel?" class="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"></textarea>
+                <textarea id="feedback" name="feedback" rows="3" placeholder="O que o cliente achou do imóvel?" class="mt-1 w-full px-4 py-2 border rounded-lg"></textarea>
             </div>
             <div class="flex items-center">
-              <input type="checkbox" id="lembrete" name="lembrete" value="1" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+              <input type="checkbox" id="lembrete" name="lembrete" value="1" class="h-4 w-4 text-blue-600 border-gray-300 rounded">
               <label for="lembrete" class="ml-2 block text-sm text-gray-900">Ativar lembrete</label>
             </div>
         </div>
@@ -104,7 +104,7 @@
         <button type="button" id="deleteButton" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 hidden">Excluir</button>
         <div class="space-x-3">
           <button type="button" id="cancelModal" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancelar</button>
-          <button type="submit" id="saveButton" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Salvar Evento</button>
+          <button type="submit" id="saveButton" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Salvar</button>
         </div>
       </div>
     </form>
@@ -152,8 +152,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const dayViewBtn = document.getElementById('day-view-btn');
     const listViewBtn = document.getElementById('list-view-btn');
     const viewButtons = [monthViewBtn, weekViewBtn, dayViewBtn, listViewBtn];
-
-    // (NOVO) Referências aos novos campos
     const tipoEventoSelect = document.getElementById('tipo_evento');
     const imovelContainer = document.getElementById('imovel-container');
     const imovelSelect = document.getElementById('id_imovel');
@@ -170,7 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return d.toISOString().slice(0, 16);
     }
     
-    // ---- 3. INICIALIZAÇÃO DO FULLCALENDAR (com novidades) ----
+    // ---- 3. INICIALIZAÇÃO DO FULLCALENDAR ----
     const calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         locale: 'pt-br',
@@ -182,13 +180,7 @@ document.addEventListener('DOMContentLoaded', function() {
         eventClick: (info) => openModalForEdit(info.event),
         eventDrop: (info) => updateEventDate(info),
         eventResize: (info) => updateEventDate(info),
-        datesSet: function(info) {
-            calendarTitleEl.textContent = info.view.title;
-        },
-        /**
-         * (NOVO) Callback executado para cada evento renderizado.
-         * Usamos para adicionar uma classe a eventos passados, dando um feedback visual.
-         */
+        datesSet: function(info) { calendarTitleEl.textContent = info.view.title; },
         eventDidMount: function(info) {
             if (info.event.end && new Date(info.event.end) < new Date()) {
                 info.el.classList.add('fc-event-past');
@@ -199,11 +191,7 @@ document.addEventListener('DOMContentLoaded', function() {
     calendarTitleEl.textContent = calendar.view.title;
     updateActiveButton(monthViewBtn);
 
-    // ---- 4. FUNÇÕES DE MANIPULAÇÃO DOS MODAIS (com novidades) ----
-
-    /**
-     * (NOVO) Busca a lista de imóveis da nossa API simulada e popula o dropdown.
-     */
+    // ---- 4. FUNÇÕES DE MANIPULAÇÃO DOS MODAIS ----
     function populateImoveis(selectedImovelId = null) {
         fetch('../../controllers/api_imoveis.php')
             .then(res => res.json())
@@ -238,19 +226,13 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    /**
-     * (NOVO) Gerencia a visibilidade dos campos de imóvel e feedback com base no tipo e data do evento.
-     */
     function toggleCustomFields(tipo, dataFim) {
-        // Mostra/esconde o campo de imóvel
         if (tipo === 'visita') {
             imovelContainer.classList.remove('hidden');
         } else {
             imovelContainer.classList.add('hidden');
-            imovelSelect.value = ''; // Limpa a seleção se não for visita
+            imovelSelect.value = '';
         }
-
-        // Mostra/esconde o campo de feedback
         const agora = new Date();
         const fimEvento = new Date(dataFim);
         if (tipo === 'visita' && fimEvento < agora) {
@@ -271,11 +253,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
         document.getElementById('data_inicio').value = toLocalISOString(startDate);
         document.getElementById('data_fim').value = toLocalISOString(endDate);
-        
-        // Esconde os campos customizados ao criar
         imovelContainer.classList.add('hidden');
         feedbackContainer.classList.add('hidden');
-
         populateClientes();
         populateImoveis();
         modal.classList.remove('hidden');
@@ -289,7 +268,6 @@ document.addEventListener('DOMContentLoaded', function() {
         actionInput.value = 'atualizar';
         idEventoInput.value = event.id;
         deleteButton.classList.remove('hidden');
-
         fetch(`../../controllers/AgendaController.php?action=buscar_evento&id=${event.id}`)
             .then(response => response.json())
             .then(res => {
@@ -302,26 +280,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('descricao').value = evento.descricao;
                     feedbackTextarea.value = evento.feedback;
                     document.getElementById('lembrete').checked = evento.lembrete == 1;
-
-                    // Popula e depois gerencia a visibilidade dos campos
                     populateClientes(evento.id_cliente);
                     populateImoveis(evento.id_imovel);
                     toggleCustomFields(evento.tipo_evento, evento.data_fim);
-
                     modal.classList.remove('hidden');
                     modal.classList.add('flex');
                 } else {
-                    alert('Erro ao buscar dados do evento: ' + res.message);
+                    alert('Erro ao buscar dados: ' + res.message);
                 }
             });
     }
     
-    // As demais funções de fechar modais e de CRUD permanecem iguais
     function closeModal() { modal.classList.add('hidden'); modal.classList.remove('flex'); }
     function closeConfirmModal() { confirmModal.classList.add('hidden'); confirmModal.classList.remove('flex'); }
     
-    // ---- 5. FUNÇÕES DE SUBMISSÃO E ATUALIZAÇÃO (FETCH API) ----
-    eventoForm.addEventListener('submit', function(e) { /* ...código sem alteração... */
+    // ---- 5. FUNÇÕES DE SUBMISSÃO E ATUALIZAÇÃO ----
+    eventoForm.addEventListener('submit', function(e) {
         e.preventDefault();
         const formData = new FormData(eventoForm);
         fetch('../../controllers/AgendaController.php', { method: 'POST', body: formData })
@@ -331,17 +305,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 closeModal();
                 calendar.refetchEvents();
             } else {
-                modalError.textContent = data.message || 'Ocorreu um erro desconhecido.';
+                modalError.textContent = data.message || 'Erro desconhecido.';
                 modalError.classList.remove('hidden');
             }
         });
     });
-    deleteButton.addEventListener('click', function() { /* ...código sem alteração... */
+
+    deleteButton.addEventListener('click', function() {
         eventoIdParaExcluir = idEventoInput.value;
         confirmModal.classList.remove('hidden');
         confirmModal.classList.add('flex');
     });
-    confirmDeleteBtn.addEventListener('click', function() { /* ...código sem alteração... */
+
+    confirmDeleteBtn.addEventListener('click', function() {
         if (!eventoIdParaExcluir) return;
         const formData = new FormData();
         formData.append('action', 'excluir');
@@ -357,7 +333,8 @@ document.addEventListener('DOMContentLoaded', function() {
             eventoIdParaExcluir = null;
         });
     });
-    function updateEventDate(info) { /* ...código sem alteração... */
+
+    function updateEventDate(info) {
         const { event } = info;
         const formData = new FormData();
         formData.append('action', 'atualizar_data');
@@ -371,7 +348,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!data.success) { alert("Erro: " + data.message); info.revert(); }
         });
     }
-    function updateActiveButton(activeButton) { /* ...código sem alteração... */
+
+    function updateActiveButton(activeButton) {
         viewButtons.forEach(button => button.classList.remove('active'));
         activeButton.classList.add('active');
     }
@@ -384,16 +362,10 @@ document.addEventListener('DOMContentLoaded', function() {
     weekViewBtn.addEventListener('click', () => { calendar.changeView('timeGridWeek'); updateActiveButton(weekViewBtn); });
     dayViewBtn.addEventListener('click', () => { calendar.changeView('timeGridDay'); updateActiveButton(dayViewBtn); });
     listViewBtn.addEventListener('click', () => { calendar.changeView('listWeek'); updateActiveButton(listViewBtn); });
-
-    /**
-     * (NOVO) Listener para o campo 'Tipo de Evento'.
-     * Quando o tipo muda, chama a função para mostrar ou esconder os campos de imóvel e feedback.
-     */
     tipoEventoSelect.addEventListener('change', function() {
         const dataFim = document.getElementById('data_fim').value;
         toggleCustomFields(this.value, dataFim);
     });
-
     document.addEventListener('click', function(e) {
         if (e.target.closest('#closeModal') || e.target.closest('#cancelModal')) { closeModal(); }
         if (e.target.closest('#cancelDelete')) { closeConfirmModal(); }
