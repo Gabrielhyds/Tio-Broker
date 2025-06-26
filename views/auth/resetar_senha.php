@@ -1,61 +1,71 @@
 <?php
-// Recebe o token de redefinição da URL. Usa o operador de coalescência nula para evitar erros se o token não estiver presente.
 $token = $_GET['token'] ?? '';
 ?>
-<!-- Declara o tipo de documento como HTML5. -->
 <!DOCTYPE html>
-<!-- O elemento raiz da página, com o idioma definido como português do Brasil. -->
-<html lang="pt-br">
+<html lang="pt-BR">
 
 <head>
-    <!-- Define o conjunto de caracteres como UTF-8. -->
     <meta charset="UTF-8">
-    <!-- Define o título que aparecerá na aba do navegador. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Definir Nova Senha</title>
-    <!-- Importa a folha de estilos do Bootstrap via CDN para estilização. -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Tailwind CSS + Font Awesome -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
 </head>
-<!-- Define um fundo cinza claro para o corpo da página. -->
 
-<body style="background:#f6fbff">
-    <!-- Contêiner principal do Bootstrap para centralizar o conteúdo na tela. -->
-    <div class="container d-flex align-items-center justify-content-center vh-100">
-        <!-- A caixa (card) onde o formulário será exibido. -->
-        <div class="bg-white p-4 rounded shadow" style="max-width:370px;width:100%;">
-            <!-- Título da caixa. -->
-            <h4 class="mb-3 text-center text-primary">Nova Senha</h4>
-            <!-- Bloco PHP para exibir uma mensagem de erro se o token for inválido ou expirado. -->
-            <?php if (isset($_GET['error'])): ?>
-                <div class="alert alert-danger">Token inválido ou expirado. Solicite novamente.</div>
-            <?php endif; ?>
-            <!-- Bloco PHP para exibir uma mensagem de sucesso após o envio do link. (Esta mensagem geralmente estaria na página anterior, mas está aqui como exemplo). -->
-            <?php if (isset($_GET['success'])): ?>
-                <div class="alert alert-success">Enviamos o link para seu e-mail!</div>
-            <?php endif; ?>
-            <!-- Bloco PHP para exibir uma mensagem de erro se o e-mail não for encontrado. (Também da página anterior). -->
-            <?php if (isset($_GET['error'])): ?>
-                <div class="alert alert-danger">E-mail não cadastrado.</div>
-            <?php endif; ?>
-            <!-- Início do formulário para definir a nova senha. -->
-            <form action="../../controllers/ResetSenhaController.php" method="POST">
-                <!-- Campo oculto que envia o token recebido pela URL junto com o formulário. -->
-                <input type="hidden" name="token" value="<?= $token ?>">
-                <!-- Campo para a nova senha. -->
-                <div class="mb-3">
-                    <label class="form-label">Nova senha</label>
-                    <input type="password" name="senha" class="form-control" required>
-                </div>
-                <!-- Botão para enviar o formulário e redefinir a senha. -->
-                <div class="d-grid mb-2 mt-4">
-                    <button type="submit" class="btn btn-primary btn-lg">Redefinir senha</button>
-                </div>
-            </form>
-            <!-- Link para voltar à página de login. -->
-            <div class="text-center mt-2">
-                <a href="login.php" class="link-secondary small">Voltar ao login</a>
+<body class="bg-gradient-to-br from-blue-600 to-sky-800 min-h-screen flex items-center justify-center px-4">
+
+    <div class="bg-white w-full max-w-md p-8 rounded-xl shadow-lg">
+
+        <!-- Título -->
+        <h2 class="text-center text-2xl font-semibold text-blue-700 mb-4">Nova Senha</h2>
+
+        <!-- Mensagens -->
+        <?php if (isset($_GET['error'])): ?>
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4 text-sm">
+                Token inválido ou expirado. Solicite novamente.
             </div>
+        <?php endif; ?>
+
+        <?php if (isset($_GET['success'])): ?>
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded mb-4 text-sm">
+                Enviamos o link para seu e-mail!
+            </div>
+        <?php endif; ?>
+
+        <!-- Formulário -->
+        <form action="../../controllers/ResetSenhaController.php" method="POST" class="space-y-4">
+
+            <!-- Token oculto -->
+            <input type="hidden" name="token" value="<?= htmlspecialchars($token) ?>">
+
+            <!-- Nova senha -->
+            <div>
+                <label for="senha" class="block text-sm font-medium text-gray-700">Nova senha</label>
+                <input type="password" name="senha" id="senha" required
+                    class="w-full mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <!-- Botão -->
+            <button type="submit"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-medium transition">
+                Redefinir senha
+            </button>
+        </form>
+
+        <!-- Voltar ao login -->
+        <div class="text-center mt-4">
+            <a href="login.php" class="text-sm text-blue-600 hover:underline">
+                <i class="fas fa-arrow-left mr-1"></i>Voltar ao login
+            </a>
         </div>
     </div>
+
 </body>
 
 </html>

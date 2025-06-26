@@ -5,7 +5,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Proteção: Garante que o usuário está logado
 if (!isset($_SESSION['usuario'])) {
-    header('Location: /views/auth/login.php'); // Ajuste o caminho se necessário
+    header('Location: ../auth/login.php'); // Ajuste o caminho se necessário
     exit;
 }
 
