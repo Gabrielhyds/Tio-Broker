@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Login - Tio Broker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -13,10 +14,11 @@
     </style>
 </head>
 
-<body class="bg-gradient-to-br from-blue-600 to-sky-800 min-h-screen flex items-center justify-center">
+<body class="bg-gradient-to-br from-blue-600 to-sky-800 min-h-screen flex justify-center py-10 px-4">
 
     <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
 
+        <!-- Logo e título -->
         <div class="flex flex-col items-center mb-6">
             <img src="../assets/img/tio_broker_ligth.png" alt="Logo Imobiliária" class="h-14 mb-2">
             <h2 class="text-xl font-semibold text-gray-800">Acesso ao Painel</h2>
@@ -29,6 +31,7 @@
             </div>
         <?php endif; ?>
 
+        <!-- Formulário de login -->
         <form action="../../controllers/AuthController.php" method="POST" autocomplete="off" class="space-y-5">
             <input type="hidden" name="action" value="login">
 
@@ -52,14 +55,14 @@
 
             <!-- Botão de login -->
             <div class="pt-2">
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg shadow">
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg shadow transition duration-200">
                     <i class="fas fa-sign-in-alt mr-1"></i> Entrar
                 </button>
             </div>
 
-            <!-- Link de recuperação -->
-            <div class="text-center text-sm">
-                <a href="recuperar_senha.php" class="text-blue-600 hover:underline">Esqueci minha senha</a>
+            <!-- Link de esqueci a senha -->
+            <div class="text-center">
+                <a href="esqueci_senha.php" class="text-sm text-blue-600 hover:underline">Esqueci minha senha</a>
             </div>
         </form>
 
