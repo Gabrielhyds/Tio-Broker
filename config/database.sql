@@ -170,11 +170,13 @@ CREATE TABLE reacoes (
   UNIQUE KEY `reacao_unica_usuario_mensagem` (`id_mensagem`, `id_usuario`)
 );
 
--- Tabela para Recuperação de Senha
+-- Tabela para recuperação de senha com controle de expiração e uso
 CREATE TABLE password_resets (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     token VARCHAR(255) NOT NULL,
-    created_at DATETIME NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    used BOOLEAN DEFAULT FALSE,
+    expires_at DATETIME NOT NULL,
     FOREIGN KEY (user_id) REFERENCES usuario(id_usuario) ON DELETE CASCADE
 );

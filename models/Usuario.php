@@ -343,4 +343,18 @@ class Usuario
         $resultado = $this->conn->query($sql);
         return $resultado ? $resultado->fetch_all(MYSQLI_ASSOC) : [];
     }
+    public function buscarPorEmail($email)
+    {
+        $stmt = $this->conn->prepare("SELECT * FROM usuario WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_assoc();
+    }
+
+    public function atualizarSenha($id_usuario, $novaSenha)
+    {
+        $stmt = $this->conn->prepare("UPDATE usuario SET senha = ? WHERE id_usuario = ?");
+        $stmt->bind_param("si", $novaSenha, $id_usuario);
+        return $stmt->execute();
+    }
 }

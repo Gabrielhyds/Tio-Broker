@@ -14,11 +14,11 @@ class PasswordResetModel
     // Cria um novo token de redefinição de senha no banco de dados.
     public function createToken($user_id, $token)
     {
-        // Prepara uma instrução SQL para inserir o ID do usuário, o token e a data/hora atual.
-        $stmt = $this->conn->prepare("INSERT INTO password_resets (user_id, token, created_at) VALUES (?, ?, NOW())");
-        // Associa (bind) o ID do usuário (inteiro 'i') e o token (string 's') à instrução.
-        $stmt->bind_param("is", $user_id, $token);
-        // Executa a instrução e retorna true em caso de sucesso ou false em caso de falha.
+        // Define a data de expiração (1 hora a partir de agora)
+        $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
+
+        $stmt = $this->conn->prepare("INSERT INTO password_resets (user_id, token, created_at, expires_at) VALUES (?, ?, NOW(), ?)");
+        $stmt->bind_param("iss", $user_id, $token, $expiresAt);
         return $stmt->execute();
     }
 

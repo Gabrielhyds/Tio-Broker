@@ -56,7 +56,7 @@
             </div>
 
             <div class="text-center mt-3">
-                <a href="recuperar.php" class="text-sm text-blue-700 hover:underline">Esqueci minha senha</a>
+                <a href="recuperar_senha.php" class="text-sm text-blue-700 hover:underline">Esqueci minha senha</a>
             </div>
 
         </form>
