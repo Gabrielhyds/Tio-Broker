@@ -14,28 +14,25 @@
     </style>
 </head>
 
-<body class="bg-gradient-to-br from-blue-600 to-sky-800 min-h-screen flex justify-center py-10 px-4">
+<body class="bg-gradient-to-br from-blue-600 to-sky-800 min-h-screen flex items-center justify-center sm:block sm:py-12">
 
-    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md mx-auto">
 
-        <!-- Logo e título -->
         <div class="flex flex-col items-center mb-6">
             <img src="../assets/img/tio_broker_ligth.png" alt="Logo Imobiliária" class="h-14 mb-2">
             <h2 class="text-xl font-semibold text-gray-800">Acesso ao Painel</h2>
         </div>
 
-        <!-- Mensagem de sucesso após redefinição -->
+        <!-- Alerta de senha redefinida -->
         <?php if (isset($_GET['reset']) && $_GET['reset'] === 'success'): ?>
             <div class="bg-green-100 text-green-800 p-3 rounded-md mb-4 text-sm">
                 Senha redefinida com sucesso! Faça login com sua nova senha.
             </div>
         <?php endif; ?>
 
-        <!-- Formulário de login -->
         <form action="../../controllers/AuthController.php" method="POST" autocomplete="off" class="space-y-5">
             <input type="hidden" name="action" value="login">
 
-            <!-- E-mail -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
                 <div class="flex items-center bg-gray-50 border border-gray-300 rounded-lg overflow-hidden">
@@ -44,7 +41,6 @@
                 </div>
             </div>
 
-            <!-- Senha -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
                 <div class="flex items-center bg-gray-50 border border-gray-300 rounded-lg overflow-hidden">
@@ -53,21 +49,19 @@
                 </div>
             </div>
 
-            <!-- Botão de login -->
             <div class="pt-2">
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg shadow transition duration-200">
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg shadow">
                     <i class="fas fa-sign-in-alt mr-1"></i> Entrar
                 </button>
             </div>
 
-            <!-- Link de esqueci a senha -->
-            <div class="text-center">
-                <a href="esqueci_senha.php" class="text-sm text-blue-600 hover:underline">Esqueci minha senha</a>
+            <div class="text-center mt-3">
+                <a href="recuperar.php" class="text-sm text-blue-700 hover:underline">Esqueci minha senha</a>
             </div>
+
         </form>
 
     </div>
-
 </body>
 
 </html>
