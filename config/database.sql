@@ -180,3 +180,37 @@ CREATE TABLE password_resets (
     expires_at DATETIME NOT NULL,
     FOREIGN KEY (user_id) REFERENCES usuario(id_usuario) ON DELETE CASCADE
 );
+
+CREATE TABLE imovel (
+    id_imovel INT AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(255) NOT NULL,
+    descricao TEXT,
+    tipo ENUM('venda', 'locacao', 'temporada', 'lancamento') NOT NULL,
+    status ENUM('disponivel', 'reservado', 'vendido', 'indisponivel') DEFAULT 'disponivel',
+    preco DECIMAL(15,2) NOT NULL,
+    endereco VARCHAR(255),
+    latitude DECIMAL(10, 8),
+    longitude DECIMAL(11, 8),
+    data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE imovel_imagem (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_imovel INT,
+    caminho VARCHAR(255),
+    FOREIGN KEY (id_imovel) REFERENCES imovel(id_imovel) ON DELETE CASCADE
+);
+
+CREATE TABLE imovel_video (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_imovel INT,
+    caminho VARCHAR(255),
+    FOREIGN KEY (id_imovel) REFERENCES imovel(id_imovel) ON DELETE CASCADE
+);
+
+CREATE TABLE imovel_documento (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_imovel INT,
+    caminho VARCHAR(255),
+    FOREIGN KEY (id_imovel) REFERENCES imovel(id_imovel) ON DELETE CASCADE
+);

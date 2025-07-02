@@ -80,6 +80,17 @@ require_once __DIR__ . '/../../config/rotas.php';
                     <i class="fas fa-calendar-alt w-6 text-center"></i><span class="ml-2">Agenda</span>
                 </a>
             </div>
+            <div>
+                <h3 class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Imóveis</h3>
+
+                <a href="<?= BASE_URL ?>views/imoveis/cadastrar.php" class="sidebar-link <?= $activeMenu === 'imovel_cadastrar' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
+                    <i class="fas fa-plus w-6 text-center"></i><span class="ml-2">Cadastrar Imóvel</span>
+                </a>
+
+                <a href="<?= BASE_URL ?>views/imoveis/listar.php" class="sidebar-link <?= $activeMenu === 'imovel_listar' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
+                    <i class="fas fa-home w-6 text-center"></i><span class="ml-2">Ver Imóveis</span>
+                </a>
+            </div>
         <?php endif; ?>
     </nav>
 </aside>
