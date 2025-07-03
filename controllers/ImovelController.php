@@ -29,7 +29,12 @@ switch ($action) {
         break;
 
     case 'excluir_arquivo':
-        $tipo = $_POST['tipo_arquivo'] ?? ''; // Corrigido aqui
+        // Incorreto:
+        // $tipo = $_POST['tipo_arquivo'] ?? ''; 
+
+        // ✅ Correto:
+        $tipo = $_POST['tipo'] ?? ''; // O formulário envia 'tipo'
+
         $idArquivo = $_POST['id_arquivo'] ?? null;
         $idImovel = $_POST['id_imovel'] ?? null;
 
@@ -110,7 +115,12 @@ function coletarDados()
 function salvarUploads($campo, $subpasta)
 {
     $arquivosSalvos = [];
-    $permitidas = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'mp4'];
+
+    // Incompleto:
+    // $permitidas = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'mp4'];
+
+    // ✅ Correto (adicionando as extensões de documento):
+    $permitidas = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'mp4', 'doc', 'docx'];
 
     $destinoRelativo = 'uploads/' . trim($subpasta, '/') . '/';
     $destinoAbsoluto = UPLOADS_DIR . trim($subpasta, '/') . '/';
