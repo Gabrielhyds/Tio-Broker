@@ -1,14 +1,24 @@
 <?php
-require_once '../config/config.php';
-require_once '../models/Imovel.php';
-require_once '../config/rotas.php';
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../models/Imovel.php';
+// require_once __DIR__ . '/../config/rotas.php'; // Se necessário para UPLOADS_DIR
+
+// Inicia a sessão para usar $_SESSION e obter dados do usuário.
 session_start();
 
+// Proteção: Garante que o usuário está logado.
+if (!isset($_SESSION['usuario'])) {
+    header('Location: ../views/auth/login.php');
+    exit;
+}
+
+// Cria uma instância do Model.
 $imovelModel = new Imovel($connection);
 
-// Verifica a ação enviada via GET ou POST
+// Verifica a ação enviada via GET ou POST.
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
+// --- Bloco de Ações ---
 switch ($action) {
     case 'cadastrar':
         cadastrarImovel($imovelModel);
@@ -20,26 +30,20 @@ switch ($action) {
 
     case 'excluir':
         $id = $_GET['id'] ?? null;
-        if ($id && $imovelModel->excluir($id)) {
+        if ($id && $imovelModel->excluir($id)) { // Supondo que o método excluir exista no Model
             $_SESSION['sucesso'] = "Imóvel excluído com sucesso.";
         } else {
             $_SESSION['erro'] = "Erro ao excluir imóvel.";
         }
         header('Location: ../views/imoveis/listar.php');
-        break;
+        exit;
 
     case 'excluir_arquivo':
-        // Incorreto:
-        // $tipo = $_POST['tipo_arquivo'] ?? ''; 
-
-        // ✅ Correto:
-        $tipo = $_POST['tipo'] ?? ''; // O formulário envia 'tipo'
-
+        $tipo = $_POST['tipo'] ?? '';
         $idArquivo = $_POST['id_arquivo'] ?? null;
         $idImovel = $_POST['id_imovel'] ?? null;
 
-        if ($tipo && $idArquivo) {
-            $imovelModel->excluirArquivo($tipo, $idArquivo);
+        if ($tipo && $idArquivo && $imovelModel->excluirArquivo($tipo, $idArquivo)) { // Supondo que o método exista
             $_SESSION['sucesso'] = ucfirst($tipo) . " excluído com sucesso.";
         } else {
             $_SESSION['erro'] = "Erro ao excluir o arquivo.";
@@ -49,36 +53,48 @@ switch ($action) {
         exit;
 
     default:
-        header('Location: ../views/imoveis/listar.php');
+        // Se nenhuma ação específica for chamada, redireciona para a listagem.
+        // A lógica de listagem agora deve estar na própria view (listar_imoveis.php),
+        // que incluirá este controller para obter os dados.
+        require_once __DIR__ . '/../views/imoveis/listar.php';
         break;
 }
 
-// --- Funções ---
+// --- Funções Auxiliares ---
 
+/**
+ * Orquestra o cadastro de um novo imóvel.
+ */
 function cadastrarImovel($model)
 {
     $dados = coletarDados();
 
+    // Salva os arquivos enviados.
     $imagens = salvarUploads('imagens', 'imagens_imoveis');
     $videos = salvarUploads('videos', 'videos_imoveis');
     $documentos = salvarUploads('documentos', 'documentos_imoveis');
 
-    if ($model->cadastrar($dados, $imagens, $videos, $documentos)) {
+    // Chama o método de cadastro no Model.
+    if ($model->cadastrar($dados, $imagens, $videos, $documentos)) { // Supondo que o método exista e aceite esses parâmetros
         $_SESSION['sucesso'] = "Imóvel cadastrado com sucesso.";
     } else {
         $_SESSION['erro'] = "Erro ao cadastrar imóvel.";
     }
 
     header('Location: ../views/imoveis/listar.php');
+    exit;
 }
 
+/**
+ * Orquestra a edição de um imóvel existente.
+ */
 function editarImovel($model)
 {
     $id = $_POST['id_imovel'] ?? null;
     if (!$id) {
         $_SESSION['erro'] = "ID do imóvel não informado.";
         header('Location: ../views/imoveis/listar.php');
-        return;
+        exit;
     }
 
     $dados = coletarDados();
@@ -88,49 +104,66 @@ function editarImovel($model)
     $videos = salvarUploads('videos', 'videos_imoveis');
     $documentos = salvarUploads('documentos', 'documentos_imoveis');
 
-    if ($model->editar($dados, $imagens, $videos, $documentos)) {
+    if ($model->editar($dados, $imagens, $videos, $documentos)) { // Supondo que o método exista
         $_SESSION['sucesso'] = "Imóvel atualizado com sucesso.";
     } else {
         $_SESSION['erro'] = "Erro ao atualizar imóvel.";
     }
 
-    // Redireciona de volta para a edição do mesmo imóvel
+    // Redireciona de volta para a página de edição.
     header("Location: ../views/imoveis/editar.php?id=" . $id);
+    exit;
 }
 
+/**
+ * Coleta os dados do formulário e adiciona o id_imobiliaria da sessão.
+ */
 function coletarDados()
 {
+    // Adiciona o id_imobiliaria do usuário logado aos dados do imóvel.
+    $id_imobiliaria = $_SESSION['usuario']['id_imobiliaria'] ?? null;
+
     return [
+        'id_imobiliaria' => $id_imobiliaria, // ** AJUSTE CRÍTICO **
         'titulo' => $_POST['titulo'] ?? '',
         'descricao' => $_POST['descricao'] ?? '',
         'tipo' => $_POST['tipo'] ?? '',
         'status' => $_POST['status'] ?? '',
-        'preco' => $_POST['preco'] ?? 0,
+        'preco' => str_replace(['.', ','], ['', '.'], $_POST['preco'] ?? 0), // Formata o preço para o BD
         'endereco' => $_POST['endereco'] ?? '',
-        'latitude' => $_POST['latitude'] ?? null,
-        'longitude' => $_POST['longitude'] ?? null,
+        'latitude' => !empty($_POST['latitude']) ? $_POST['latitude'] : null,
+        'longitude' => !empty($_POST['longitude']) ? $_POST['longitude'] : null,
     ];
 }
 
+/**
+ * Processa o upload de múltiplos arquivos.
+ */
 function salvarUploads($campo, $subpasta)
 {
     $arquivosSalvos = [];
+    $permitidas = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'mp4', 'doc', 'docx', 'xls', 'xlsx'];
 
-    // Incompleto:
-    // $permitidas = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'mp4'];
-
-    // ✅ Correto (adicionando as extensões de documento):
-    $permitidas = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'mp4', 'doc', 'docx'];
+    // Define o caminho absoluto para salvar os arquivos.
+    // Crie uma constante UPLOADS_DIR no seu config.php, ex: define('UPLOADS_DIR', __DIR__ . '/../uploads/');
+    if (!defined('UPLOADS_DIR')) {
+        // Fallback caso a constante não esteja definida.
+        define('UPLOADS_DIR', __DIR__ . '/../uploads/');
+    }
 
     $destinoRelativo = 'uploads/' . trim($subpasta, '/') . '/';
     $destinoAbsoluto = UPLOADS_DIR . trim($subpasta, '/') . '/';
 
     if (!empty($_FILES[$campo]['name'][0])) {
-        if (!is_dir($destinoAbsoluto)) mkdir($destinoAbsoluto, 0777, true);
+        if (!is_dir($destinoAbsoluto)) {
+            mkdir($destinoAbsoluto, 0777, true);
+        }
 
         foreach ($_FILES[$campo]['tmp_name'] as $index => $tmp) {
+            if (empty($tmp)) continue; // Pula arquivos vazios
+
             $extensao = strtolower(pathinfo($_FILES[$campo]['name'][$index], PATHINFO_EXTENSION));
-            if (!in_array($extensao, $permitidas)) continue;
+            if (!in_array($extensao, $permitidas)) continue; // Pula arquivos não permitidos
 
             $nome = uniqid() . '_' . basename($_FILES[$campo]['name'][$index]);
             $caminhoCompleto = $destinoAbsoluto . $nome;

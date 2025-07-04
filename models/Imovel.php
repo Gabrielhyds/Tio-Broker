@@ -8,30 +8,20 @@ class Imovel
         $this->conn = $conexao;
     }
 
-    public function listarTodos()
-    {
-        $query = "SELECT * FROM imovel ORDER BY data_cadastro DESC";
-        $result = $this->conn->query($query);
-        return $result->fetch_all(MYSQLI_ASSOC);
-    }
-
-    public function buscarPorId($id)
-    {
-        $query = "SELECT * FROM imovel WHERE id_imovel = ?";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
-        return $stmt->get_result()->fetch_assoc();
-    }
-
+    /**
+     * Cadastra um novo imóvel no banco de dados, associando-o à imobiliária correta.
+     */
     public function cadastrar($dados, $imagens = [], $videos = [], $documentos = [])
     {
-        $query = "INSERT INTO imovel (titulo, descricao, tipo, status, preco, endereco, latitude, longitude)
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        // ** AJUSTE **: Adicionado id_imobiliaria na query.
+        $query = "INSERT INTO imovel (id_imobiliaria, titulo, descricao, tipo, status, preco, endereco, latitude, longitude)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $this->conn->prepare($query);
+        // ** AJUSTE **: Adicionado "i" para o id_imobiliaria.
         $stmt->bind_param(
-            "ssssdssd",
+            "issssdssd",
+            $dados['id_imobiliaria'],
             $dados['titulo'],
             $dados['descricao'],
             $dados['tipo'],
@@ -53,24 +43,20 @@ class Imovel
         return false;
     }
 
+    /**
+     * Edita um imóvel existente.
+     */
     public function editar($dados, $imagens = [], $videos = [], $documentos = [])
     {
-        $tiposValidos = ['venda', 'locacao', 'temporada', 'lancamento'];
-        $statusesValidos = ['disponivel', 'reservado', 'vendido', 'indisponivel'];
-
-        if (!in_array($dados['tipo'], $tiposValidos)) {
-            throw new Exception("Tipo inválido: " . $dados['tipo']);
-        }
-        if (!in_array($dados['status'], $statusesValidos)) {
-            throw new Exception("Status inválido: " . $dados['status']);
-        }
-
-        $query = "UPDATE imovel SET titulo = ?, descricao = ?, tipo = ?, status = ?, preco = ?, endereco = ?, latitude = ?, longitude = ? 
+        // ** AJUSTE **: Adicionado id_imobiliaria na query de update.
+        $query = "UPDATE imovel SET id_imobiliaria = ?, titulo = ?, descricao = ?, tipo = ?, status = ?, preco = ?, endereco = ?, latitude = ?, longitude = ? 
                   WHERE id_imovel = ?";
 
         $stmt = $this->conn->prepare($query);
+        // ** AJUSTE **: Adicionado "i" para id_imobiliaria e no final para id_imovel.
         $stmt->bind_param(
-            "ssssdssdi",
+            "issssdssdi",
+            $dados['id_imobiliaria'],
             $dados['titulo'],
             $dados['descricao'],
             $dados['tipo'],
@@ -92,14 +78,23 @@ class Imovel
         return false;
     }
 
+    /**
+     * Exclui um imóvel do banco de dados.
+     */
     public function excluir($id)
     {
+        // Antes de excluir, apaga os arquivos associados para limpeza (opcional, mas recomendado)
+        // $this->excluirTodosArquivosDeUmImovel($id);
+
         $query = "DELETE FROM imovel WHERE id_imovel = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param("i", $id);
         return $stmt->execute();
     }
 
+    /**
+     * Salva os caminhos dos arquivos no banco de dados.
+     */
     private function salvarArquivos($idImovel, $tipo, $arquivos)
     {
         if (empty($arquivos)) return;
@@ -113,6 +108,44 @@ class Imovel
         }
     }
 
+    /**
+     * Exclui um arquivo específico (imagem, vídeo ou documento).
+     */
+    public function excluirArquivo($tipo, $idArquivo)
+    {
+        $tiposValidos = ['imagem', 'video', 'documento'];
+        if (!in_array($tipo, $tiposValidos)) {
+            return false;
+        }
+
+        // Opcional: buscar o caminho do arquivo para deletá-lo do servidor
+        // $arquivo = $this->buscarCaminhoArquivoPorId($tipo, $idArquivo);
+        // if ($arquivo && file_exists(UPLOADS_DIR . $arquivo)) {
+        //     unlink(UPLOADS_DIR . $arquivo);
+        // }
+
+        $tabela = "imovel_" . $tipo;
+        $query = "DELETE FROM $tabela WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bind_param("i", $idArquivo);
+        return $stmt->execute();
+    }
+
+    /**
+     * Busca um imóvel pelo seu ID.
+     */
+    public function buscarPorId($id)
+    {
+        $query = "SELECT * FROM imovel WHERE id_imovel = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_assoc();
+    }
+
+    /**
+     * Busca todos os arquivos de um determinado tipo para um imóvel.
+     */
     public function buscarArquivos($idImovel, $tipo)
     {
         $tabela = "imovel_" . $tipo;
@@ -123,17 +156,113 @@ class Imovel
         return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
 
-    public function excluirArquivo($tipo, $idArquivo)
+    /**
+     * Lista TODOS os imóveis, filtrando por imobiliária (sem paginação).
+     * Este método foi adicionado para ser compatível com a sua nova view.
+     */
+    public function listarTodos($id_imobiliaria_logada, $permissao_usuario)
     {
-        $tiposValidos = ['imagem', 'video', 'documento'];
-        if (!in_array($tipo, $tiposValidos)) {
-            throw new Exception("Tipo de arquivo inválido para exclusão.");
+        $sql = "SELECT * FROM imovel";
+        $params = [];
+        $types = '';
+
+        if ($permissao_usuario !== 'SuperAdmin') {
+            $sql .= " WHERE id_imobiliaria = ?";
+            $params[] = $id_imobiliaria_logada;
+            $types .= 'i';
         }
 
-        $tabela = "imovel_" . $tipo;
-        $query = "DELETE FROM $tabela WHERE id = ?";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bind_param("i", $idArquivo);
-        return $stmt->execute();
+        $sql .= " ORDER BY data_cadastro DESC";
+
+        $stmt = $this->conn->prepare($sql);
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+
+        $stmt->execute();
+        $resultado = $stmt->get_result();
+        return $resultado ? $resultado->fetch_all(MYSQLI_ASSOC) : [];
+    }
+
+    /**
+     * Lista os imóveis de forma paginada, filtrando por imobiliária.
+     */
+    public function listarPaginado($pagina_atual, $limite, $id_imobiliaria_logada, $permissao_usuario, $filtro = null)
+    {
+        $offset = ($pagina_atual - 1) * $limite;
+        $sql = "SELECT * FROM imovel";
+        $params = [];
+        $types = '';
+        $whereClauses = [];
+
+        if ($permissao_usuario !== 'SuperAdmin') {
+            $whereClauses[] = "id_imobiliaria = ?";
+            $params[] = $id_imobiliaria_logada;
+            $types .= 'i';
+        }
+
+        if (!empty($filtro)) {
+            $whereClauses[] = "(titulo LIKE ? OR endereco LIKE ?)";
+            $searchTerm = "%{$filtro}%";
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+            $types .= 'ss';
+        }
+
+        if (!empty($whereClauses)) {
+            $sql .= " WHERE " . implode(' AND ', $whereClauses);
+        }
+
+        $sql .= " ORDER BY data_cadastro DESC LIMIT ? OFFSET ?";
+        $params[] = $limite;
+        $params[] = $offset;
+        $types .= "ii";
+
+        $stmt = $this->conn->prepare($sql);
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+
+        $stmt->execute();
+        $resultado = $stmt->get_result();
+        return $resultado ? $resultado->fetch_all(MYSQLI_ASSOC) : [];
+    }
+
+    /**
+     * Conta o total de imóveis, respeitando a permissão do usuário e o filtro.
+     */
+    public function contarTotal($id_imobiliaria_logada, $permissao_usuario, $filtro = null)
+    {
+        $sql = "SELECT COUNT(id_imovel) as total FROM imovel";
+        $params = [];
+        $types = '';
+        $whereClauses = [];
+
+        if ($permissao_usuario !== 'SuperAdmin') {
+            $whereClauses[] = "id_imobiliaria = ?";
+            $params[] = $id_imobiliaria_logada;
+            $types .= 'i';
+        }
+
+        if (!empty($filtro)) {
+            $whereClauses[] = "(titulo LIKE ? OR endereco LIKE ?)";
+            $searchTerm = "%{$filtro}%";
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+            $types .= 'ss';
+        }
+
+        if (!empty($whereClauses)) {
+            $sql .= " WHERE " . implode(' AND ', $whereClauses);
+        }
+
+        $stmt = $this->conn->prepare($sql);
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+
+        $stmt->execute();
+        $resultado = $stmt->get_result()->fetch_assoc();
+        return (int)($resultado['total'] ?? 0);
     }
 }

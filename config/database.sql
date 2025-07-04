@@ -103,21 +103,23 @@ CREATE TABLE documentos (
     FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE
 );
 
--- Tabela de Tarefas
 CREATE TABLE tarefas (
     id_tarefa INT AUTO_INCREMENT PRIMARY KEY,
     id_usuario INT NOT NULL,
-    id_cliente INT, -- Agora pode ser NULL caso seja "Outro"
+    id_cliente INT NULL,
+    id_imobiliaria INT NULL, -- Coluna para associar a tarefa à imobiliária
     descricao TEXT NOT NULL,
     status ENUM('pendente', 'em andamento', 'concluida') NOT NULL DEFAULT 'pendente',
     prioridade ENUM('baixa', 'média', 'alta') DEFAULT 'média',
     prazo DATE DEFAULT NULL,
     data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
     data_conclusao DATETIME DEFAULT NULL,
-    
+    -- Chaves estrangeiras
     FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE,
-    FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente) ON DELETE SET NULL
-);  
+    FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente) ON DELETE SET NULL,
+    FOREIGN KEY (id_imobiliaria) REFERENCES imobiliaria(id_imobiliaria) ON DELETE CASCADE
+);
+
 
 -- Tabela de Ranking de Desempenho
 CREATE TABLE ranking_desempenho (
@@ -181,8 +183,10 @@ CREATE TABLE password_resets (
     FOREIGN KEY (user_id) REFERENCES usuario(id_usuario) ON DELETE CASCADE
 );
 
+-- Tabela de Imóveis (com id_imobiliaria)
 CREATE TABLE imovel (
     id_imovel INT AUTO_INCREMENT PRIMARY KEY,
+    id_imobiliaria INT NULL, -- Coluna para associar o imóvel à imobiliária
     titulo VARCHAR(255) NOT NULL,
     descricao TEXT,
     tipo ENUM('venda', 'locacao', 'temporada', 'lancamento') NOT NULL,
@@ -191,8 +195,10 @@ CREATE TABLE imovel (
     endereco VARCHAR(255),
     latitude DECIMAL(10, 8),
     longitude DECIMAL(11, 8),
-    data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_imobiliaria) REFERENCES imobiliaria(id_imobiliaria) ON DELETE SET NULL
 );
+
 
 CREATE TABLE imovel_imagem (
     id INT AUTO_INCREMENT PRIMARY KEY,
