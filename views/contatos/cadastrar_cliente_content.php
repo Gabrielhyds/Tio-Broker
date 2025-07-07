@@ -68,22 +68,22 @@ error_reporting(E_ALL);
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
             <label for="renda" class="block text-sm font-medium text-gray-700">Renda (R$)</label>
-            <input type="number" step="0.01" name="renda" id="renda" placeholder="0,00"
+            <input type="text" step="0.01" name="renda" id="renda" placeholder="0,00"
                 class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
         </div>
         <div>
             <label for="entrada" class="block text-sm font-medium text-gray-700">Entrada (R$)</label>
-            <input type="number" step="0.01" name="entrada" id="entrada" placeholder="0,00"
+            <input type="text" step="0.01" name="entrada" id="entrada" placeholder="0,00"
                 class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
         </div>
         <div>
             <label for="fgts" class="block text-sm font-medium text-gray-700">FGTS (R$)</label>
-            <input type="number" step="0.01" name="fgts" id="fgts" placeholder="0,00"
+            <input type="text" step="0.01" name="fgts" id="fgts" placeholder="0,00"
                 class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
         </div>
         <div>
             <label for="subsidio" class="block text-sm font-medium text-gray-700">Subsídio (R$)</label>
-            <input type="number" step="0.01" name="subsidio" id="subsidio" placeholder="0,00"
+            <input type="text" step="0.01" name="subsidio" id="subsidio" placeholder="0,00"
                 class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
         </div>
     </div>
@@ -190,5 +190,35 @@ error_reporting(E_ALL);
             document.getElementById('numero').value = ''; // Limpa o campo de telefone.
             aplicarMascaraTelefone(this.value);
         });
+
+        // Máscara DINHEIRO para campos financeiros
+        const camposDinheiro = ['renda', 'entrada', 'fgts', 'subsidio'];
+
+        camposDinheiro.forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.addEventListener('input', () => {
+                    let valor = input.value.replace(/\D/g, '');
+                    valor = (parseInt(valor, 10) / 100).toFixed(2) + '';
+                    valor = valor.replace('.', ',');
+                    valor = valor.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+                    input.value = 'R$ ' + valor;
+                });
+            }
+        });
+
+        // Antes de enviar o formulário, limpa os valores para enviar corretamente ao backend
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', () => {
+                camposDinheiro.forEach(id => {
+                    const input = document.getElementById(id);
+                    if (input) {
+                        // Remove R$, pontos e espaços. Substitui vírgula por ponto.
+                        input.value = input.value.replace(/[R$\s.]/g, '').replace(',', '.');
+                    }
+                });
+            });
+        }
     });
 </script>
