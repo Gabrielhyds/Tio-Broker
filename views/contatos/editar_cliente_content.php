@@ -2,14 +2,14 @@
 // Verifica se a variável $cliente, que deve ser carregada pelo controller, não existe ou está vazia.
 if (!isset($cliente) || empty($cliente)) {
     // Se não houver dados, exibe uma mensagem de erro e interrompe a renderização do formulário.
-    echo "<div class='alert alert-danger'>Não foi possível carregar os dados do cliente.</div>";
+    echo "<div class='p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg' role='alert'>Não foi possível carregar os dados do cliente.</div>";
     return; // 'return' impede que o restante do arquivo seja executado.
 }
 ?>
 <!-- Importa a biblioteca SweetAlert2 para exibir alertas mais bonitos. -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <!-- Contêiner principal com estilo de cartão, centralizado na página. -->
-<div class="container mx-auto max-w-5xl bg-white p-8 rounded-lg shadow-md mt-6">
+<div class="container mx-auto max-w-5xl bg-white p-6 sm:p-8 rounded-lg shadow-md mt-6">
     <!-- Título da página de edição. -->
     <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
         <i class="fas fa-pencil-alt text-blue-600"></i> Editar Cliente
@@ -26,12 +26,11 @@ if (!isset($cliente) || empty($cliente)) {
     <?php endif; ?>
 
     <!-- Formulário para editar os dados do cliente. -->
-    <form method="POST" action="index.php?controller=cliente&action=editar&id_cliente=<?= htmlspecialchars($cliente['id_cliente']) ?>" class="space-y-6">
+    <form method="POST" action="index.php?controller=cliente&action=editar&id_cliente=<?= htmlspecialchars($cliente['id_cliente']) ?>" class="space-y-6" id="edit-cliente-form">
         <!-- Grid para organizar os campos do formulário. -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label for="nome" class="block text-sm font-medium text-gray-700">Nome Completo <span class="text-red-500">*</span></label>
-                <!-- O valor do campo é preenchido com os dados atuais do cliente. -->
                 <input type="text" name="nome" id="nome" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" value="<?= htmlspecialchars($cliente['nome'] ?? '') ?>" required>
             </div>
             <div>
@@ -58,19 +57,20 @@ if (!isset($cliente) || empty($cliente)) {
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
                 <label for="renda" class="block text-sm font-medium text-gray-700">Renda (R$)</label>
-                <input type="number" step="0.01" name="renda" id="renda" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" value="<?= htmlspecialchars($cliente['renda'] ?? '') ?>">
+                <!-- ✅ CORREÇÃO: Alterado type para "text" para a máscara funcionar -->
+                <input type="text" name="renda" id="renda" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" placeholder="R$ 0,00" value="<?= htmlspecialchars($cliente['renda'] ?? '') ?>">
             </div>
             <div>
                 <label for="entrada" class="block text-sm font-medium text-gray-700">Entrada (R$)</label>
-                <input type="number" step="0.01" name="entrada" id="entrada" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" value="<?= htmlspecialchars($cliente['entrada'] ?? '') ?>">
+                <input type="text" name="entrada" id="entrada" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" placeholder="R$ 0,00" value="<?= htmlspecialchars($cliente['entrada'] ?? '') ?>">
             </div>
             <div>
                 <label for="fgts" class="block text-sm font-medium text-gray-700">FGTS (R$)</label>
-                <input type="number" step="0.01" name="fgts" id="fgts" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" value="<?= htmlspecialchars($cliente['fgts'] ?? '') ?>">
+                <input type="text" name="fgts" id="fgts" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" placeholder="R$ 0,00" value="<?= htmlspecialchars($cliente['fgts'] ?? '') ?>">
             </div>
             <div>
                 <label for="subsidio" class="block text-sm font-medium text-gray-700">Subsídio (R$)</label>
-                <input type="number" step="0.01" name="subsidio" id="subsidio" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" value="<?= htmlspecialchars($cliente['subsidio'] ?? '') ?>">
+                <input type="text" name="subsidio" id="subsidio" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" placeholder="R$ 0,00" value="<?= htmlspecialchars($cliente['subsidio'] ?? '') ?>">
             </div>
         </div>
 
@@ -87,7 +87,6 @@ if (!isset($cliente) || empty($cliente)) {
 
         <div>
             <label for="tipo_lista" class="block text-sm font-medium text-gray-700">Classificação <span class="text-red-500">*</span></label>
-            <!-- Select para a classificação do cliente, com a opção atual pré-selecionada. -->
             <select name="tipo_lista" id="tipo_lista" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
                 <option value="Potencial" <?= ($cliente['tipo_lista'] ?? '') === 'Potencial' ? 'selected' : '' ?>>Potencial</option>
                 <option value="Não potencial" <?= ($cliente['tipo_lista'] ?? '') === 'Não potencial' ? 'selected' : '' ?>>Não potencial</option>
@@ -121,12 +120,15 @@ if (!isset($cliente) || empty($cliente)) {
     </script>
     <?php unset($_SESSION['mensagem_erro']); ?>
 <?php endif; ?>
-<!-- Scripts JavaScript para aplicar máscaras de formatação nos campos. -->
+
+<!-- ✅ SCRIPT CORRIGIDO E MELHORADO -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const cpfInput = document.getElementById('cpf');
         const telefoneInput = document.getElementById('numero');
+        const form = document.getElementById('edit-cliente-form');
 
+        // --- Máscara de CPF ---
         if (cpfInput) {
             cpfInput.addEventListener('input', function() {
                 let value = cpfInput.value.replace(/\D/g, '');
@@ -138,6 +140,7 @@ if (!isset($cliente) || empty($cliente)) {
             });
         }
 
+        // --- Máscara de Telefone ---
         if (telefoneInput) {
             telefoneInput.addEventListener('input', function() {
                 let value = telefoneInput.value.replace(/\D/g, '');
@@ -145,6 +148,52 @@ if (!isset($cliente) || empty($cliente)) {
                 value = value.replace(/^(\d{2})(\d)/, '($1) $2');
                 value = value.replace(/(\d{5})(\d{1,4})$/, '$1-$2');
                 telefoneInput.value = value;
+            });
+        }
+
+        // --- Máscara de Moeda (DINHEIRO) ---
+        const camposDinheiro = ['renda', 'entrada', 'fgts', 'subsidio'];
+
+        const formatToCurrency = (value) => {
+            // Converte o valor para string e remove não-dígitos
+            let digits = String(value).replace(/\D/g, '');
+            if (!digits) return '';
+
+            // Converte para número e formata
+            const valueAsNumber = parseFloat(digits) / 100;
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(valueAsNumber);
+        };
+
+        camposDinheiro.forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                // Formata o valor inicial carregado do banco de dados
+                input.value = formatToCurrency(input.value);
+
+                // Adiciona o listener para formatar enquanto digita
+                input.addEventListener('input', (e) => {
+                    e.target.value = formatToCurrency(e.target.value);
+                });
+            }
+        });
+
+        // --- Limpeza do Formulário antes do Envio ---
+        if (form) {
+            form.addEventListener('submit', () => {
+                // Limpa os campos de moeda
+                camposDinheiro.forEach(id => {
+                    const input = document.getElementById(id);
+                    if (input && input.value) {
+                        const digits = input.value.replace(/\D/g, '');
+                        if (digits) {
+                            const valueAsNumber = parseFloat(digits) / 100;
+                            input.value = valueAsNumber.toFixed(2);
+                        }
+                    }
+                });
             });
         }
     });

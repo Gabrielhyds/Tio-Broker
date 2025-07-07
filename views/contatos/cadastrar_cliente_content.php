@@ -13,7 +13,7 @@ error_reporting(E_ALL);
 </h2>
 
 <!-- Formulário para cadastrar um novo cliente. -->
-<form method="POST" action="index.php?controller=cliente&action=cadastrar" class="space-y-6 bg-white p-6 rounded-lg shadow-md">
+<form method="POST" action="index.php?controller=cliente&action=cadastrar" class="space-y-6 bg-white p-6 rounded-lg shadow-md" id="cliente-form">
 
     <!-- Grid para organizar os campos do formulário em colunas. -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -39,7 +39,6 @@ error_reporting(E_ALL);
                     <option value="JP">+81 🇯🇵</option>
                     <option value="UK">+44 🇬🇧</option>
                     <option value="IN">+91 🇮🇳</option>
-                    <!-- Adicione mais países conforme necessário. -->
                 </select>
                 <!-- Campo para o número de telefone, que será formatado pelo JavaScript. -->
                 <input type="text" name="numero" id="numero" placeholder="Digite o telefone"
@@ -68,22 +67,22 @@ error_reporting(E_ALL);
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
             <label for="renda" class="block text-sm font-medium text-gray-700">Renda (R$)</label>
-            <input type="text" step="0.01" name="renda" id="renda" placeholder="0,00"
+            <input type="text" name="renda" id="renda" placeholder="R$ 0,00"
                 class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
         </div>
         <div>
             <label for="entrada" class="block text-sm font-medium text-gray-700">Entrada (R$)</label>
-            <input type="text" step="0.01" name="entrada" id="entrada" placeholder="0,00"
+            <input type="text" name="entrada" id="entrada" placeholder="R$ 0,00"
                 class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
         </div>
         <div>
             <label for="fgts" class="block text-sm font-medium text-gray-700">FGTS (R$)</label>
-            <input type="text" step="0.01" name="fgts" id="fgts" placeholder="0,00"
+            <input type="text" name="fgts" id="fgts" placeholder="R$ 0,00"
                 class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
         </div>
         <div>
             <label for="subsidio" class="block text-sm font-medium text-gray-700">Subsídio (R$)</label>
-            <input type="text" step="0.01" name="subsidio" id="subsidio" placeholder="0,00"
+            <input type="text" name="subsidio" id="subsidio" placeholder="R$ 0,00"
                 class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
         </div>
     </div>
@@ -98,7 +97,7 @@ error_reporting(E_ALL);
         <label for="tipo_lista" class="block text-sm font-medium text-gray-700">Classificação do Cliente <span class="text-red-500">*</span></label>
         <select name="tipo_lista" id="tipo_lista"
             class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500" required>
-            <option disabled selected>Selecione uma opção</option>
+            <option disabled selected value="">Selecione uma opção</option>
             <option value="Potencial">Potencial</option>
             <option value="Não potencial">Não potencial</option>
         </select>
@@ -131,13 +130,15 @@ error_reporting(E_ALL);
     <?php unset($_SESSION['mensagem_erro']); ?>
 <?php endif; ?>
 
-<!-- Script para aplicar máscaras de formatação nos campos. -->
+<!-- ✅ SCRIPT CORRIGIDO E MELHORADO -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const cpfInput = document.getElementById('cpf');
         const telefoneInput = document.getElementById('numero');
         const paisSelect = document.getElementById('codigo_pais');
+        const form = document.getElementById('cliente-form');
 
+        // --- Máscara de CPF ---
         if (cpfInput) {
             cpfInput.addEventListener('input', function() {
                 let value = cpfInput.value.replace(/\D/g, ''); // Remove não-dígitos.
@@ -149,73 +150,73 @@ error_reporting(E_ALL);
             });
         }
 
-        // Função para aplicar a máscara de telefone correta com base no país selecionado.
+        // --- Máscara de Telefone ---
         function aplicarMascaraTelefone(pais) {
-            // Remove ouvintes de evento antigos para evitar múltiplas formatações.
             const novoTelefoneInput = telefoneInput.cloneNode(true);
             telefoneInput.parentNode.replaceChild(novoTelefoneInput, telefoneInput);
 
             novoTelefoneInput.addEventListener('input', function formatarNumero() {
                 let value = novoTelefoneInput.value.replace(/\D/g, '');
-
                 switch (pais) {
-                    case 'BR': // Brasil: (XX) XXXXX-XXXX
+                    case 'BR': // (XX) XXXXX-XXXX
                         if (value.length > 11) value = value.slice(0, 11);
                         value = value.replace(/^(\d{2})(\d)/, '($1) $2');
                         value = value.replace(/(\d{5})(\d{1,4})$/, '$1-$2');
                         break;
-                    case 'US': // EUA: (XXX) XXX-XXXX
+                    case 'US': // (XXX) XXX-XXXX
                         if (value.length > 10) value = value.slice(0, 10);
                         value = value.replace(/^(\d{3})(\d)/, '($1) $2');
                         value = value.replace(/(\d{3})(\d{1,4})$/, '$1-$2');
                         break;
-                    case 'PT': // Portugal: XXX XXX XXX
-                        value = value.slice(0, 9);
-                        value = value.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3');
-                        break;
-                        // Adicione outras máscaras aqui...
                     default:
-                        break; // Nenhuma máscara para outros países.
+                        break;
                 }
-
                 novoTelefoneInput.value = value;
             });
         }
 
-        // Aplica a máscara inicial com base no valor padrão do select.
-        aplicarMascaraTelefone(paisSelect.value);
+        if (telefoneInput && paisSelect) {
+            aplicarMascaraTelefone(paisSelect.value);
+            paisSelect.addEventListener('change', function() {
+                document.getElementById('numero').value = '';
+                aplicarMascaraTelefone(this.value);
+            });
+        }
 
-        // Adiciona um ouvinte para mudar a máscara quando o país for alterado.
-        paisSelect.addEventListener('change', function() {
-            document.getElementById('numero').value = ''; // Limpa o campo de telefone.
-            aplicarMascaraTelefone(this.value);
-        });
-
-        // Máscara DINHEIRO para campos financeiros
+        // --- Máscara de Moeda (DINHEIRO) ---
         const camposDinheiro = ['renda', 'entrada', 'fgts', 'subsidio'];
+
+        const formatToCurrency = (digits) => {
+            if (!digits) return '';
+            const valueAsNumber = parseInt(digits, 10) / 100;
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(valueAsNumber);
+        };
 
         camposDinheiro.forEach(id => {
             const input = document.getElementById(id);
             if (input) {
-                input.addEventListener('input', () => {
-                    let valor = input.value.replace(/\D/g, '');
-                    valor = (parseInt(valor, 10) / 100).toFixed(2) + '';
-                    valor = valor.replace('.', ',');
-                    valor = valor.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
-                    input.value = 'R$ ' + valor;
+                input.addEventListener('input', (e) => {
+                    const currentDigits = e.target.value.replace(/\D/g, '');
+                    e.target.value = formatToCurrency(currentDigits);
                 });
             }
         });
 
-        // Antes de enviar o formulário, limpa os valores para enviar corretamente ao backend
-        const form = document.querySelector('form');
+        // --- Limpeza do Formulário antes do Envio ---
         if (form) {
             form.addEventListener('submit', () => {
+                // Limpa os campos de moeda
                 camposDinheiro.forEach(id => {
                     const input = document.getElementById(id);
-                    if (input) {
-                        // Remove R$, pontos e espaços. Substitui vírgula por ponto.
-                        input.value = input.value.replace(/[R$\s.]/g, '').replace(',', '.');
+                    if (input && input.value) {
+                        const digits = input.value.replace(/\D/g, '');
+                        if (digits) {
+                            const valueAsNumber = parseInt(digits, 10) / 100;
+                            input.value = valueAsNumber.toFixed(2);
+                        }
                     }
                 });
             });
