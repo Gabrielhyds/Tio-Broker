@@ -61,7 +61,7 @@ try {
 <div class="bg-gray-50 min-h-screen p-4 sm:p-6 lg:p-8">
     <div class="max-w-7xl mx-auto">
 
-        <form action="../../controllers/ImovelController.php" method="POST" enctype="multipart/form-data">
+        <form action="../../controllers/ImovelController.php" method="POST" enctype="multipart/form-data" id="imovel-form">
 
             <!-- Cabeçalho da Página e Ações -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
@@ -69,7 +69,6 @@ try {
                     <h1 class="text-3xl font-bold text-gray-900">Editar Imóvel</h1>
                     <p class="text-gray-600 mt-1">Atualize as informações do imóvel: <span class="font-semibold text-blue-600"><?= htmlspecialchars($imovel['titulo']) ?></span></p>
                 </div>
-                <!-- ✅ CORREÇÃO: Botões movidos para o topo -->
                 <div class="flex items-center gap-4 mt-4 sm:mt-0">
                     <a href="listar.php" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold text-sm hover:bg-gray-100 transition-colors">
                         Cancelar
@@ -118,10 +117,7 @@ try {
                                 <div>
                                     <label for="preco" class="block text-sm font-medium text-gray-700">Preço (R$) *</label>
                                     <div class="relative mt-1">
-                                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                            <span class="text-gray-500 sm:text-sm">R$</span>
-                                        </div>
-                                        <input type="number" step="0.01" name="preco" id="preco" value="<?= htmlspecialchars($imovel['preco']) ?>" required class="pl-10 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                        <input type="text" name="preco" id="preco" value="<?= number_format($imovel['preco'], 2, ',', '.') ?>" required class=" block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="R$ 0,00">
                                     </div>
                                 </div>
                                 <div>
@@ -234,8 +230,32 @@ try {
                                 </div>
                             <?php endif; ?>
 
+                            <!-- Galeria de Documentos Existentes -->
+                            <?php if (!empty($documentos)): ?>
+                                <div class="mb-6">
+                                    <h3 class="text-md font-semibold text-gray-700 mb-4">Documentos Atuais</h3>
+                                    <div class="space-y-3">
+                                        <?php foreach ($documentos as $doc): ?>
+                                            <div class="flex items-center justify-between bg-gray-100 p-3 rounded-lg">
+                                                <a href="<?= BASE_URL . str_replace('\\', '/', ltrim($doc['caminho'], '/')) ?>" target="_blank" class="flex items-center gap-3 text-blue-600 hover:underline">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                    </svg>
+                                                    <span class="text-sm font-medium truncate"><?= htmlspecialchars(basename($doc['caminho'])) ?></span>
+                                                </a>
+                                                <button type="button" onclick="deleteFile('<?= htmlspecialchars($doc['id']) ?>', '<?= htmlspecialchars($imovel['id_imovel']) ?>', 'documento')" class="flex-shrink-0 text-gray-400 hover:text-red-600" aria-label="Excluir Documento">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+
                             <!-- Upload de Novos Arquivos -->
-                            <div class="space-y-4">
+                            <div class="space-y-4 pt-4 border-t">
                                 <div>
                                     <label for="imagens" class="block text-sm font-medium text-gray-700">Adicionar Imagens</label>
                                     <div class="mt-1">
@@ -260,6 +280,18 @@ try {
                                         </label>
                                     </div>
                                 </div>
+                                <div>
+                                    <label for="documentos" class="block text-sm font-medium text-gray-700">Adicionar Documentos</label>
+                                    <div class="mt-1">
+                                        <input type="file" name="documentos[]" id="documentos" multiple accept=".pdf,.doc,.docx,.xls,.xlsx" class="sr-only">
+                                        <label for="documentos" class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                            <span id="documentos-label">Selecionar Documentos</span>
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
                         </fieldset>
                     </div>
@@ -269,8 +301,9 @@ try {
     </div>
 </div>
 
+<!-- ✅ SCRIPT CORRIGIDO E MELHORADO -->
 <script>
-    // Função para deletar arquivos via POST
+    // Função para deletar arquivos via POST (original do seu código)
     function deleteFile(idArquivo, idImovel, tipo) {
         if (confirm(`Tem certeza que deseja excluir este ${tipo}? A ação não pode ser desfeita.`)) {
             // Cria um formulário dinamicamente
@@ -300,7 +333,7 @@ try {
         }
     }
 
-    // Função para atualizar o texto do label do input de arquivo
+    // Função para atualizar o texto do label do input de arquivo (original do seu código)
     function setupFileInput(inputId, labelId, single, plural) {
         const input = document.getElementById(inputId);
         if (!input) return;
@@ -318,9 +351,55 @@ try {
         });
     }
 
-    // Inicializa os inputs de arquivo
     document.addEventListener('DOMContentLoaded', function() {
+        const precoInput = document.getElementById('preco');
+        const imovelForm = document.getElementById('imovel-form');
+
+        // --- Lógica de Formatação de Preço ---
+        if (precoInput) {
+            // Função que formata uma string de dígitos (ex: "12345") para moeda (ex: "R$ 123,45")
+            const formatToCurrency = (digits) => {
+                if (!digits) return '';
+                // Usa a API Intl.NumberFormat que é o padrão moderno para isso.
+                // Ela lida com diferentes localidades e formatos automaticamente.
+                const valueAsNumber = parseInt(digits, 10) / 100;
+                return new Intl.NumberFormat('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL'
+                }).format(valueAsNumber);
+            };
+
+            // Formata o valor inicial que vem do PHP
+            const initialDigits = precoInput.value.replace(/\D/g, '');
+            precoInput.value = formatToCurrency(initialDigits);
+
+            // Formata o valor enquanto o usuário digita
+            precoInput.addEventListener('input', (e) => {
+                const currentDigits = e.target.value.replace(/\D/g, '');
+                e.target.value = formatToCurrency(currentDigits);
+            });
+        }
+
+        // --- Lógica do Formulário ---
+        if (imovelForm) {
+            imovelForm.addEventListener('submit', () => {
+                if (precoInput && precoInput.value) {
+                    // Pega o valor formatado (ex: "R$ 9,99")
+                    // Extrai apenas os dígitos ("999")
+                    const digits = precoInput.value.replace(/\D/g, '');
+
+                    if (digits) {
+                        // Converte para o formato numérico correto para o backend (ex: "9.99")
+                        const valueAsNumber = parseInt(digits, 10) / 100;
+                        precoInput.value = valueAsNumber.toFixed(2);
+                    }
+                }
+            });
+        }
+
+        // --- Inicialização dos Labels de Arquivo ---
         setupFileInput('imagens', 'imagens-label', 'imagem', 'imagens');
         setupFileInput('videos', 'videos-label', 'vídeo', 'vídeos');
+        setupFileInput('documentos', 'documentos-label', 'documento', 'documentos');
     });
 </script>

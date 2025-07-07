@@ -1,7 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../models/Imovel.php';
-// require_once __DIR__ . '/../config/rotas.php'; // Se necessário para UPLOADS_DIR
 
 // Inicia a sessão para usar $_SESSION e obter dados do usuário.
 session_start();
@@ -30,7 +29,7 @@ switch ($action) {
 
     case 'excluir':
         $id = $_GET['id'] ?? null;
-        if ($id && $imovelModel->excluir($id)) { // Supondo que o método excluir exista no Model
+        if ($id && $imovelModel->excluir($id)) {
             $_SESSION['sucesso'] = "Imóvel excluído com sucesso.";
         } else {
             $_SESSION['erro'] = "Erro ao excluir imóvel.";
@@ -43,7 +42,7 @@ switch ($action) {
         $idArquivo = $_POST['id_arquivo'] ?? null;
         $idImovel = $_POST['id_imovel'] ?? null;
 
-        if ($tipo && $idArquivo && $imovelModel->excluirArquivo($tipo, $idArquivo)) { // Supondo que o método exista
+        if ($tipo && $idArquivo && $imovelModel->excluirArquivo($tipo, $idArquivo)) {
             $_SESSION['sucesso'] = ucfirst($tipo) . " excluído com sucesso.";
         } else {
             $_SESSION['erro'] = "Erro ao excluir o arquivo.";
@@ -54,10 +53,8 @@ switch ($action) {
 
     default:
         // Se nenhuma ação específica for chamada, redireciona para a listagem.
-        // A lógica de listagem agora deve estar na própria view (listar_imoveis.php),
-        // que incluirá este controller para obter os dados.
-        require_once __DIR__ . '/../views/imoveis/listar.php';
-        break;
+        header('Location: ../views/imoveis/listar.php');
+        exit;
 }
 
 // --- Funções Auxiliares ---
@@ -75,7 +72,7 @@ function cadastrarImovel($model)
     $documentos = salvarUploads('documentos', 'documentos_imoveis');
 
     // Chama o método de cadastro no Model.
-    if ($model->cadastrar($dados, $imagens, $videos, $documentos)) { // Supondo que o método exista e aceite esses parâmetros
+    if ($model->cadastrar($dados, $imagens, $videos, $documentos)) {
         $_SESSION['sucesso'] = "Imóvel cadastrado com sucesso.";
     } else {
         $_SESSION['erro'] = "Erro ao cadastrar imóvel.";
@@ -104,7 +101,7 @@ function editarImovel($model)
     $videos = salvarUploads('videos', 'videos_imoveis');
     $documentos = salvarUploads('documentos', 'documentos_imoveis');
 
-    if ($model->editar($dados, $imagens, $videos, $documentos)) { // Supondo que o método exista
+    if ($model->editar($dados, $imagens, $videos, $documentos)) {
         $_SESSION['sucesso'] = "Imóvel atualizado com sucesso.";
     } else {
         $_SESSION['erro'] = "Erro ao atualizar imóvel.";
@@ -124,12 +121,14 @@ function coletarDados()
     $id_imobiliaria = $_SESSION['usuario']['id_imobiliaria'] ?? null;
 
     return [
-        'id_imobiliaria' => $id_imobiliaria, // ** AJUSTE CRÍTICO **
+        'id_imobiliaria' => $id_imobiliaria,
         'titulo' => $_POST['titulo'] ?? '',
         'descricao' => $_POST['descricao'] ?? '',
         'tipo' => $_POST['tipo'] ?? '',
         'status' => $_POST['status'] ?? '',
-        'preco' => str_replace(['.', ','], ['', '.'], $_POST['preco'] ?? 0), // Formata o preço para o BD
+        // ✅ CORREÇÃO: Converte o valor para float, preservando o decimal.
+        // O JavaScript já envia o valor no formato "1234.56".
+        'preco' => (float) ($_POST['preco'] ?? 0),
         'endereco' => $_POST['endereco'] ?? '',
         'latitude' => !empty($_POST['latitude']) ? $_POST['latitude'] : null,
         'longitude' => !empty($_POST['longitude']) ? $_POST['longitude'] : null,
