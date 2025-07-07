@@ -45,7 +45,7 @@
 
     <div>
         <label for="preco" class="block text-sm font-medium text-gray-700">Preço (R$)</label>
-        <input type="number" step="0.01" name="preco" id="preco" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+        <input type="text" step="0.01" name="preco" id="preco" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
     </div>
 
     <div>
@@ -85,3 +85,29 @@
         </button>
     </div>
 </form>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const precoInput = document.getElementById('preco');
+
+        // Máscara de moeda ao digitar
+        if (precoInput) {
+            precoInput.addEventListener('input', () => {
+                let valor = precoInput.value.replace(/\D/g, '');
+                valor = (parseInt(valor, 10) / 100).toFixed(2) + '';
+                valor = valor.replace('.', ',');
+                valor = valor.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+                precoInput.value = 'R$ ' + valor;
+            });
+        }
+
+        // Antes de enviar, limpar a máscara
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', () => {
+                if (precoInput) {
+                    precoInput.value = precoInput.value.replace(/[R$\s.]/g, '').replace(',', '.');
+                }
+            });
+        }
+    });
+</script>
