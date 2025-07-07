@@ -1,23 +1,15 @@
 <?php
-// Inclui o arquivo que define constantes de rota, como a URL base do site.
 require_once __DIR__ . '/../../config/rotas.php';
 
-// Garante que uma sessão PHP seja iniciada, se ainda não houver uma ativa.
 if (session_status() === PHP_SESSION_NONE) session_start();
 
-// Obtém os dados do usuário logado da sessão. Se não houver, usa valores padrão.
 $usuarioLogado = $_SESSION['usuario'] ?? ['nome' => 'Usuário', 'email' => ''];
-// Extrai o primeiro nome do usuário para exibição.
 $primeiroNome = explode(' ', trim($usuarioLogado['nome']))[0] ?? 'Usuário';
-// Pega a primeira letra do nome para usar como fallback de avatar.
 $primeiraLetra = strtoupper(substr($primeiroNome, 0, 1));
-// Obtém o caminho da foto de perfil, se houver.
 $fotoPerfil = $usuarioLogado['foto'] ?? null;
 
-// Monta o caminho completo da imagem do perfil.
-$caminhoFoto = BASE_URL . 'uploads/' . ltrim($fotoPerfil, '/');
-// Verifica se o usuário tem uma foto de perfil definida.
 $temFoto = !empty($fotoPerfil);
+$caminhoFoto = BASE_URL . ltrim(str_replace('../', '', $fotoPerfil), '/');
 ?>
 
 <!-- A tag <header> define o cabeçalho da página. -->
@@ -70,7 +62,7 @@ $temFoto = !empty($fotoPerfil);
                 <!-- Divisor. -->
                 <hr class="my-1">
                 <!-- Links do menu. -->
-                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Meu Perfil</a>
+                <a href="../usuarios/perfil.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Meu Perfil</a>
                 <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Configurações</a>
                 <!-- Link para o logout, usando a URL base definida em rotas.php. -->
                 <a href="<?= BASE_URL ?>controllers/LogoutController.php" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Sair</a>

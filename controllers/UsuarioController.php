@@ -115,6 +115,81 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: ../views/usuarios/listar.php?atualizado=1');
         exit;
     }
+
+    // Bloco para lidar com atualização do próprio perfil
+    if ($_POST['action'] === 'atualizarPerfil') {
+        // Validação de sessão e segurança
+        if (!isset($_SESSION['usuario']['id_usuario'])) {
+            $_SESSION['erro'] = "Sessão expirada. Por favor, faça login novamente.";
+            header('Location: ../auth/login.php');
+            exit;
+        }
+
+        $id = $_SESSION['usuario']['id_usuario'];
+        $nome = trim($_POST['nome']);
+        $telefone = trim($_POST['telefone']);
+        $senha = $_POST['senha'] ?? null;
+        $confirmar_senha = $_POST['confirmar_senha'] ?? null;
+        $remover_foto = $_POST['remover_foto'] ?? '0';
+        $novaSenhaHash = null; // Usaremos esta variável para a senha criptografada
+
+        // Validação de senha (se for fornecida)
+        if (!empty($senha)) {
+            // Validação de segurança no servidor
+            if (strlen($senha) < 8) {
+                $_SESSION['erro'] = "A nova senha deve ter pelo menos 8 caracteres.";
+                header('Location: ../views/usuarios/perfil.php');
+                exit;
+            }
+            if ($senha !== $confirmar_senha) {
+                $_SESSION['erro'] = "As senhas não coincidem.";
+                header('Location: ../views/usuarios/perfil.php');
+                exit;
+            }
+            // ✅ CORREÇÃO 1: Criptografar a nova senha antes de salvar.
+            $novaSenhaHash = password_hash($senha, PASSWORD_DEFAULT);
+        }
+
+        // Busca os dados atuais do usuário para obter o caminho da foto antiga.
+        $dadosAntigos = $usuario->buscarPorId($id);
+        $fotoPath = $dadosAntigos['foto'] ?? null;
+
+        // ✅ CORREÇÃO 2: Lógica para remover a foto.
+        if ($remover_foto === '1') {
+            // Se o arquivo antigo existir, apaga do servidor.
+            if ($fotoPath && file_exists($fotoPath)) {
+                unlink($fotoPath);
+            }
+            $fotoPath = null; // Define o caminho como nulo para limpar no banco.
+        }
+
+        // Upload de uma nova imagem (sobrescreve a remoção se uma nova for enviada)
+        $novaFotoPath = salvarFoto('foto');
+        if ($novaFotoPath) {
+            // Se uma nova foto foi enviada, apaga a antiga se existir.
+            if ($fotoPath && file_exists($fotoPath)) {
+                unlink($fotoPath);
+            }
+            $fotoPath = $novaFotoPath;
+        }
+
+        // Atualiza no banco, passando a senha já criptografada (ou null se não for alterada).
+        $resultado = $usuario->atualizarPerfil($id, $nome, $telefone, $novaSenhaHash, $fotoPath);
+
+        if ($resultado) {
+            $_SESSION['sucesso'] = "Perfil atualizado com sucesso.";
+            // Atualiza os dados da sessão para refletir as mudanças imediatamente.
+            $_SESSION['usuario']['nome'] = $nome;
+            $_SESSION['usuario']['telefone'] = $telefone;
+            // Atualiza a foto na sessão, garantindo que o caminho esteja correto.
+            $_SESSION['usuario']['foto'] = $fotoPath ? str_replace('../', '', $fotoPath) : null;
+        } else {
+            $_SESSION['erro'] = "Erro ao atualizar perfil.";
+        }
+
+        header('Location: ../views/usuarios/perfil.php');
+        exit;
+    }
 }
 
 // Bloco para lidar com a exclusão de um usuário via requisição GET.

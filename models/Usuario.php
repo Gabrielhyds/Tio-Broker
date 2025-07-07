@@ -357,4 +357,30 @@ class Usuario
         $stmt->bind_param("si", $novaSenha, $id_usuario);
         return $stmt->execute();
     }
+    public function atualizarPerfil($id, $nome, $telefone, $novaSenha = null, $foto = null)
+    {
+        $sql = "UPDATE usuario SET nome = ?, telefone = ?";
+        $tipos = "ss";
+        $params = [$nome, $telefone];
+
+        if ($novaSenha) {
+            $sql .= ", senha = ?";
+            $tipos .= "s";
+            $params[] = password_hash($novaSenha, PASSWORD_DEFAULT);
+        }
+
+        if ($foto) {
+            $sql .= ", foto = ?";
+            $tipos .= "s";
+            $params[] = $foto;
+        }
+
+        $sql .= " WHERE id_usuario = ?";
+        $tipos .= "i";
+        $params[] = $id;
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param($tipos, ...$params);
+        return $stmt->execute();
+    }
 }
