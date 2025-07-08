@@ -69,19 +69,11 @@ class Usuario
         return $stmt->get_result()->fetch_assoc();
     }
 
-    // ✅✅✅ INÍCIO DA CORREÇÃO DEFINITIVA ✅✅✅
     /**
      * Atualiza o perfil de um usuário no banco de dados.
      * Esta versão constrói a query SQL dinamicamente e inclui depuração de erros.
-     *
-     * @param int $id O ID do usuário a ser atualizado.
-     * @param string $nome O novo nome do usuário.
-     * @param string $telefone O novo telefone do usuário.
-     * @param string|null $novaSenhaHash A nova senha já criptografada (ou null se não for para alterar).
-     * @param string|null $fotoPath O novo caminho da foto (pode ser null para remover a foto).
-     * @return bool Retorna true se a atualização for bem-sucedida, false caso contrário.
      */
-    public function atualizarPerfil($id, $nome, $telefone, $novaSenhaHash = null, $fotoPath = null)
+    public function atualizarPerfil($id, $nome, $email, $telefone, $novaSenhaHash = null, $fotoPath = null)
     {
         // 1. Inicia a construção da query SQL e dos parâmetros
         $sqlParts = [];
@@ -93,52 +85,51 @@ class Usuario
         $params[] = $nome;
         $types .= 's';
 
-        $sqlParts[] = "telefone = ?";
-        $params[] = $telefone;
+        $sqlParts[] = "email = ?";
+        $params[] = $email;
         $types .= 's';
 
-        // 3. Adiciona a senha à query APENAS se uma nova senha foi fornecida.
-        // O controller já envia a senha criptografada (md5, neste caso).
-        // Esta função apenas salva o valor recebido.
+        // --- INÍCIO DA CORREÇÃO ---
+        // Adiciona o telefone à query APENAS se um valor não nulo foi fornecido.
+        // Isso evita o erro "Column 'telefone' cannot be null".
+        if ($telefone !== null) {
+            $sqlParts[] = "telefone = ?";
+            $params[] = $telefone;
+            $types .= 's';
+        }
+        // --- FIM DA CORREÇÃO ---
+
+        // Adiciona a senha à query APENAS se uma nova senha foi fornecida.
         if ($novaSenhaHash !== null) {
             $sqlParts[] = "senha = ?";
             $params[] = $novaSenhaHash;
             $types .= 's';
         }
 
-        // 4. Adiciona a foto à query.
-        // A lógica de upload/remoção está no Controller. Aqui apenas salvamos o resultado.
-        // Se $fotoPath for null, a foto será removida do banco.
-        // É importante que este campo seja sempre atualizado, mesmo que com o valor antigo.
+        // Adiciona a foto à query.
         $sqlParts[] = "foto = ?";
         $params[] = $fotoPath;
         $types .= 's';
 
-        // 5. Monta a query final
+        // Monta a query final
         $sql = "UPDATE usuario SET " . implode(', ', $sqlParts) . " WHERE id_usuario = ?";
 
         // Adiciona o ID do usuário aos parâmetros no final
         $params[] = $id;
         $types .= 'i';
 
-        // 6. Prepara a statement
         $stmt = $this->conn->prepare($sql);
 
-        // 7. DEPURAÇÃO: Verifica se a preparação da query falhou
         if ($stmt === false) {
-            // Se falhar, armazena o erro na sessão para ser exibido na view.
             $_SESSION['erro'] = "ERRO DE SQL (prepare): " . $this->conn->error;
             return false;
         }
 
-        // 8. Vincula os parâmetros de forma dinâmica
         $stmt->bind_param($types, ...$params);
 
-        // 9. Executa e verifica o resultado
         if ($stmt->execute()) {
             return true; // Sucesso
         } else {
-            // DEPURAÇÃO: Se a execução falhar, armazena o erro específico.
             $_SESSION['erro'] = "ERRO DE SQL (execute): " . $stmt->error;
             return false;
         }
@@ -150,9 +141,7 @@ class Usuario
      */
     public function atualizar($id, $nome, $email, $cpf, $telefone, $permissao, $id_imobiliaria, $creci = null, $foto = null)
     {
-        // Prepara o UPDATE para os dados do usuário.
         $stmt = $this->conn->prepare("UPDATE usuario SET nome = ?, email = ?, cpf = ?, telefone = ?, permissao = ?, id_imobiliaria = ?, creci = ?, foto = ? WHERE id_usuario = ?");
-        // Associa os parâmetros à instrução.
         $stmt->bind_param("sssssissi", $nome, $email, $cpf, $telefone, $permissao, $id_imobiliaria, $creci, $foto, $id);
         return $stmt->execute();
     }
@@ -289,5 +278,82 @@ class Usuario
         $stmt = $this->conn->prepare("UPDATE usuario SET senha = ? WHERE id_usuario = ?");
         $stmt->bind_param("si", $novaSenha, $id_usuario);
         return $stmt->execute();
+    }
+    public function contarTotal($filtro = null, $permissao = '', $id_imobiliaria = null)
+    {
+        $sql = "SELECT COUNT(u.id_usuario) as total 
+                FROM usuario u
+                LEFT JOIN imobiliaria i ON u.id_imobiliaria = i.id_imobiliaria
+                WHERE u.is_deleted = 0";
+
+        $params = [];
+        $types = "";
+
+        // Adiciona filtro por permissão
+        if ($permissao !== 'SuperAdmin' && $id_imobiliaria) {
+            $sql .= " AND u.id_imobiliaria = ?";
+            $params[] = $id_imobiliaria;
+            $types .= "i";
+        }
+
+        // Adiciona filtro de busca textual
+        if (!empty($filtro)) {
+            $sql .= " AND (u.nome LIKE ? OR u.email LIKE ? OR u.permissao LIKE ? OR i.nome LIKE ?)";
+            $searchTerm = "%{$filtro}%";
+            array_push($params, $searchTerm, $searchTerm, $searchTerm, $searchTerm);
+            $types .= "ssss";
+        }
+
+        $stmt = $this->conn->prepare($sql);
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+        $resultado = $stmt->get_result()->fetch_assoc();
+        return (int)($resultado['total'] ?? 0);
+    }
+
+    /**
+     * Lista os usuários de forma paginada, aplicando filtros de permissão e busca.
+     */
+    public function listarPaginadoComImobiliaria($pagina_atual, $limite, $filtro = null, $permissao = '', $id_imobiliaria = null)
+    {
+        $offset = ($pagina_atual - 1) * $limite;
+        $sql = "
+            SELECT u.*, i.nome AS nome_imobiliaria
+            FROM usuario u
+            LEFT JOIN imobiliaria i ON u.id_imobiliaria = i.id_imobiliaria
+            WHERE u.is_deleted = 0
+        ";
+        $params = [];
+        $types = '';
+
+        // Filtro por permissão
+        if ($permissao !== 'SuperAdmin' && $id_imobiliaria) {
+            $sql .= " AND u.id_imobiliaria = ?";
+            $params[] = $id_imobiliaria;
+            $types .= "i";
+        }
+
+        // Filtro de busca textual
+        if (!empty($filtro)) {
+            $sql .= " AND (u.nome LIKE ? OR u.email LIKE ? OR u.permissao LIKE ? OR i.nome LIKE ?)";
+            $searchTerm = "%{$filtro}%";
+            array_push($params, $searchTerm, $searchTerm, $searchTerm, $searchTerm);
+            $types .= "ssss";
+        }
+
+        $sql .= " ORDER BY u.nome ASC LIMIT ? OFFSET ?";
+        $params[] = $limite;
+        $params[] = $offset;
+        $types .= "ii";
+
+        $stmt = $this->conn->prepare($sql);
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+        $resultado = $stmt->get_result();
+        return $resultado ? $resultado->fetch_all(MYSQLI_ASSOC) : [];
     }
 }

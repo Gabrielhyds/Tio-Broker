@@ -43,8 +43,9 @@
                     <input type="text" name="nome" id="nome" value="<?= htmlspecialchars($usuario['nome'] ?? 'Nome do Usuário') ?>" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700">E-mail (não pode ser alterado)</label>
-                    <input type="email" id="email" value="<?= htmlspecialchars($usuario['email'] ?? 'email@exemplo.com') ?>" disabled class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 cursor-not-allowed">
+                    <!-- ✅✅✅ CAMPO DE E-MAIL CORRIGIDO ✅✅✅ -->
+                    <label for="email" class="block text-sm font-medium text-gray-700">E-mail</label>
+                    <input type="email" name="email" id="email" value="<?= htmlspecialchars($usuario['email'] ?? 'email@exemplo.com') ?>" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div>
                     <label for="telefone" class="block text-sm font-medium text-gray-700">Telefone</label>
@@ -78,7 +79,7 @@
                             </button>
                         </div>
                     </div>
-                    <!-- ✅ MUDANÇA: Requisitos da Senha (inicialmente ocultos) -->
+                    <!-- Requisitos da Senha (inicialmente ocultos) -->
                     <div id="password-requirements-container" class="md:col-span-2 mt-2 hidden">
                         <p class="text-sm font-medium text-gray-600">A senha deve ter:</p>
                         <ul class="text-sm space-y-1 mt-2">

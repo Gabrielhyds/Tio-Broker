@@ -108,15 +108,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $id = $_SESSION['usuario']['id_usuario'];
         $nome = trim($_POST['nome']);
+        // ✅✅✅ CORREÇÃO: Captura o e-mail do formulário.
+        $email = trim($_POST['email']);
         $telefone = trim($_POST['telefone']);
         $senha = $_POST['senha'] ?? null;
         $confirmar_senha = $_POST['confirmar_senha'] ?? null;
         $remover_foto = $_POST['remover_foto'] ?? '0';
-        $novaSenhaHash = null; // Usaremos esta variável para a senha criptografada
+        $novaSenhaHash = null;
 
         // Validação de senha (se for fornecida)
         if (!empty($senha)) {
-            // Validação de segurança no servidor
             if (strlen($senha) < 8) {
                 $_SESSION['erro'] = "A nova senha deve ter pelo menos 8 caracteres.";
                 header('Location: ../views/usuarios/perfil.php');
@@ -127,47 +128,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header('Location: ../views/usuarios/perfil.php');
                 exit;
             }
-            // ✅ CORREÇÃO: Usando md5() para compatibilidade com o sistema legado.
-            // ATENÇÃO: MD5 não é seguro para senhas. O ideal é migrar seu sistema
-            // para usar password_hash() e password_verify().
             $novaSenhaHash = md5($senha);
         }
 
-        // Busca os dados atuais do usuário para obter o caminho da foto antiga.
+        // Lógica para foto
         $dadosAntigos = $usuario->buscarPorId($id);
         $fotoPath = $dadosAntigos['foto'] ?? null;
 
-        // Lógica para remover a foto.
         if ($remover_foto === '1') {
-            // Se o arquivo antigo existir, apaga do servidor.
             if ($fotoPath && file_exists($fotoPath)) {
                 unlink($fotoPath);
             }
-            $fotoPath = null; // Define o caminho como nulo para limpar no banco.
+            $fotoPath = null;
         }
 
-        // Upload de uma nova imagem (sobrescreve a remoção se uma nova for enviada)
         $novaFotoPath = salvarFoto('foto');
         if ($novaFotoPath) {
-            // Se uma nova foto foi enviada, apaga a antiga se existir.
             if ($fotoPath && file_exists($fotoPath)) {
                 unlink($fotoPath);
             }
             $fotoPath = $novaFotoPath;
         }
 
-        // Atualiza no banco, passando a senha já criptografada (ou null se não for alterada).
-        $resultado = $usuario->atualizarPerfil($id, $nome, $telefone, $novaSenhaHash, $fotoPath);
+        // ✅✅✅ CORREÇÃO: Passa os parâmetros na ordem correta para o Model.
+        $resultado = $usuario->atualizarPerfil($id, $nome, $email, $telefone, $novaSenhaHash, $fotoPath);
 
         if ($resultado) {
             $_SESSION['sucesso'] = "Perfil atualizado com sucesso.";
             // Atualiza os dados da sessão para refletir as mudanças imediatamente.
             $_SESSION['usuario']['nome'] = $nome;
+            $_SESSION['usuario']['email'] = $email; // Atualiza o e-mail na sessão
             $_SESSION['usuario']['telefone'] = $telefone;
-            // Atualiza a foto na sessão, garantindo que o caminho esteja correto.
             $_SESSION['usuario']['foto'] = $fotoPath ? str_replace('../', '', $fotoPath) : null;
         } else {
-            $_SESSION['erro'] = "Erro ao atualizar perfil.";
+            // A mensagem de erro específica já é definida no Model
+            if (!isset($_SESSION['erro'])) {
+                $_SESSION['erro'] = "Erro ao atualizar perfil. O e-mail pode já estar em uso.";
+            }
         }
 
         header('Location: ../views/usuarios/perfil.php');
