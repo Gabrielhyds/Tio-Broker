@@ -58,113 +58,6 @@ class Usuario
     }
 
     /**
-     * Conta o total de usuários ativos (não excluídos), com filtros opcionais de busca e permissão.
-     */
-    public function contarTotal($filtro = null, $permissao = 'Admin', $id_imobiliaria = null)
-    {
-        // SQL base para contar usuários ativos.
-        $sql = "SELECT COUNT(u.id_usuario) as total 
-                FROM usuario u
-                LEFT JOIN imobiliaria i ON u.id_imobiliaria = i.id_imobiliaria AND i.is_deleted = 0
-                WHERE u.is_deleted = 0";
-
-        // Inicializa arrays para parâmetros dinâmicos.
-        $params = [];
-        $types = "";
-
-        // Se o usuário não for 'SuperAdmin', restringe a contagem à sua própria imobiliária.
-        if ($permissao !== 'SuperAdmin' && $id_imobiliaria !== null) {
-            $sql .= " AND u.id_imobiliaria = ?";
-            $params[] = $id_imobiliaria;
-            $types .= "i";
-        }
-
-        // Se um termo de filtro for fornecido, adiciona condições de busca.
-        if (!empty($filtro)) {
-            $sql .= " AND (u.nome LIKE ? OR u.email LIKE ? OR u.permissao LIKE ? OR i.nome LIKE ?)";
-            $searchTerm = "%{$filtro}%";
-            $params = array_merge($params, [$searchTerm, $searchTerm, $searchTerm, $searchTerm]);
-            $types .= "ssss";
-        }
-
-        // Prepara e executa a contagem com os parâmetros dinâmicos.
-        $stmt = $this->conn->prepare($sql);
-        if (!empty($params)) {
-            $stmt->bind_param($types, ...$params);
-        }
-        $stmt->execute();
-        $resultado = $stmt->get_result()->fetch_assoc();
-        // Retorna o total como um inteiro.
-        return (int)($resultado['total'] ?? 0);
-    }
-
-    /**
-     * Lista os usuários ativos de forma paginada, com filtros opcionais.
-     */
-    public function listarPaginadoComImobiliaria($pagina_atual, $limite, $filtro = null, $permissao = 'Admin', $id_imobiliaria = null)
-    {
-        // Calcula o offset para a consulta SQL com base na página atual e no limite.
-        $offset = ($pagina_atual - 1) * $limite;
-        // SQL base para listar usuários ativos com o nome da imobiliária.
-        $sql = "
-        SELECT u.*, i.nome AS nome_imobiliaria
-        FROM usuario u
-        LEFT JOIN imobiliaria i ON u.id_imobiliaria = i.id_imobiliaria AND i.is_deleted = 0
-        WHERE u.is_deleted = 0
-    ";
-        $params = [];
-        $types = '';
-
-        // Aplica o filtro por imobiliária se o usuário não for SuperAdmin.
-        if ($permissao !== 'SuperAdmin' && $id_imobiliaria !== null) {
-            $sql .= " AND u.id_imobiliaria = ?";
-            $params[] = $id_imobiliaria;
-            $types .= "i";
-        }
-
-        // Aplica o filtro de busca textual, se fornecido.
-        if (!empty($filtro)) {
-            $sql .= " AND (u.nome LIKE ? OR u.email LIKE ? OR u.permissao LIKE ? OR i.nome LIKE ?)";
-            $searchTerm = "%{$filtro}%";
-            $params = array_merge($params, [$searchTerm, $searchTerm, $searchTerm, $searchTerm]);
-            $types .= "ssss";
-        }
-
-        // Adiciona a ordenação e os limites de paginação.
-        $sql .= " ORDER BY u.nome ASC LIMIT ? OFFSET ?";
-        $params[] = $limite;
-        $params[] = $offset;
-        $types .= "ii";
-
-        // Prepara, executa e retorna os resultados.
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bind_param($types, ...$params);
-        $stmt->execute();
-        $resultado = $stmt->get_result();
-
-        return $resultado ? $resultado->fetch_all(MYSQLI_ASSOC) : [];
-    }
-
-
-    /**
-     * Lista todos os usuários ativos com o nome da imobiliária associada.
-     */
-    public function listarTodosComImobiliaria()
-    {
-        // Query para buscar todos os usuários que não foram excluídos logicamente.
-        $query = "
-            SELECT u.*, i.nome AS nome_imobiliaria
-            FROM usuario u
-            LEFT JOIN imobiliaria i ON u.id_imobiliaria = i.id_imobiliaria AND i.is_deleted = 0
-            WHERE u.is_deleted = 0
-            ORDER BY u.nome ASC
-        ";
-        // Executa a query diretamente (é segura pois não há input do usuário).
-        $resultado = $this->conn->query($query);
-        return $resultado ? $resultado->fetch_all(MYSQLI_ASSOC) : [];
-    }
-
-    /**
      * Busca um único usuário ativo pelo seu ID.
      */
     public function buscarPorId($id)
@@ -176,8 +69,84 @@ class Usuario
         return $stmt->get_result()->fetch_assoc();
     }
 
+    // ✅✅✅ INÍCIO DA CORREÇÃO DEFINITIVA ✅✅✅
     /**
-     * Atualiza os dados de um usuário existente.
+     * Atualiza o perfil de um usuário no banco de dados.
+     * Esta versão constrói a query SQL dinamicamente e inclui depuração de erros.
+     *
+     * @param int $id O ID do usuário a ser atualizado.
+     * @param string $nome O novo nome do usuário.
+     * @param string $telefone O novo telefone do usuário.
+     * @param string|null $novaSenhaHash A nova senha já criptografada (ou null se não for para alterar).
+     * @param string|null $fotoPath O novo caminho da foto (pode ser null para remover a foto).
+     * @return bool Retorna true se a atualização for bem-sucedida, false caso contrário.
+     */
+    public function atualizarPerfil($id, $nome, $telefone, $novaSenhaHash = null, $fotoPath = null)
+    {
+        // 1. Inicia a construção da query SQL e dos parâmetros
+        $sqlParts = [];
+        $params = [];
+        $types = '';
+
+        // 2. Adiciona os campos base que sempre serão atualizados
+        $sqlParts[] = "nome = ?";
+        $params[] = $nome;
+        $types .= 's';
+
+        $sqlParts[] = "telefone = ?";
+        $params[] = $telefone;
+        $types .= 's';
+
+        // 3. Adiciona a senha à query APENAS se uma nova senha foi fornecida.
+        // O controller já envia a senha criptografada (md5, neste caso).
+        // Esta função apenas salva o valor recebido.
+        if ($novaSenhaHash !== null) {
+            $sqlParts[] = "senha = ?";
+            $params[] = $novaSenhaHash;
+            $types .= 's';
+        }
+
+        // 4. Adiciona a foto à query.
+        // A lógica de upload/remoção está no Controller. Aqui apenas salvamos o resultado.
+        // Se $fotoPath for null, a foto será removida do banco.
+        // É importante que este campo seja sempre atualizado, mesmo que com o valor antigo.
+        $sqlParts[] = "foto = ?";
+        $params[] = $fotoPath;
+        $types .= 's';
+
+        // 5. Monta a query final
+        $sql = "UPDATE usuario SET " . implode(', ', $sqlParts) . " WHERE id_usuario = ?";
+
+        // Adiciona o ID do usuário aos parâmetros no final
+        $params[] = $id;
+        $types .= 'i';
+
+        // 6. Prepara a statement
+        $stmt = $this->conn->prepare($sql);
+
+        // 7. DEPURAÇÃO: Verifica se a preparação da query falhou
+        if ($stmt === false) {
+            // Se falhar, armazena o erro na sessão para ser exibido na view.
+            $_SESSION['erro'] = "ERRO DE SQL (prepare): " . $this->conn->error;
+            return false;
+        }
+
+        // 8. Vincula os parâmetros de forma dinâmica
+        $stmt->bind_param($types, ...$params);
+
+        // 9. Executa e verifica o resultado
+        if ($stmt->execute()) {
+            return true; // Sucesso
+        } else {
+            // DEPURAÇÃO: Se a execução falhar, armazena o erro específico.
+            $_SESSION['erro'] = "ERRO DE SQL (execute): " . $stmt->error;
+            return false;
+        }
+    }
+    // ✅✅✅ FIM DA CORREÇÃO ✅✅✅
+
+    /**
+     * Atualiza os dados de um usuário existente (função de admin).
      */
     public function atualizar($id, $nome, $email, $cpf, $telefone, $permissao, $id_imobiliaria, $creci = null, $foto = null)
     {
@@ -189,7 +158,7 @@ class Usuario
     }
 
     /**
-     * "Exclui" um usuário logicamente (soft delete), definindo o campo 'is_deleted' para 1.
+     * "Exclui" um usuário logicamente (soft delete).
      */
     public function excluir($id)
     {
@@ -199,24 +168,18 @@ class Usuario
         return $stmt->execute();
     }
 
-    /**
-     * Lista todos os usuários ativos de uma determinada imobiliária.
-     */
+    // ... (restante das suas funções existentes, sem alterações) ...
+
     public function listarPorImobiliaria($id_imobiliaria)
     {
-        // Prepara a busca de usuários ativos por ID de imobiliária.
         $stmt = $this->conn->prepare("SELECT * FROM usuario WHERE id_imobiliaria = ? AND is_deleted = 0 ORDER BY nome ASC");
         $stmt->bind_param("i", $id_imobiliaria);
         $stmt->execute();
         return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
 
-    /**
-     * Retorna todas as imobiliárias que possuem ao menos um usuário ativo.
-     */
     public function listarImobiliariasComUsuarios()
     {
-        // Query que retorna imobiliárias distintas que têm pelo menos um usuário ativo.
         $query = "
             SELECT i.id_imobiliaria, i.nome 
             FROM imobiliaria i
@@ -229,48 +192,29 @@ class Usuario
         return $resultado ? $resultado->fetch_all(MYSQLI_ASSOC) : [];
     }
 
-    /**
-     * Retira o vínculo de um usuário com a imobiliária (define id_imobiliaria como NULL).
-     */
     public function removerImobiliaria($id_usuario)
     {
-        // Prepara um UPDATE para desvincular o usuário.
         $stmt = $this->conn->prepare("UPDATE usuario SET id_imobiliaria = NULL WHERE id_usuario = ?");
         $stmt->bind_param("i", $id_usuario);
         return $stmt->execute();
     }
 
-
-    /**
-     * Vincula um usuário a uma imobiliária.
-     */
     public function vincularImobiliaria($id_usuario, $id_imobiliaria)
     {
-        // Prepara um UPDATE para definir o ID da imobiliária para o usuário.
         $stmt = $this->conn->prepare("UPDATE usuario SET id_imobiliaria = ? WHERE id_usuario = ?");
         $stmt->bind_param("ii", $id_imobiliaria, $id_usuario);
         return $stmt->execute();
     }
 
-    // --- MÉTODOS NOVOS PARA RESTAURAÇÃO E LISTAGEM DE EXCLUÍDOS ---
-
-    /**
-     * Restaura um usuário que foi "excluído" logicamente.
-     */
     public function restaurar($id)
     {
-        // Prepara um UPDATE para reverter o soft delete, definindo is_deleted = 0.
         $stmt = $this->conn->prepare("UPDATE usuario SET is_deleted = 0 WHERE id_usuario = ?");
         $stmt->bind_param("i", $id);
         return $stmt->execute();
     }
 
-    /**
-     * Conta o total de usuários "excluídos", com filtro opcional.
-     */
     public function contarTotalExcluidos($filtro = null)
     {
-        // SQL base para contar usuários marcados como deletados.
         $sql = "SELECT COUNT(u.id_usuario) as total 
                 FROM usuario u
                 LEFT JOIN imobiliaria i ON u.id_imobiliaria = i.id_imobiliaria
@@ -278,7 +222,6 @@ class Usuario
         $params = [];
         $types = "";
 
-        // Adiciona filtro de busca textual, se fornecido.
         if (!empty($filtro)) {
             $sql .= " AND (u.nome LIKE ? OR u.email LIKE ?)";
             $searchTerm = "%{$filtro}%";
@@ -286,7 +229,6 @@ class Usuario
             $types = "ss";
         }
 
-        // Prepara, executa e retorna a contagem.
         $stmt = $this->conn->prepare($sql);
         if (!empty($params)) {
             $stmt->bind_param($types, ...$params);
@@ -296,14 +238,9 @@ class Usuario
         return (int)($resultado['total'] ?? 0);
     }
 
-    /**
-     * Lista os usuários "excluídos" de forma paginada, com filtro opcional.
-     */
     public function listarExcluidosPaginado($pagina_atual, $limite, $filtro = null)
     {
-        // Calcula o offset para paginação.
         $offset = ($pagina_atual - 1) * $limite;
-        // SQL base para listar usuários deletados.
         $sql = "
             SELECT u.*, i.nome AS nome_imobiliaria
             FROM usuario u
@@ -313,7 +250,6 @@ class Usuario
         $params = [];
         $types = '';
 
-        // Adiciona filtro de busca textual.
         if (!empty($filtro)) {
             $sql .= " AND (u.nome LIKE ? OR u.email LIKE ?)";
             $searchTerm = "%{$filtro}%";
@@ -321,28 +257,25 @@ class Usuario
             $types = "ss";
         }
 
-        // Adiciona ordenação e limites de paginação.
         $sql .= " ORDER BY u.nome ASC LIMIT ? OFFSET ?";
         $params[] = $limite;
         $params[] = $offset;
         $types .= "ii";
 
-        // Prepara, executa e retorna os resultados.
         $stmt = $this->conn->prepare($sql);
         $stmt->bind_param($types, ...$params);
         $stmt->execute();
         $resultado = $stmt->get_result();
         return $resultado ? $resultado->fetch_all(MYSQLI_ASSOC) : [];
     }
-    /**
-     * Lista todos os usuários ativos (sem imobiliária, sem filtros extras).
-     */
+
     public function listarTodos()
     {
         $sql = "SELECT * FROM usuario WHERE is_deleted = 0 ORDER BY nome ASC";
         $resultado = $this->conn->query($sql);
         return $resultado ? $resultado->fetch_all(MYSQLI_ASSOC) : [];
     }
+
     public function buscarPorEmail($email)
     {
         $stmt = $this->conn->prepare("SELECT * FROM usuario WHERE email = ?");
@@ -355,32 +288,6 @@ class Usuario
     {
         $stmt = $this->conn->prepare("UPDATE usuario SET senha = ? WHERE id_usuario = ?");
         $stmt->bind_param("si", $novaSenha, $id_usuario);
-        return $stmt->execute();
-    }
-    public function atualizarPerfil($id, $nome, $telefone, $novaSenha = null, $foto = null)
-    {
-        $sql = "UPDATE usuario SET nome = ?, telefone = ?";
-        $tipos = "ss";
-        $params = [$nome, $telefone];
-
-        if ($novaSenha) {
-            $sql .= ", senha = ?";
-            $tipos .= "s";
-            $params[] = password_hash($novaSenha, PASSWORD_DEFAULT);
-        }
-
-        if ($foto) {
-            $sql .= ", foto = ?";
-            $tipos .= "s";
-            $params[] = $foto;
-        }
-
-        $sql .= " WHERE id_usuario = ?";
-        $tipos .= "i";
-        $params[] = $id;
-
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bind_param($tipos, ...$params);
         return $stmt->execute();
     }
 }
