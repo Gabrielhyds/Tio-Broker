@@ -170,15 +170,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: ../views/usuarios/perfil.php');
         exit;
     }
+
+    // ✅✅✅ INÍCIO DA CORREÇÃO ✅✅✅
+    // Bloco para vincular um usuário a uma imobiliária (vindo de um formulário)
+    if ($_POST['action'] === 'vincularUsuario') {
+        $idUsuarioParaVincular = (int)($_POST['id_usuario'] ?? 0);
+        $idImobiliariaParaRedirecionar = (int)($_POST['id_imobiliaria'] ?? 0);
+
+        if ($idUsuarioParaVincular > 0 && $idImobiliariaParaRedirecionar > 0) {
+            if ($usuario->vincularImobiliaria($idUsuarioParaVincular, $idImobiliariaParaRedirecionar)) {
+                $_SESSION['sucesso'] = "Usuário vinculado com sucesso!";
+            } else {
+                $_SESSION['erro'] = "Ocorreu um erro ao vincular o usuário.";
+            }
+        } else {
+            $_SESSION['erro'] = "Dados inválidos para vincular usuário.";
+        }
+        header("Location: ../views/imobiliarias/editar_imobiliaria.php?id=" . $idImobiliariaParaRedirecionar);
+        exit;
+    }
 }
 
 // Bloco para lidar com a exclusão de um usuário via requisição GET.
 if (isset($_GET['excluir'])) {
-    // (código de exclusão existente - sem alterações)
-    $usuario->excluir($_GET['excluir']);
-    header('Location: ../views/usuarios/listar.php?excluido=1');
+    $usuario->excluir((int)$_GET['excluir']);
+    $_SESSION['sucesso'] = "Usuário excluído com sucesso."; // Feedback de exclusão
+    header('Location: ../views/usuarios/listar.php');
     exit;
 }
+
+// Bloco para remover o vínculo de um usuário com uma imobiliária
+if (isset($_GET['removerImobiliaria']) && isset($_GET['idImobiliaria'])) {
+    // NOTA: Usar GET para ações que modificam dados não é a melhor prática.
+    // O ideal seria usar um formulário com método POST.
+    $idUsuarioParaRemover = (int)$_GET['removerImobiliaria'];
+    $idImobiliariaParaRedirecionar = (int)$_GET['idImobiliaria'];
+
+    if ($usuario->removerImobiliaria($idUsuarioParaRemover)) {
+        $_SESSION['sucesso'] = "Usuário desvinculado com sucesso!";
+    } else {
+        $_SESSION['erro'] = "Ocorreu um erro ao desvincular o usuário.";
+    }
+    header("Location: ../views/imobiliarias/editar_imobiliaria.php?id=" . $idImobiliariaParaRedirecionar);
+    exit;
+}
+
+// ✅✅✅ INÍCIO DA CORREÇÃO ✅✅✅
+// Bloco para VINCULAR um usuário a uma imobiliária via GET
+// NOTA: O ideal é usar o método POST para ações que modificam dados.
+// Este bloco foi ajustado para funcionar com o formulário existente que usa GET.
+if (isset($_GET['incluirUsuario']) && isset($_GET['idImobiliaria'])) {
+    $idUsuarioParaVincular = (int)$_GET['incluirUsuario'];
+    $idImobiliariaParaRedirecionar = (int)$_GET['idImobiliaria'];
+
+    if ($idUsuarioParaVincular > 0 && $idImobiliariaParaRedirecionar > 0) {
+        if ($usuario->vincularImobiliaria($idUsuarioParaVincular, $idImobiliariaParaRedirecionar)) {
+            $_SESSION['sucesso'] = "Usuário vinculado com sucesso!";
+        } else {
+            $_SESSION['erro'] = "Ocorreu um erro ao vincular o usuário.";
+        }
+    } else {
+        $_SESSION['erro'] = "Dados inválidos para vincular usuário.";
+    }
+    header("Location: ../views/imobiliarias/editar_imobiliaria.php?id=" . $idImobiliariaParaRedirecionar);
+    exit;
+}
+// ✅✅✅ FIM DA CORREÇÃO ✅✅✅
+
+
 
 // (Restante do seu código... sem alterações)
 
