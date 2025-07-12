@@ -1,609 +1,283 @@
 <?php
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
+// As variáveis $cliente, $interacoes e $documentos são fornecidas pelo ClienteController.
 if (!isset($cliente) || empty($cliente)) {
-    $_SESSION['mensagem_erro'] = "Não foi possível carregar os dados do cliente.";
-    header('Location: index.php?controller=cliente&action=listar');
-    exit;
+    echo "<div class='bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg' role='alert'>Não foi possível carregar os dados do cliente.</div>";
+    return;
 }
-// A variável $interacoes e $documentos devem ser passadas pelo ClienteController
+
+function formatarData($data) {
+    return $data ? date('d/m/Y \à\s H:i', strtotime($data)) : 'Não informada';
+}
+
+function formatarMoeda($valor) {
+    return $valor !== null ? 'R$ ' . number_format((float)$valor, 2, ',', '.') : 'Não informado';
+}
 ?>
-<!DOCTYPE html>
-<html lang="pt-br">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalhes do Cliente: <?= htmlspecialchars($cliente['nome']) ?> - Tio Broker CRM</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #eef2f5;
-            color: #343a40;
-            font-size: 0.95rem;
-        }
+<!-- Container principal com espaçamento -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        .profile-container {
-            background-color: #ffffff;
-            padding: 30px 35px;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
-            margin-top: 30px;
-            margin-bottom: 30px;
-        }
-
-        .profile-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 25px;
-            border-bottom: 1px solid #e9ecef;
-        }
-
-        .profile-header img {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 50%;
-            margin-right: 20px;
-            border: 3px solid #f8f9fa;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .profile-header .icon-placeholder {
-            width: 100px;
-            height: 100px;
-            font-size: 3rem;
-            border-radius: 50%;
-            margin-right: 20px;
-            background-color: #f8f9fa;
-            color: #adb5bd;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 3px solid #f8f9fa;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .profile-header h2 {
-            color: #2c3e50;
-            font-weight: 700;
-            margin-bottom: 5px;
-            font-size: 1.7rem;
-        }
-
-        .profile-header p {
-            color: #6c757d;
-            margin-bottom: 5px;
-            font-size: 0.88rem;
-        }
-
-        .info-section,
-        .history-section,
-        .documents-section,
-        .actions-section {
-            margin-bottom: 30px;
-        }
-
-        .info-section h5,
-        .history-section h5,
-        .documents-section h5,
-        .actions-section h5 {
-            color: #343a40;
-            font-weight: 600;
-            font-size: 1.05rem;
-            margin-bottom: 15px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid #e9ecef;
-            display: inline-block;
-        }
-
-        .actions-section .card-header h5 {
-            /* Para o card de ações não ter a borda do título */
-            border-bottom: none;
-            margin-bottom: 0;
-        }
-
-        .info-section h5 i,
-        .history-section h5 i,
-        .documents-section h5 i,
-        .actions-section h5 i {
-            margin-right: 8px;
-            color: #495057;
-        }
-
-        .info-item {
-            margin-bottom: 12px;
-            line-height: 1.5;
-            display: flex;
-            flex-wrap: wrap;
-        }
-
-        .info-item strong {
-            color: #495057;
-            padding-right: 8px;
-            font-weight: 500;
-            flex-shrink: 0;
-        }
-
-        .info-item span {
-            word-break: break-word;
-        }
-
-        .history-entry {
-            background-color: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-left-width: 4px;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-        }
-
-        .history-entry .meta {
-            font-size: 0.85rem;
-            color: #6c757d;
-            margin-bottom: 8px;
-        }
-
-        .history-entry .meta .badge {
-            font-size: 0.75rem;
-        }
-
-        .history-entry p {
-            margin-bottom: 0;
-            line-height: 1.6;
-            white-space: pre-wrap;
-        }
-
-        .border-primary-subtle {
-            border-left-color: #0d6efd !important;
-        }
-
-        .border-success-subtle {
-            border-left-color: #198754 !important;
-        }
-
-        .border-warning-subtle {
-            border-left-color: #ffc107 !important;
-        }
-
-        .documents-section .card-header h5 {
-            border-bottom: none;
-            margin-bottom: 0;
-            font-size: 1.15rem;
-        }
-
-        .form-container {
-            /* Para os formulários que serão mostrados/ocultos */
-            display: none;
-            /* Começam ocultos */
-        }
-
-        .action-buttons-footer {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #e9ecef;
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-        }
-
-        .action-buttons-footer .btn-group-start a,
-        .action-buttons-footer .btn-group-end a {
-            margin-left: 8px;
-            padding: 0.45rem 0.9rem;
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
-
-        .action-buttons-footer .btn-group-start a:first-child,
-        .action-buttons-footer .btn-group-end a:first-child {
-            margin-left: 0;
-        }
-
-        @media (max-width: 991px) {
-            .info-item strong {
-                min-width: 130px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .profile-header {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .profile-header img,
-            .profile-header .icon-placeholder {
-                margin-right: 0;
-                margin-bottom: 15px;
-            }
-
-            .info-item {
-                flex-direction: column;
-            }
-
-            .info-item strong {
-                min-width: auto;
-                margin-bottom: 3px;
-            }
-
-            .action-buttons-footer {
-                flex-direction: column;
-            }
-
-            .action-buttons-footer .btn-group-start,
-            .action-buttons-footer .btn-group-end {
-                width: 100%;
-                display: flex;
-                flex-direction: column;
-                margin-bottom: 10px;
-            }
-
-            .action-buttons-footer .btn-group-start a,
-            .action-buttons-footer .btn-group-end a {
-                width: 100%;
-                margin-left: 0;
-                margin-bottom: 8px;
-            }
-        }
-
-        .badge {
-            font-size: 0.8rem;
-            padding: 0.4em 0.7em;
-            font-weight: 500;
-        }
-
-        .badge-potencial {
-            background-color: rgba(25, 135, 84, 0.1);
-            color: #0f5132;
-            border: 1px solid rgba(25, 135, 84, 0.3);
-        }
-
-        .badge-nao-potencial {
-            background-color: rgba(220, 53, 69, 0.1);
-            color: #842029;
-            border: 1px solid rgba(220, 53, 69, 0.3);
-        }
-
-        .btn-outline-secondary {
-            color: #495057;
-            border-color: #ced4da;
-        }
-
-        .btn-outline-secondary:hover {
-            background-color: #f8f9fa;
-            color: #2c3e50;
-            border-color: #adb5bd;
-        }
-
-        .btn-warning {
-            background-color: #ffc107;
-            border-color: #ffc107;
-            color: #212529;
-        }
-
-        .btn-warning:hover {
-            background-color: #e0a800;
-            border-color: #d39e00;
-        }
-
-        .btn-danger {
-            background-color: #dc3545;
-            border-color: #dc3545;
-        }
-
-        .btn-danger:hover {
-            background-color: #bb2d3b;
-            border-color: #b02a37;
-        }
-    </style>
-</head>
-
-<body>
-    <div class="container">
-        <div class="profile-container">
-            <div class="d-flex justify-content-end align-items-center mb-3">
-                <a href="index.php?controller=cliente&action=listar" class="btn btn-sm btn-outline-secondary me-2">
-                    <i class="bi bi-arrow-left-circle"></i> Voltar para Lista
-                </a>
-                <a href="index.php?controller=cliente&action=editar&id_cliente=<?= htmlspecialchars($cliente['id_cliente']) ?>" class="btn btn-sm btn-warning me-2">
-                    <i class="bi bi-pencil-square"></i> Editar Cliente
-                </a>
-                <a href="index.php?controller=cliente&action=excluir&id_cliente=<?= htmlspecialchars($cliente['id_cliente']) ?>" class="btn btn-sm btn-danger"
-                    onclick="return confirm('Tem certeza que deseja excluir o cliente \'<?= htmlspecialchars(addslashes($cliente['nome'])) ?>\'? Esta ação não pode ser desfeita.');">
-                    <i class="bi bi-trash-fill"></i> Excluir Cliente
-                </a>
-            </div>
-            <div class="profile-header">
-                <?php if (!empty($cliente['foto'])): ?>
-                    <img src="<?= htmlspecialchars($cliente['foto']) ?>" alt="Foto de <?= htmlspecialchars($cliente['nome']) ?>"
-                        onerror="this.style.display='none'; document.getElementById('icon_placeholder_cliente').style.display='flex';">
-                    <div id="icon_placeholder_cliente" class="icon-placeholder" style="display:none;"><i class="bi bi-person-bounding-box"></i></div>
-                <?php else: ?>
-                    <div id="icon_placeholder_cliente" class="icon-placeholder"><i class="bi bi-person-bounding-box"></i></div>
-                <?php endif; ?>
-                <div>
-                    <h2><?= htmlspecialchars($cliente['nome']) ?></h2>
-                    <p class="text-muted">ID do Cliente: #<?= htmlspecialchars($cliente['id_cliente']) ?></p>
-                    <span class="badge <?= $cliente['tipo_lista'] === 'Potencial' ? 'badge-potencial' : 'badge-nao-potencial' ?>">
-                        <i class="bi <?= $cliente['tipo_lista'] === 'Potencial' ? 'bi-check-circle' : 'bi-x-circle' ?>"></i> <?= htmlspecialchars($cliente['tipo_lista']) ?>
-                    </span>
-                </div>
-            </div>
-
-            <?php if (isset($_SESSION['mensagem_sucesso'])): ?>
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="bi bi-check-circle-fill me-2"></i><?= htmlspecialchars($_SESSION['mensagem_sucesso']); ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-                </div>
-                <?php unset($_SESSION['mensagem_sucesso']); ?>
-            <?php endif; ?>
-            <?php if (isset($_SESSION['mensagem_erro'])): ?>
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i><?= htmlspecialchars($_SESSION['mensagem_erro']); ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-                </div>
-                <?php unset($_SESSION['mensagem_erro']); ?>
-            <?php endif; ?>
-            <?php if (isset($_SESSION['mensagem_info'])): ?>
-                <div class="alert alert-info alert-dismissible fade show" role="alert">
-                    <i class="bi bi-info-circle-fill me-2"></i><?= htmlspecialchars($_SESSION['mensagem_info']); ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-                </div>
-                <?php unset($_SESSION['mensagem_info']); ?>
-            <?php endif; ?>
-
-            <div class="row g-4">
-                <div class="col-lg-4 col-md-6">
-                    <section class="info-section">
-                        <h5><i class="bi bi-person-vcard"></i> Informações Pessoais</h5>
-                        <div class="info-item"><strong>Telefone:</strong> <span><?= htmlspecialchars($cliente['numero']) ?></span></div>
-                        <div class="info-item"><strong>CPF:</strong> <span><?= htmlspecialchars($cliente['cpf']) ?></span></div>
-                        <div class="info-item"><strong>Empreendimento:</strong> <span><?= htmlspecialchars($cliente['empreendimento'] ?? 'Não informado') ?></span></div>
-                        <div class="info-item"><strong>Cadastro:</strong> <span><?= isset($cliente['criado_em']) ? date('d/m/Y \à\s H:i', strtotime($cliente['criado_em'])) : 'Não informada' ?></span></div>
-                    </section>
-                </div>
-                <div class="col-lg-4 col-md-6">
-                    <section class="info-section">
-                        <h5><i class="bi bi-cash-coin"></i> Informações Financeiras</h5>
-                        <div class="info-item"><strong>Renda:</strong> <span>R$ <?= isset($cliente['renda']) && $cliente['renda'] !== null ? number_format((float)$cliente['renda'], 2, ',', '.') : 'Não informada' ?></span></div>
-                        <div class="info-item"><strong>Entrada:</strong> <span>R$ <?= isset($cliente['entrada']) && $cliente['entrada'] !== null ? number_format((float)$cliente['entrada'], 2, ',', '.') : 'Não informada' ?></span></div>
-                        <div class="info-item"><strong>FGTS:</strong> <span>R$ <?= isset($cliente['fgts']) && $cliente['fgts'] !== null ? number_format((float)$cliente['fgts'], 2, ',', '.') : 'Não informado' ?></span></div>
-                        <div class="info-item"><strong>Subsídio:</strong> <span>R$ <?= isset($cliente['subsidio']) && $cliente['subsidio'] !== null ? number_format((float)$cliente['subsidio'], 2, ',', '.') : 'Não informado' ?></span></div>
-                    </section>
-                </div>
-                <div class="col-lg-4 col-md-12">
-                    <section class="info-section">
-                        <h5><i class="bi bi-briefcase-fill"></i> Informações do Corretor</h5>
-                        <div class="info-item"><strong>Corretor:</strong> <span><?= htmlspecialchars($cliente['nome_corretor'] ?? 'Não associado') ?></span></div>
-                        <div class="info-item"><strong>Email:</strong> <span><?= htmlspecialchars($cliente['email_corretor'] ?? 'Não informado') ?></span></div>
-                        <div class="info-item"><strong>Telefone:</strong> <span><?= htmlspecialchars($cliente['telefone_corretor'] ?? 'Não informado') ?></span></div>
-                        <div class="info-item"><strong>Imobiliária:</strong> <span><?= htmlspecialchars($cliente['nome_imobiliaria'] ?? 'Não associada') ?></span></div>
-                    </section>
-                </div>
-            </div>
-
-            <div class="row mt-4">
-                <div class="col-12">
-                    <section class="actions-section card shadow-sm">
-                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0"><i class="bi bi-plus-circle-fill me-2"></i>Adicionar Nova Ação</h5>
-                            <div class="dropdown">
-                                <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" id="dropdownAcoesCliente" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-pencil-fill me-1"></i> Selecionar Ação
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownAcoesCliente">
-                                    <li><a class="dropdown-item" href="#" id="btnMostrarFormInteracao"><i class="bi bi-chat-left-text me-2"></i>Registrar Nova Interação</a></li>
-                                    <li><a class="dropdown-item" href="#" id="btnMostrarFormDocumento"><i class="bi bi-file-earmark-arrow-up me-2"></i>Anexar Novo Documento</a></li>
-                                    <li>
-                                        <hr class="dropdown-divider">
-                                    </li>
-                                    <li><a class="dropdown-item text-muted" href="#" id="btnEsconderFormularios"><i class="bi bi-x-circle me-2"></i>Fechar Formulário</a></li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div id="formInteracaoContainer" class="form-container">
-                                <h6 class="card-title mb-3"><i class="bi bi-chat-dots-fill me-2"></i>Registrar Nova Interação</h6>
-                                <form method="POST" action="index.php?controller=interacao&action=adicionar">
-                                    <input type="hidden" name="id_cliente" value="<?= htmlspecialchars($cliente['id_cliente']) ?>">
-                                    <div class="mb-3">
-                                        <label for="tipo_interacao" class="form-label">Tipo de Interação:</label>
-                                        <select name="tipo_interacao" id="tipo_interacao" class="form-select form-select-sm" required>
-                                            <option value="mensagem" selected>Mensagem</option>
-                                            <option value="telefone">Ligação Telefônica</option>
-                                            <option value="reuniao">Reunião</option>
-                                        </select>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="descricao" class="form-label">Descrição / Mensagem:</label>
-                                        <textarea name="descricao" id="descricao" class="form-control form-control-sm" rows="3" required placeholder="Digite os detalhes da interação..."></textarea>
-                                    </div>
-                                    <button type="submit" class="btn btn-success btn-sm">
-                                        <i class="bi bi-plus-lg"></i> Adicionar ao Histórico
-                                    </button>
-                                </form>
-                            </div>
-
-                            <div id="formDocumentoContainer" class="form-container">
-                                <h6 class="card-title mb-3"><i class="bi bi-file-earmark-medical-fill me-2"></i>Anexar Novo Documento</h6>
-                                <form method="POST" action="index.php?controller=documento&action=adicionar" enctype="multipart/form-data">
-                                    <input type="hidden" name="id_cliente" value="<?= htmlspecialchars($cliente['id_cliente']) ?>">
-                                    <div class="mb-3">
-                                        <label for="doc_nome_documento" class="form-label">Nome do Documento <span class="text-danger">*</span></label>
-                                        <input type="text" name="nome_documento" id="doc_nome_documento" class="form-control form-control-sm" required placeholder="Ex: Contrato Assinado, RG Frente">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="doc_tipo_documento" class="form-label">Tipo do Documento <span class="text-danger">*</span></label>
-                                        <input type="text" name="tipo_documento" id="doc_tipo_documento" class="form-control form-control-sm" required placeholder="Ex: PDF, Contrato, Identidade">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="doc_arquivo" class="form-label">Arquivo <span class="text-danger">*</span></label>
-                                        <input type="file" name="arquivo_documento" id="doc_arquivo" class="form-control form-control-sm" required>
-                                        <small class="form-text text-muted">Max: 10MB. Tipos: PDF, DOC, DOCX, JPG, PNG.</small>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary btn-sm">
-                                        <i class="bi bi-upload"></i> Anexar Documento
-                                    </button>
-                                </form>
-                            </div>
-                            <p id="placeholderAcoes" class="text-muted text-center py-3">Selecione uma ação no menu acima para começar.</p>
-                        </div>
-                    </section>
-                </div>
-            </div>
-
-
-            <div class="row mt-4">
-                <div class="col-12">
-                    <section class="history-section">
-                        <h5><i class="bi bi-list-ul me-2"></i>Histórico de Interações</h5>
-                        <?php if (!isset($interacoes) || empty($interacoes)): ?>
-                            <div class="alert alert-light text-center" role="alert">
-                                <i class="bi bi-clock-history me-2"></i>Nenhuma interação registrada para este cliente ainda.
-                            </div>
-                        <?php else: ?>
-                            <?php foreach ($interacoes as $interacao): ?>
-                                <?php
-                                $borderClass = 'border-primary-subtle';
-                                $iconClass = 'bi-chat-dots-fill text-primary';
-                                $tipoLabel = 'Mensagem';
-                                switch ($interacao['tipo_interacao']) {
-                                    case 'telefone':
-                                        $borderClass = 'border-warning-subtle';
-                                        $iconClass = 'bi-telephone-fill text-warning';
-                                        $tipoLabel = 'Ligação';
-                                        break;
-                                    case 'reuniao':
-                                        $borderClass = 'border-success-subtle';
-                                        $iconClass = 'bi-people-fill text-success';
-                                        $tipoLabel = 'Reunião';
-                                        break;
-                                }
-                                ?>
-                                <div class="history-entry <?= $borderClass ?>">
-                                    <div class="meta d-flex flex-wrap justify-content-between align-items-center">
-                                        <div>
-                                            <i class="bi <?= $iconClass ?> me-2"></i>
-                                            <span class="badge bg-secondary me-2"><?= htmlspecialchars($tipoLabel) ?></span>
-                                            Registrado por: <strong><?= htmlspecialchars($interacao['nome_usuario'] ?? 'Usuário Desconhecido') ?></strong>
-                                        </div>
-                                        <span class="text-nowrap"><?= date('d/m/Y H:i', strtotime($interacao['data_interacao'])) ?></span>
-                                    </div>
-                                    <p class="mt-2 mb-1"><?= nl2br(htmlspecialchars($interacao['descricao'])) ?></p>
-                                    <?php if (!empty($interacao['anexo_interacao_nome_original']) && !empty($interacao['anexo_interacao_caminho'])): ?>
-                                        <div class="mt-1">
-                                            <small class="text-muted">Anexo da interação:
-                                                <a href="<?= htmlspecialchars($interacao['anexo_interacao_caminho']) ?>" target="_blank" class="text-decoration-none">
-                                                    <i class="bi bi-paperclip"></i> <?= htmlspecialchars($interacao['anexo_interacao_nome_original']) ?>
-                                                </a>
-                                            </small>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </section>
-                </div>
-            </div>
-
-            <div class="row mt-4">
-                <div class="col-12">
-                    <section class="documents-section">
-                        <h5><i class="bi bi-folder2-open me-2"></i>Documentos Anexados</h5>
-                        <?php if (!isset($documentos) || empty($documentos)): ?>
-                            <div class="alert alert-light text-center" role="alert">
-                                <i class="bi bi-folder-x me-2"></i>Nenhum documento anexado para este cliente ainda.
-                            </div>
-                        <?php else: ?>
-                            <ul class="list-group list-group-flush">
-                                <?php foreach ($documentos as $documento): ?>
-                                    <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center py-3">
-                                        <div class="me-3 mb-2 mb-md-0">
-                                            <i class="bi bi-file-earmark-text me-2 fs-5 align-middle"></i>
-                                            <strong class="align-middle"><?= htmlspecialchars($documento['nome_documento']) ?></strong>
-                                            <span class="badge bg-info-subtle text-info-emphasis ms-2 align-middle"><?= htmlspecialchars($documento['tipo_documento']) ?></span>
-                                            <br>
-                                            <small class="text-muted ms-4 ps-1">
-                                                Upload em: <?= isset($documento['data_upload']) ? date('d/m/Y H:i', strtotime($documento['data_upload'])) : 'Data não informada' ?>
-                                                <?php if (isset($documento['nome_usuario_upload'])): ?>
-                                                    por <?= htmlspecialchars($documento['nome_usuario_upload']) ?>
-                                                <?php endif; ?>
-                                            </small>
-                                        </div>
-                                        <div class="ms-md-auto">
-                                            <a href="index.php?controller=documento&action=baixar&id_documento=<?= htmlspecialchars($documento['id_documento']) ?>" target="_blank" class="btn btn-outline-secondary btn-sm" title="Ver/Baixar Documento">
-                                                <i class="bi bi-download"></i> Ver / Baixar
-                                            </a>
-                                            <a href="index.php?controller=documento&action=excluir&id_documento=<?= $documento['id_documento'] ?>&id_cliente=<?= $cliente['id_cliente'] ?>"
-                                                class="btn btn-outline-danger btn-sm ms-2"
-                                                onclick="return confirm('Tem certeza que deseja excluir este documento: \'<?= htmlspecialchars(addslashes($documento['nome_documento'])) ?>\'? Esta ação não pode ser desfeita.');"
-                                                title="Excluir Documento">
-                                                <i class="bi bi-trash-fill"></i>
-                                            </a>
-                                        </div>
-                                    </li>
-                                <?php endforeach; ?>
-                            </ul>
-                        <?php endif; ?>
-                    </section>
-                </div>
-            </div>
+    <!-- Cabeçalho da página com botões de ação -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Detalhes do Cliente</h1>
+            <p class="text-sm text-gray-500">Visualize e gerencie as informações do cliente.</p>
+        </div>
+        <div class="flex items-center space-x-2">
+            <!-- CORREÇÃO FINAL: Usando BASE_URL para garantir o caminho absoluto -->
+            <a href="<?= BASE_URL ?>views/contatos/index.php?controller=cliente&action=listar" class="bg-white hover:bg-gray-100 text-gray-700 text-sm font-medium py-2 px-4 border border-gray-300 rounded-lg shadow-sm flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i> Voltar
+            </a>
+            <a href="<?= BASE_URL ?>views/contatos/index.php?controller=cliente&action=editar&id_cliente=<?= htmlspecialchars($cliente['id_cliente']) ?>" class="bg-yellow-400 hover:bg-yellow-500 text-white text-sm font-medium py-2 px-4 rounded-lg shadow-sm flex items-center">
+                <i class="fas fa-pencil-alt mr-2"></i> Editar
+            </a>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const btnMostrarFormInteracao = document.getElementById('btnMostrarFormInteracao');
-            const btnMostrarFormDocumento = document.getElementById('btnMostrarFormDocumento');
-            const btnEsconderFormularios = document.getElementById('btnEsconderFormularios');
+    <!-- Container principal do perfil -->
+    <div class="bg-white shadow-lg rounded-2xl p-6 md:p-8">
+        <!-- Header do Perfil -->
+        <div class="flex flex-col sm:flex-row items-center border-b border-gray-200 pb-6 mb-6">
+            <?php if (!empty($cliente['foto'])): ?>
+                <img src="<?= BASE_URL . htmlspecialchars($cliente['foto']) ?>" alt="Foto de <?= htmlspecialchars($cliente['nome']) ?>" class="w-24 h-24 rounded-full object-cover mr-0 sm:mr-6 mb-4 sm:mb-0 border-4 border-gray-100" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="hidden w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-4xl mr-0 sm:mr-6 mb-4 sm:mb-0"><i class="fas fa-user"></i></div>
+            <?php else: ?>
+                <div class="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-4xl mr-0 sm:mr-6 mb-4 sm:mb-0"><i class="fas fa-user"></i></div>
+            <?php endif; ?>
+            <div class="text-center sm:text-left">
+                <h2 class="text-3xl font-bold text-gray-900"><?= htmlspecialchars($cliente['nome']) ?></h2>
+                <p class="text-sm text-gray-500">ID do Cliente: #<?= htmlspecialchars($cliente['id_cliente']) ?></p>
+                <?php
+                    $isPotencial = ($cliente['tipo_lista'] ?? '') === 'Potencial';
+                    $badgeClass = $isPotencial ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                    $iconClass = $isPotencial ? 'fa-check-circle' : 'fa-times-circle';
+                ?>
+                <span class="mt-2 inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold <?= $badgeClass ?>">
+                    <i class="fas <?= $iconClass ?> mr-2"></i>
+                    <?= htmlspecialchars($cliente['tipo_lista'] ?? 'Não definido') ?>
+                </span>
+            </div>
+        </div>
 
-            const formInteracaoContainer = document.getElementById('formInteracaoContainer');
-            const formDocumentoContainer = document.getElementById('formDocumentoContainer');
-            const placeholderAcoes = document.getElementById('placeholderAcoes');
+        <!-- Alertas de Mensagens -->
+        <?php if (isset($_SESSION['mensagem_sucesso'])): ?>
+            <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg mb-6" role="alert">
+                <p><?= htmlspecialchars($_SESSION['mensagem_sucesso']); ?></p>
+            </div>
+            <?php unset($_SESSION['mensagem_sucesso']); ?>
+        <?php endif; ?>
+        <?php if (isset($_SESSION['mensagem_erro'])): ?>
+             <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-6" role="alert">
+                <p><?= htmlspecialchars($_SESSION['mensagem_erro']); ?></p>
+            </div>
+            <?php unset($_SESSION['mensagem_erro']); ?>
+        <?php endif; ?>
 
-            function mostrarFormulario(formParaMostrar) {
-                // Esconde todos os formulários e o placeholder
-                formInteracaoContainer.style.display = 'none';
-                formDocumentoContainer.style.display = 'none';
-                placeholderAcoes.style.display = 'none';
+        <!-- Grid de Informações -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            <!-- Colunas de Informações -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 flex items-center"><i class="fas fa-user-circle mr-3 text-gray-500"></i>Informações Pessoais</h3>
+                <div class="flex justify-between text-sm"><strong class="font-medium text-gray-600">Telefone:</strong> <span class="text-gray-800"><?= htmlspecialchars($cliente['numero']) ?></span></div>
+                <div class="flex justify-between text-sm"><strong class="font-medium text-gray-600">CPF:</strong> <span class="text-gray-800"><?= htmlspecialchars($cliente['cpf']) ?></span></div>
+                <div class="flex justify-between text-sm"><strong class="font-medium text-gray-600">Empreendimento:</strong> <span class="text-gray-800"><?= htmlspecialchars($cliente['empreendimento'] ?? 'Não informado') ?></span></div>
+                <div class="flex justify-between text-sm"><strong class="font-medium text-gray-600">Cadastro:</strong> <span class="text-gray-800"><?= formatarData($cliente['criado_em']) ?></span></div>
+            </div>
+            <div class="space-y-4">
+                <h3 class="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 flex items-center"><i class="fas fa-dollar-sign mr-3 text-gray-500"></i>Informações Financeiras</h3>
+                <div class="flex justify-between text-sm"><strong class="font-medium text-gray-600">Renda:</strong> <span class="text-gray-800"><?= formatarMoeda($cliente['renda']) ?></span></div>
+                <div class="flex justify-between text-sm"><strong class="font-medium text-gray-600">Entrada:</strong> <span class="text-gray-800"><?= formatarMoeda($cliente['entrada']) ?></span></div>
+                <div class="flex justify-between text-sm"><strong class="font-medium text-gray-600">FGTS:</strong> <span class="text-gray-800"><?= formatarMoeda($cliente['fgts']) ?></span></div>
+                <div class="flex justify-between text-sm"><strong class="font-medium text-gray-600">Subsídio:</strong> <span class="text-gray-800"><?= formatarMoeda($cliente['subsidio']) ?></span></div>
+            </div>
+            <div class="space-y-4">
+                <h3 class="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 flex items-center"><i class="fas fa-user-tie mr-3 text-gray-500"></i>Informações do Corretor</h3>
+                <div class="flex justify-between text-sm"><strong class="font-medium text-gray-600">Corretor:</strong> <span class="text-gray-800"><?= htmlspecialchars($cliente['nome_corretor'] ?? 'Não associado') ?></span></div>
+                <div class="flex justify-between text-sm"><strong class="font-medium text-gray-600">Email:</strong> <span class="text-gray-800"><?= htmlspecialchars($cliente['email_corretor'] ?? 'Não informado') ?></span></div>
+                <div class="flex justify-between text-sm"><strong class="font-medium text-gray-600">Telefone:</strong> <span class="text-gray-800"><?= htmlspecialchars($cliente['telefone_corretor'] ?? 'Não informado') ?></span></div>
+                <div class="flex justify-between text-sm"><strong class="font-medium text-gray-600">Imobiliária:</strong> <span class="text-gray-800"><?= htmlspecialchars($cliente['nome_imobiliaria'] ?? 'Não associada') ?></span></div>
+            </div>
+        </div>
 
-                // Mostra o formulário selecionado
-                if (formParaMostrar) {
-                    formParaMostrar.style.display = 'block';
-                } else {
-                    // Se nenhum formulário for para mostrar (ex: fechar), mostra o placeholder
-                    placeholderAcoes.style.display = 'block';
+        <!-- Seção de Ações com Abas (Tabs) -->
+        <div class="bg-gray-50 rounded-xl p-6 mb-8 border border-gray-200">
+            <div class="mb-4 border-b border-gray-200">
+                <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="myTab" data-tabs-toggle="#myTabContent" role="tablist">
+                    <li class="mr-2" role="presentation">
+                        <button class="inline-block p-4 border-b-2 rounded-t-lg" id="interacao-tab" data-tabs-target="#interacao" type="button" role="tab" aria-controls="interacao" aria-selected="false">
+                            <i class="fas fa-comment-dots mr-2"></i>Registrar Interação
+                        </button>
+                    </li>
+                    <li class="mr-2" role="presentation">
+                        <button class="inline-block p-4 border-b-2 rounded-t-lg hover:text-gray-600 hover:border-gray-300" id="documento-tab" data-tabs-target="#documento" type="button" role="tab" aria-controls="documento" aria-selected="false">
+                           <i class="fas fa-file-upload mr-2"></i>Anexar Documento
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div id="myTabContent">
+                <!-- Formulário de Interação -->
+                <div class="hidden p-4 rounded-lg bg-gray-50" id="interacao" role="tabpanel" aria-labelledby="interacao-tab">
+                    <!-- CORREÇÃO FINAL: Usando BASE_URL para garantir o caminho absoluto -->
+                    <form method="POST" action="<?= BASE_URL ?>views/contatos/index.php?controller=interacao&action=adicionar">
+                        <input type="hidden" name="id_cliente" value="<?= htmlspecialchars($cliente['id_cliente']) ?>">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <label for="tipo_interacao" class="block text-sm font-medium text-gray-700">Tipo de Interação</label>
+                            <select name="tipo_interacao" id="tipo_interacao" class="col-span-2 mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                                <option value="mensagem" selected>Mensagem</option>
+                                <option value="telefone">Ligação Telefônica</option>
+                                <option value="reuniao">Reunião</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <label for="descricao" class="block text-sm font-medium text-gray-700">Descrição</label>
+                            <textarea name="descricao" id="descricao" rows="3" class="col-span-2 mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required placeholder="Digite os detalhes da interação..."></textarea>
+                        </div>
+                        <div class="text-right mt-4">
+                            <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                Adicionar ao Histórico
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <!-- Formulário de Documento -->
+                <div class="hidden p-4 rounded-lg bg-gray-50" id="documento" role="tabpanel" aria-labelledby="documento-tab">
+                     <!-- CORREÇÃO FINAL: Usando BASE_URL para garantir o caminho absoluto -->
+                     <form method="POST" action="<?= BASE_URL ?>views/contatos/index.php?controller=documento&action=adicionar" enctype="multipart/form-data">
+                        <input type="hidden" name="id_cliente" value="<?= htmlspecialchars($cliente['id_cliente']) ?>">
+                        <div class="space-y-4">
+                             <div>
+                                <label for="doc_nome_documento" class="block text-sm font-medium text-gray-700">Nome do Documento <span class="text-red-500">*</span></label>
+                                <input type="text" name="nome_documento" id="doc_nome_documento" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required placeholder="Ex: Contrato Assinado, RG Frente">
+                            </div>
+                             <div>
+                                <label for="doc_tipo_documento" class="block text-sm font-medium text-gray-700">Tipo do Documento <span class="text-red-500">*</span></label>
+                                <input type="text" name="tipo_documento" id="doc_tipo_documento" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required placeholder="Ex: PDF, Contrato, Identidade">
+                            </div>
+                            <div>
+                                <label for="doc_arquivo" class="block text-sm font-medium text-gray-700">Arquivo <span class="text-red-500">*</span></label>
+                                <input type="file" name="arquivo_documento" id="doc_arquivo" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required>
+                                <p class="mt-1 text-xs text-gray-500">Max: 10MB. Tipos: PDF, DOC, DOCX, JPG, PNG.</p>
+                            </div>
+                        </div>
+                        <div class="text-right mt-4">
+                            <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                Anexar Documento
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Histórico e Documentos (sem alterações) -->
+        <div class="mb-8">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center"><i class="fas fa-history mr-3 text-gray-500"></i>Histórico de Interações</h3>
+            <div class="space-y-4">
+                <?php if (empty($interacoes)): ?>
+                    <div class="text-center text-gray-500 py-6 bg-gray-50 rounded-lg">
+                        <i class="fas fa-comment-slash text-3xl text-gray-400 mb-2"></i>
+                        <p>Nenhuma interação registrada.</p>
+                    </div>
+                <?php else: ?>
+                    <?php foreach ($interacoes as $interacao): 
+                        $style = [
+                            'mensagem' => ['icon' => 'fas fa-comment-dots', 'color' => 'blue'],
+                            'telefone' => ['icon' => 'fas fa-phone-alt', 'color' => 'purple'],
+                            'reuniao'  => ['icon' => 'fas fa-users', 'color' => 'green'],
+                        ];
+                        $tipo = $interacao['tipo_interacao'] ?? 'mensagem';
+                        $s = $style[$tipo];
+                    ?>
+                    <div class="bg-white p-4 rounded-lg border-l-4 border-<?= $s['color'] ?>-500 shadow-sm transition hover:shadow-md">
+                        <div class="flex justify-between items-center text-sm mb-2">
+                            <div class="flex items-center font-semibold text-<?= $s['color'] ?>-700">
+                                <i class="<?= $s['icon'] ?> mr-2"></i>
+                                <span><?= htmlspecialchars(ucfirst($tipo)) ?> por <strong><?= htmlspecialchars($interacao['nome_usuario'] ?? 'N/A') ?></strong></span>
+                            </div>
+                            <span class="text-gray-500"><?= formatarData($interacao['data_interacao']) ?></span>
+                        </div>
+                        <p class="text-gray-700 text-sm pl-5"><?= nl2br(htmlspecialchars($interacao['descricao'])) ?></p>
+                    </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </div>
+        <div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center"><i class="fas fa-folder-open mr-3 text-gray-500"></i>Documentos Anexados</h3>
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <ul class="divide-y divide-gray-200">
+                    <?php if (empty($documentos)): ?>
+                        <li class="p-6 text-center text-gray-500">
+                            <i class="fas fa-file-excel text-3xl text-gray-400 mb-2"></i>
+                            <p>Nenhum documento anexado.</p>
+                        </li>
+                    <?php else: ?>
+                        <?php foreach ($documentos as $documento): ?>
+                        <li class="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center hover:bg-gray-50">
+                            <div class="flex items-center mb-2 sm:mb-0">
+                                <i class="fas fa-file-alt text-blue-500 text-xl mr-4"></i>
+                                <div>
+                                    <p class="font-semibold text-gray-800"><?= htmlspecialchars($documento['nome_documento']) ?></p>
+                                    <p class="text-xs text-gray-500">
+                                        Upload por <?= htmlspecialchars($documento['nome_usuario_upload'] ?? 'N/A') ?> em <?= formatarData($documento['data_upload']) ?>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex space-x-3 self-end sm:self-center">
+                                <a href="<?= BASE_URL ?>views/contatos/index.php?controller=documento&action=baixar&id_documento=<?= htmlspecialchars($documento['id_documento']) ?>" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Ver/Baixar</a>
+                                <a href="<?= BASE_URL ?>views/contatos/index.php?controller=documento&action=excluir&id_documento=<?= $documento['id_documento'] ?>&id_cliente=<?= $cliente['id_cliente'] ?>" class="text-red-600 hover:text-red-800 text-sm font-medium" onclick="return confirm('Tem certeza que deseja excluir este documento?')">Excluir</a>
+                            </div>
+                        </li>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- O JavaScript para controlar as abas (sem alterações) -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const tabs = [];
+    const tabContents = {};
+
+    document.querySelectorAll('[data-tabs-toggle]').forEach(container => {
+        const tabContainer = container;
+        const contentContainer = document.querySelector(tabContainer.dataset.tabsToggle);
+
+        tabContainer.querySelectorAll('[role="tab"]').forEach(tab => {
+            const targetId = tab.dataset.tabsTarget;
+            const targetContent = contentContainer.querySelector(targetId);
+            
+            tabs.push(tab);
+            tabContents[targetId] = targetContent;
+
+            tab.addEventListener('click', (e) => {
+                e.preventDefault();
+                tabs.forEach(t => {
+                    t.setAttribute('aria-selected', 'false');
+                    t.classList.remove('border-blue-600', 'text-blue-600');
+                    t.classList.add('border-transparent', 'hover:text-gray-600', 'hover:border-gray-300');
+                });
+                Object.values(tabContents).forEach(content => {
+                    content.classList.add('hidden');
+                });
+
+                tab.setAttribute('aria-selected', 'true');
+                tab.classList.add('border-blue-600', 'text-blue-600');
+                tab.classList.remove('border-transparent', 'hover:text-gray-600', 'hover:border-gray-300');
+                
+                if (targetContent) {
+                    targetContent.classList.remove('hidden');
                 }
-            }
-
-            btnMostrarFormInteracao.addEventListener('click', function(e) {
-                e.preventDefault();
-                mostrarFormulario(formInteracaoContainer);
             });
-
-            btnMostrarFormDocumento.addEventListener('click', function(e) {
-                e.preventDefault();
-                mostrarFormulario(formDocumentoContainer);
-            });
-
-            btnEsconderFormularios.addEventListener('click', function(e) {
-                e.preventDefault();
-                mostrarFormulario(null); // Passa null para esconder todos e mostrar placeholder
-            });
-
-            // Inicialmente, mostra o placeholder
-            mostrarFormulario(null);
         });
-    </script>
-</body>
-
-</html>
+        
+        if (tabs.length > 0) {
+            tabs[0].click();
+        }
+    });
+});
+</script>

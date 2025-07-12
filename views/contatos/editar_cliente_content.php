@@ -1,9 +1,9 @@
+<!-- CÓDIGO CORRIGIDO E VERIFICADO -->
 <?php
 // Verifica se a variável $cliente, que deve ser carregada pelo controller, não existe ou está vazia.
 if (!isset($cliente) || empty($cliente)) {
-    // Se não houver dados, exibe uma mensagem de erro e interrompe a renderização do formulário.
     echo "<div class='p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg' role='alert'>Não foi possível carregar os dados do cliente.</div>";
-    return; // 'return' impede que o restante do arquivo seja executado.
+    return; // Impede que o restante do arquivo seja executado.
 }
 ?>
 <!-- Importa a biblioteca SweetAlert2 para exibir alertas mais bonitos. -->
@@ -21,12 +21,12 @@ if (!isset($cliente) || empty($cliente)) {
             <strong class="font-bold">Erro:</strong>
             <span class="block sm:inline"><?= htmlspecialchars($_SESSION['mensagem_erro_form']); ?></span>
         </div>
-        <?php unset($_SESSION['mensagem_erro_form']); // Limpa a mensagem da sessão. 
-        ?>
+        <?php unset($_SESSION['mensagem_erro_form']); // Limpa a mensagem da sessão. ?>
     <?php endif; ?>
 
     <!-- Formulário para editar os dados do cliente. -->
-    <form method="POST" action="index.php?controller=cliente&action=editar&id_cliente=<?= htmlspecialchars($cliente['id_cliente']) ?>" class="space-y-6" id="edit-cliente-form">
+    <!-- CORREÇÃO DEFINITIVA: O action agora usa a BASE_URL para garantir o caminho absoluto e correto. -->
+    <form method="POST" action="<?= BASE_URL ?>views/contatos/index.php?controller=cliente&action=editar&id_cliente=<?= htmlspecialchars($cliente['id_cliente']) ?>" class="space-y-6" id="edit-cliente-form">
         <!-- Grid para organizar os campos do formulário. -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -50,14 +50,11 @@ if (!isset($cliente) || empty($cliente)) {
             </div>
         </div>
 
-        <!-- Título da seção de informações financeiras. -->
         <h3 class="text-lg font-semibold text-gray-800 mt-8 mb-4">Informações Financeiras</h3>
 
-        <!-- Grid para os campos financeiros. -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
                 <label for="renda" class="block text-sm font-medium text-gray-700">Renda (R$)</label>
-                <!-- ✅ CORREÇÃO: Alterado type para "text" para a máscara funcionar -->
                 <input type="text" name="renda" id="renda" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" placeholder="R$ 0,00" value="<?= htmlspecialchars($cliente['renda'] ?? '') ?>">
             </div>
             <div>
@@ -77,7 +74,6 @@ if (!isset($cliente) || empty($cliente)) {
         <div>
             <label for="foto" class="block text-sm font-medium text-gray-700">URL da Foto</label>
             <input type="url" name="foto" id="foto" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" value="<?= htmlspecialchars($cliente['foto'] ?? '') ?>">
-            <!-- Exibe a foto atual do cliente, se existir. -->
             <?php if (!empty($cliente['foto'])): ?>
                 <div class="mt-2">
                     <img src="<?= htmlspecialchars($cliente['foto']) ?>" alt="Foto atual" class="rounded-md w-24 h-24 object-cover" onerror="this.style.display='none';">
@@ -93,7 +89,6 @@ if (!isset($cliente) || empty($cliente)) {
             </select>
         </div>
 
-        <!-- Botões de ação do formulário. -->
         <div class="flex justify-end space-x-3 pt-4">
             <a href="index.php?controller=cliente&action=mostrar&id_cliente=<?= htmlspecialchars($cliente['id_cliente']) ?>" class="bg-gray-100 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-200">
                 Cancelar
@@ -104,9 +99,8 @@ if (!isset($cliente) || empty($cliente)) {
         </div>
     </form>
 </div>
-<!-- Bloco para exibir um alerta de erro do SweetAlert, se houver uma mensagem de erro na sessão. -->
+
 <?php if (isset($_SESSION['mensagem_erro'])): ?>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             Swal.fire({
@@ -121,14 +115,11 @@ if (!isset($cliente) || empty($cliente)) {
     <?php unset($_SESSION['mensagem_erro']); ?>
 <?php endif; ?>
 
-<!-- ✅ SCRIPT CORRIGIDO E MELHORADO -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const cpfInput = document.getElementById('cpf');
         const telefoneInput = document.getElementById('numero');
         const form = document.getElementById('edit-cliente-form');
-
-        // --- Máscara de CPF ---
         if (cpfInput) {
             cpfInput.addEventListener('input', function() {
                 let value = cpfInput.value.replace(/\D/g, '');
@@ -139,8 +130,6 @@ if (!isset($cliente) || empty($cliente)) {
                 cpfInput.value = value;
             });
         }
-
-        // --- Máscara de Telefone ---
         if (telefoneInput) {
             telefoneInput.addEventListener('input', function() {
                 let value = telefoneInput.value.replace(/\D/g, '');
@@ -150,40 +139,27 @@ if (!isset($cliente) || empty($cliente)) {
                 telefoneInput.value = value;
             });
         }
-
-        // --- Máscara de Moeda (DINHEIRO) ---
         const camposDinheiro = ['renda', 'entrada', 'fgts', 'subsidio'];
-
         const formatToCurrency = (value) => {
-            // Converte o valor para string e remove não-dígitos
             let digits = String(value).replace(/\D/g, '');
             if (!digits) return '';
-
-            // Converte para número e formata
             const valueAsNumber = parseFloat(digits) / 100;
             return new Intl.NumberFormat('pt-BR', {
                 style: 'currency',
                 currency: 'BRL'
             }).format(valueAsNumber);
         };
-
         camposDinheiro.forEach(id => {
             const input = document.getElementById(id);
             if (input) {
-                // Formata o valor inicial carregado do banco de dados
                 input.value = formatToCurrency(input.value);
-
-                // Adiciona o listener para formatar enquanto digita
                 input.addEventListener('input', (e) => {
                     e.target.value = formatToCurrency(e.target.value);
                 });
             }
         });
-
-        // --- Limpeza do Formulário antes do Envio ---
         if (form) {
             form.addEventListener('submit', () => {
-                // Limpa os campos de moeda
                 camposDinheiro.forEach(id => {
                     const input = document.getElementById(id);
                     if (input && input.value) {
