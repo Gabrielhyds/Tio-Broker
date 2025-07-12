@@ -62,6 +62,11 @@
                 <select name="permissao" id="permissao"
                     class="mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring focus:ring-blue-200" required>
                     <option disabled selected>Selecione uma permissão</option>
+
+                    <?php if ($_SESSION['usuario']['permissao'] === 'SuperAdmin'): ?>
+                        <option value="SuperAdmin">SuperAdmin</option>
+                    <?php endif; ?>
+
                     <option value="Admin">Admin</option>
                     <option value="Coordenador">Coordenador</option>
                     <option value="Corretor">Corretor</option>

@@ -47,12 +47,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Bloco para lidar com o cadastro de um novo usuário.
     if ($_POST['action'] === 'cadastrar') {
-        // (código de cadastro existente - sem alterações)
+        // ✅ Protege o cadastro de SuperAdmin
+        $permissaoRecebida = $_POST['permissao'];
+
+        if ($permissaoRecebida === 'SuperAdmin' && $_SESSION['usuario']['permissao'] !== 'SuperAdmin') {
+            $_SESSION['mensagem_erro'] = "Apenas SuperAdmins podem cadastrar outros SuperAdmins.";
+            header('Location: ../views/usuarios/cadastrar.php');
+            exit;
+        }
+
         if (!validarCpf($_POST['cpf'])) {
             $_SESSION['mensagem_erro'] = "CPF inválido. Verifique e tente novamente.";
             header('Location: ../views/usuarios/cadastrar.php');
             exit;
         }
+
         $fotoPath = salvarFoto('foto');
         $usuario->cadastrar(
             $_POST['nome'],
@@ -65,6 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_POST['creci'] ?? null,
             $fotoPath
         );
+
         header('Location: ../views/usuarios/listar.php?sucesso=1');
         exit;
     }
@@ -82,13 +92,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $dadosAntigos = $usuario->buscarPorId($_POST['id_usuario']);
             $fotoPath = $dadosAntigos['foto'] ?? null;
         }
+        // Protege a permissão do SuperAdmin
+        $usuarioExistente = $usuario->buscarPorId($_POST['id_usuario']);
+        $permissaoFinal = $_POST['permissao'];
+
+        // Se o usuário já for SuperAdmin, mantém essa permissão fixamente
+        if ($usuarioExistente && $usuarioExistente['permissao'] === 'SuperAdmin') {
+            $permissaoFinal = 'SuperAdmin'; // Força a manter a permissão
+        }
+
         $usuario->atualizar(
             $_POST['id_usuario'],
             $_POST['nome'],
             $_POST['email'],
             $_POST['cpf'],
             $_POST['telefone'],
-            $_POST['permissao'],
+            $permissaoFinal,
             $_POST['id_imobiliaria'],
             $_POST['creci'] ?? null,
             $fotoPath

@@ -75,12 +75,19 @@
 
             <div>
                 <label for="permissao" class="block text-sm font-medium text-gray-700">Permissão</label>
-                <!-- Select para alterar o nível de permissão do usuário. -->
-                <select id="permissao" name="permissao" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                    <option value="Admin" <?= $dados['permissao'] === 'Admin' ? 'selected' : '' ?>>Admin</option>
-                    <option value="Coordenador" <?= $dados['permissao'] === 'Coordenador' ? 'selected' : '' ?>>Coordenador</option>
-                    <option value="Corretor" <?= $dados['permissao'] === 'Corretor' ? 'selected' : '' ?>>Corretor</option>
-                </select>
+
+                <?php if ($dados['permissao'] === 'SuperAdmin'): ?>
+                    <input type="hidden" name="permissao" value="SuperAdmin">
+                    <div class="mt-1 text-gray-600 bg-gray-100 border border-gray-300 px-3 py-2 rounded">
+                        SuperAdmin (não editável)
+                    </div>
+                <?php else: ?>
+                    <select id="permissao" name="permissao" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                        <option value="Admin" <?= $dados['permissao'] === 'Admin' ? 'selected' : '' ?>>Admin</option>
+                        <option value="Coordenador" <?= $dados['permissao'] === 'Coordenador' ? 'selected' : '' ?>>Coordenador</option>
+                        <option value="Corretor" <?= $dados['permissao'] === 'Corretor' ? 'selected' : '' ?>>Corretor</option>
+                    </select>
+                <?php endif; ?>
             </div>
 
             <div>
