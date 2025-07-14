@@ -1,11 +1,23 @@
 <?php if (isset($_SESSION['sucesso'])): ?>
     <!-- Bloco PHP para exibir uma mensagem de sucesso, se existir na sessão. -->
     <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <i class="fas fa-check-circle mr-2"></i>
         <?= htmlspecialchars($_SESSION['sucesso']); // Exibe a mensagem com segurança.
         unset($_SESSION['sucesso']); // Remove a mensagem da sessão para não ser exibida novamente. 
         ?>
     </div>
 <?php endif; ?>
+
+<!-- CORREÇÃO: Bloco adicionado para exibir mensagens de erro -->
+<?php if (isset($_SESSION['erro'])): ?>
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <i class="fas fa-exclamation-triangle mr-2"></i>
+        <?= htmlspecialchars($_SESSION['erro']); // Exibe a mensagem de erro.
+        unset($_SESSION['erro']); // Remove a mensagem da sessão.
+        ?>
+    </div>
+<?php endif; ?>
+
 
 <!-- Cabeçalho da página com título e botão de ação. -->
 <div class="flex justify-between items-center mb-6">
@@ -72,8 +84,8 @@
                                         <a href="editar_imobiliaria.php?id=<?= $item['id_imobiliaria'] ?>" class="text-yellow-500 hover:text-yellow-600" title="Editar">
                                             <i class="fas fa-pen"></i>
                                         </a>
-                                        <!-- Link para excluir a imobiliária, com uma confirmação em JavaScript. -->
-                                        <a href="../../controllers/ImobiliariaController.php?excluir=<?= $item['id_imobiliaria'] ?>" class="text-red-500 hover:text-red-600" title="Excluir" onclick="return confirm('Deseja realmente excluir?')">
+                                        <!-- CORREÇÃO: Removido o 'onclick' padrão e adicionada a classe 'btn-excluir' -->
+                                        <a href="../../controllers/ImobiliariaController.php?excluir=<?= $item['id_imobiliaria'] ?>" class="text-red-500 hover:text-red-600 btn-excluir" title="Excluir">
                                             <i class="fas fa-trash"></i>
                                         </a>
                                     </div>
@@ -107,3 +119,43 @@
         <?php endif; ?>
     </div>
 </div>
+
+<!-- Inclusão da biblioteca SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- Script para o modal de confirmação de exclusão -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Seleciona todos os botões/links que têm a classe 'btn-excluir'
+    const botoesExcluir = document.querySelectorAll('.btn-excluir');
+
+    // Adiciona um evento de clique para cada botão encontrado
+    botoesExcluir.forEach(function(botao) {
+        botao.addEventListener('click', function(event) {
+            // Impede a ação padrão do link (que seria navegar para a URL imediatamente)
+            event.preventDefault();
+            
+            // Pega a URL de exclusão do atributo 'href' do link que foi clicado
+            const urlParaExcluir = this.href;
+
+            // Exibe o modal de confirmação personalizado do SweetAlert2
+            Swal.fire({
+                title: 'Você tem certeza?',
+                text: "Esta ação não poderá ser revertida!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sim, excluir!',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                // Se o usuário clicar no botão "Sim, excluir!"
+                if (result.isConfirmed) {
+                    // Redireciona a página para a URL de exclusão
+                    window.location.href = urlParaExcluir;
+                }
+            });
+        });
+    });
+});
+</script>
