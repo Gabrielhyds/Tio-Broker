@@ -1,24 +1,35 @@
 <?php
 class Imovel
 {
-    private $conn;
+    /**
+     * @var mysqli A conexão com o banco de dados.
+     */
+    public $connection;
+
+    /**
+     * @var array Armazena informações de depuração para a última operação.
+     */
+    public $debugInfo = [];
 
     public function __construct($conexao)
     {
-        $this->conn = $conexao;
+        $this->connection = $conexao;
     }
 
     /**
-     * Cadastra um novo imóvel no banco de dados, associando-o à imobiliária correta.
+     * Cadastra um novo imóvel e seus arquivos associados usando uma transação.
+     * Lança uma exceção em caso de erro.
      */
     public function cadastrar($dados, $imagens = [], $videos = [], $documentos = [])
     {
-        // ** AJUSTE **: Adicionado id_imobiliaria na query.
         $query = "INSERT INTO imovel (id_imobiliaria, titulo, descricao, tipo, status, preco, endereco, latitude, longitude)
                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        $stmt = $this->conn->prepare($query);
-        // ** AJUSTE **: Adicionado "i" para o id_imobiliaria.
+        $stmt = $this->connection->prepare($query);
+        if (!$stmt) {
+            throw new Exception("Erro ao preparar a query de cadastro: " . $this->connection->error);
+        }
+
         $stmt->bind_param(
             "issssdssd",
             $dados['id_imobiliaria'],
@@ -32,28 +43,30 @@ class Imovel
             $dados['longitude']
         );
 
-        if ($stmt->execute()) {
-            $idImovel = $stmt->insert_id;
-            $this->salvarArquivos($idImovel, 'imagem', $imagens);
-            $this->salvarArquivos($idImovel, 'video', $videos);
-            $this->salvarArquivos($idImovel, 'documento', $documentos);
-            return true;
+        if (!$stmt->execute()) {
+            throw new Exception("Erro ao executar o cadastro do imóvel: " . $stmt->error);
         }
 
-        return false;
+        $idImovel = $stmt->insert_id;
+        $this->salvarArquivos($idImovel, 'imagem', $imagens);
+        $this->salvarArquivos($idImovel, 'video', $videos);
+        $this->salvarArquivos($idImovel, 'documento', $documentos);
     }
 
     /**
-     * Edita um imóvel existente.
+     * Edita um imóvel existente e adiciona novos arquivos.
+     * Lança uma exceção em caso de erro.
      */
     public function editar($dados, $imagens = [], $videos = [], $documentos = [])
     {
-        // ** AJUSTE **: Adicionado id_imobiliaria na query de update.
         $query = "UPDATE imovel SET id_imobiliaria = ?, titulo = ?, descricao = ?, tipo = ?, status = ?, preco = ?, endereco = ?, latitude = ?, longitude = ? 
                   WHERE id_imovel = ?";
 
-        $stmt = $this->conn->prepare($query);
-        // ** AJUSTE **: Adicionado "i" para id_imobiliaria e no final para id_imovel.
+        $stmt = $this->connection->prepare($query);
+        if (!$stmt) {
+            throw new Exception("Erro ao preparar a query de edição: " . $this->connection->error);
+        }
+
         $stmt->bind_param(
             "issssdssdi",
             $dados['id_imobiliaria'],
@@ -68,201 +81,227 @@ class Imovel
             $dados['id_imovel']
         );
 
-        if ($stmt->execute()) {
-            $this->salvarArquivos($dados['id_imovel'], 'imagem', $imagens);
-            $this->salvarArquivos($dados['id_imovel'], 'video', $videos);
-            $this->salvarArquivos($dados['id_imovel'], 'documento', $documentos);
-            return true;
+        if (!$stmt->execute()) {
+            throw new Exception("Erro ao executar a edição do imóvel: " . $stmt->error);
         }
 
-        return false;
+        $this->salvarArquivos($dados['id_imovel'], 'imagem', $imagens);
+        $this->salvarArquivos($dados['id_imovel'], 'video', $videos);
+        $this->salvarArquivos($dados['id_imovel'], 'documento', $documentos);
     }
 
     /**
-     * Exclui um imóvel do banco de dados.
+     * Exclui um imóvel e todos os seus arquivos associados (registros e arquivos físicos)
+     * usando uma transação. Lança uma exceção em caso de erro.
      */
     public function excluir($id)
     {
-        // Antes de excluir, apaga os arquivos associados para limpeza (opcional, mas recomendado)
-        // $this->excluirTodosArquivosDeUmImovel($id);
+        $imagens = $this->buscarArquivos($id, 'imagem');
+        $videos = $this->buscarArquivos($id, 'video');
+        $documentos = $this->buscarArquivos($id, 'documento');
+        $todosArquivos = array_merge($imagens, $videos, $documentos);
 
-        $query = "DELETE FROM imovel WHERE id_imovel = ?";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bind_param("i", $id);
-        return $stmt->execute();
+        $this->connection->begin_transaction();
+        try {
+            $this->excluirRegistrosDeArquivosPorImovelId($id, 'imagem');
+            $this->excluirRegistrosDeArquivosPorImovelId($id, 'video');
+            $this->excluirRegistrosDeArquivosPorImovelId($id, 'documento');
+
+            $query = "DELETE FROM imovel WHERE id_imovel = ?";
+            $stmt = $this->connection->prepare($query);
+            if (!$stmt) throw new Exception("Erro ao preparar a query de exclusão do imóvel.");
+            $stmt->bind_param("i", $id);
+            if (!$stmt->execute()) throw new Exception("Erro ao excluir o registro do imóvel: " . $stmt->error);
+
+            $this->connection->commit();
+        } catch (Exception $e) {
+            $this->connection->rollback();
+            throw $e;
+        }
+
+        foreach ($todosArquivos as $arquivo) {
+            $caminhoCompleto = UPLOADS_DIR . str_replace('uploads/', '', $arquivo['caminho']);
+            if (file_exists($caminhoCompleto)) {
+                unlink($caminhoCompleto);
+            }
+        }
     }
 
     /**
-     * Salva os caminhos dos arquivos no banco de dados.
+     * Exclui um arquivo específico (registro e arquivo físico).
+     * Lança uma exceção em caso de erro.
+     */
+    public function excluirArquivo($tipo, $idArquivo)
+    {
+        $tiposValidos = ['imagem', 'video', 'documento'];
+        if (!in_array($tipo, $tiposValidos)) {
+            throw new Exception("Tipo de arquivo inválido.");
+        }
+
+        $caminhoRelativo = $this->buscarCaminhoArquivoPorId($tipo, $idArquivo);
+
+        if ($caminhoRelativo) {
+            $tabela = "imovel_" . $tipo;
+            $query = "DELETE FROM $tabela WHERE id = ?";
+            $stmt = $this->connection->prepare($query);
+            if (!$stmt) throw new Exception("Erro ao preparar a query de exclusão de arquivo.");
+
+            $stmt->bind_param("i", $idArquivo);
+            if ($stmt->execute()) {
+                $caminhoCompleto = UPLOADS_DIR . str_replace('uploads/', '', $caminhoRelativo);
+                if (file_exists($caminhoCompleto)) {
+                    unlink($caminhoCompleto);
+                }
+            } else {
+                throw new Exception("Erro ao excluir o registro do arquivo: " . $stmt->error);
+            }
+        } else {
+            throw new Exception("Arquivo não encontrado no banco de dados.");
+        }
+    }
+
+    /**
+     * Salva os caminhos dos arquivos no banco de dados. Lança exceção em caso de erro.
      */
     private function salvarArquivos($idImovel, $tipo, $arquivos)
     {
         if (empty($arquivos)) return;
 
         $tabela = "imovel_" . $tipo;
+        $query = "INSERT INTO $tabela (id_imovel, caminho) VALUES (?, ?)";
+        $stmt = $this->connection->prepare($query);
+        if (!$stmt) {
+            throw new Exception("Erro ao preparar a query para salvar arquivos: " . $this->connection->error);
+        }
+
         foreach ($arquivos as $arquivo) {
-            $query = "INSERT INTO $tabela (id_imovel, caminho) VALUES (?, ?)";
-            $stmt = $this->conn->prepare($query);
             $stmt->bind_param("is", $idImovel, $arquivo);
-            $stmt->execute();
+            if (!$stmt->execute()) {
+                throw new Exception("Erro ao salvar o arquivo '$arquivo' no banco: " . $stmt->error);
+            }
         }
     }
 
     /**
-     * Exclui um arquivo específico (imagem, vídeo ou documento).
-     */
-    public function excluirArquivo($tipo, $idArquivo)
-    {
-        $tiposValidos = ['imagem', 'video', 'documento'];
-        if (!in_array($tipo, $tiposValidos)) {
-            return false;
-        }
-
-        // Opcional: buscar o caminho do arquivo para deletá-lo do servidor
-        // $arquivo = $this->buscarCaminhoArquivoPorId($tipo, $idArquivo);
-        // if ($arquivo && file_exists(UPLOADS_DIR . $arquivo)) {
-        //     unlink(UPLOADS_DIR . $arquivo);
-        // }
-
-        $tabela = "imovel_" . $tipo;
-        $query = "DELETE FROM $tabela WHERE id = ?";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bind_param("i", $idArquivo);
-        return $stmt->execute();
-    }
-
-    /**
-     * Busca um imóvel pelo seu ID.
+     * Busca um imóvel pelo seu ID, com tratamento de erros robusto.
      */
     public function buscarPorId($id)
     {
+        if (empty($id) || !is_numeric($id)) return null;
+
         $query = "SELECT * FROM imovel WHERE id_imovel = ?";
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->connection->prepare($query);
+        if (!$stmt) {
+            throw new Exception("Erro ao preparar a query (buscarPorId): " . $this->connection->error);
+        }
         $stmt->bind_param("i", $id);
-        $stmt->execute();
-        return $stmt->get_result()->fetch_assoc();
+        if (!$stmt->execute()) {
+            throw new Exception("Erro ao executar a query (buscarPorId): " . $stmt->error);
+        }
+        $result = $stmt->get_result();
+        return $result->fetch_assoc();
     }
 
     /**
-     * Busca todos os arquivos de um determinado tipo para um imóvel.
+     * Busca todos os arquivos de um determinado tipo para um imóvel, com tratamento de erros.
      */
     public function buscarArquivos($idImovel, $tipo)
     {
+        if (empty($idImovel) || !is_numeric($idImovel)) return [];
+
         $tabela = "imovel_" . $tipo;
-        $query = "SELECT * FROM $tabela WHERE id_imovel = ?";
-        $stmt = $this->conn->prepare($query);
+        $query = "SELECT id, caminho FROM $tabela WHERE id_imovel = ?";
+        $stmt = $this->connection->prepare($query);
+        if (!$stmt) {
+            throw new Exception("Erro ao preparar a query (buscarArquivos): " . $this->connection->error);
+        }
         $stmt->bind_param("i", $idImovel);
-        $stmt->execute();
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        if (!$stmt->execute()) {
+            throw new Exception("Erro ao executar a query (buscarArquivos): " . $stmt->error);
+        }
+        $result = $stmt->get_result();
+        return $result->fetch_all(MYSQLI_ASSOC);
     }
 
     /**
-     * Lista TODOS os imóveis, filtrando por imobiliária (sem paginação).
-     * Este método foi adicionado para ser compatível com a sua nova view.
+     * Lista todos os imóveis de uma imobiliária específica, com tratamento de erros e depuração.
      */
-    public function listarTodos($id_imobiliaria_logada, $permissao_usuario)
+    public function buscarPorImobiliaria($id_imobiliaria)
     {
-        $sql = "SELECT * FROM imovel";
-        $params = [];
-        $types = '';
+        // Reseta as informações de depuração para esta chamada específica
+        $this->debugInfo = [
+            'metodo' => 'buscarPorImobiliaria',
+            'id_passado' => $id_imobiliaria,
+            'query_sql' => '',
+            'num_resultados' => 0,
+            'erro' => null
+        ];
 
-        if ($permissao_usuario !== 'SuperAdmin') {
-            $sql .= " WHERE id_imobiliaria = ?";
-            $params[] = $id_imobiliaria_logada;
-            $types .= 'i';
+        if (empty($id_imobiliaria) || !is_numeric($id_imobiliaria)) {
+            $this->debugInfo['erro'] = 'ID da imobiliária é inválido ou está vazio.';
+            return [];
         }
 
-        $sql .= " ORDER BY data_cadastro DESC";
+        $query = "SELECT * FROM imovel WHERE id_imobiliaria = ? ORDER BY data_cadastro DESC";
+        $this->debugInfo['query_sql'] = $query; // Salva a query para depuração
 
-        $stmt = $this->conn->prepare($sql);
-        if (!empty($params)) {
-            $stmt->bind_param($types, ...$params);
+        $stmt = $this->connection->prepare($query);
+        if (!$stmt) {
+            $this->debugInfo['erro'] = "Erro ao preparar a query: " . $this->connection->error;
+            throw new Exception($this->debugInfo['erro']);
         }
 
-        $stmt->execute();
-        $resultado = $stmt->get_result();
-        return $resultado ? $resultado->fetch_all(MYSQLI_ASSOC) : [];
+        $stmt->bind_param("i", $id_imobiliaria);
+        if (!$stmt->execute()) {
+            $this->debugInfo['erro'] = "Erro ao executar a query: " . $stmt->error;
+            throw new Exception($this->debugInfo['erro']);
+        }
+
+        $result = $stmt->get_result();
+        if (!$result) {
+            $this->debugInfo['erro'] = "Erro ao obter o resultado da busca: " . $this->connection->error;
+            throw new Exception($this->debugInfo['erro']);
+        }
+
+        // Salva o número de linhas encontradas para depuração
+        $this->debugInfo['num_resultados'] = $result->num_rows;
+
+        return $result->fetch_all(MYSQLI_ASSOC);
     }
 
-    /**
-     * Lista os imóveis de forma paginada, filtrando por imobiliária.
-     */
-    public function listarPaginado($pagina_atual, $limite, $id_imobiliaria_logada, $permissao_usuario, $filtro = null)
-    {
-        $offset = ($pagina_atual - 1) * $limite;
-        $sql = "SELECT * FROM imovel";
-        $params = [];
-        $types = '';
-        $whereClauses = [];
-
-        if ($permissao_usuario !== 'SuperAdmin') {
-            $whereClauses[] = "id_imobiliaria = ?";
-            $params[] = $id_imobiliaria_logada;
-            $types .= 'i';
-        }
-
-        if (!empty($filtro)) {
-            $whereClauses[] = "(titulo LIKE ? OR endereco LIKE ?)";
-            $searchTerm = "%{$filtro}%";
-            $params[] = $searchTerm;
-            $params[] = $searchTerm;
-            $types .= 'ss';
-        }
-
-        if (!empty($whereClauses)) {
-            $sql .= " WHERE " . implode(' AND ', $whereClauses);
-        }
-
-        $sql .= " ORDER BY data_cadastro DESC LIMIT ? OFFSET ?";
-        $params[] = $limite;
-        $params[] = $offset;
-        $types .= "ii";
-
-        $stmt = $this->conn->prepare($sql);
-        if (!empty($params)) {
-            $stmt->bind_param($types, ...$params);
-        }
-
-        $stmt->execute();
-        $resultado = $stmt->get_result();
-        return $resultado ? $resultado->fetch_all(MYSQLI_ASSOC) : [];
-    }
+    // --- MÉTODOS AUXILIARES ---
 
     /**
-     * Conta o total de imóveis, respeitando a permissão do usuário e o filtro.
+     * Busca o caminho de um arquivo pelo seu ID de registro.
      */
-    public function contarTotal($id_imobiliaria_logada, $permissao_usuario, $filtro = null)
+    private function buscarCaminhoArquivoPorId($tipo, $idArquivo)
     {
-        $sql = "SELECT COUNT(id_imovel) as total FROM imovel";
-        $params = [];
-        $types = '';
-        $whereClauses = [];
+        if (empty($idArquivo) || !is_numeric($idArquivo)) return null;
 
-        if ($permissao_usuario !== 'SuperAdmin') {
-            $whereClauses[] = "id_imobiliaria = ?";
-            $params[] = $id_imobiliaria_logada;
-            $types .= 'i';
+        $tabela = "imovel_" . $tipo;
+        $query = "SELECT caminho FROM $tabela WHERE id = ?";
+        $stmt = $this->connection->prepare($query);
+        if (!$stmt) {
+            throw new Exception("Erro ao preparar a query (buscarCaminhoArquivoPorId): " . $this->connection->error);
         }
-
-        if (!empty($filtro)) {
-            $whereClauses[] = "(titulo LIKE ? OR endereco LIKE ?)";
-            $searchTerm = "%{$filtro}%";
-            $params[] = $searchTerm;
-            $params[] = $searchTerm;
-            $types .= 'ss';
+        $stmt->bind_param("i", $idArquivo);
+        if (!$stmt->execute()) {
+            throw new Exception("Erro ao executar a query (buscarCaminhoArquivoPorId): " . $stmt->error);
         }
-
-        if (!empty($whereClauses)) {
-            $sql .= " WHERE " . implode(' AND ', $whereClauses);
-        }
-
-        $stmt = $this->conn->prepare($sql);
-        if (!empty($params)) {
-            $stmt->bind_param($types, ...$params);
-        }
-
-        $stmt->execute();
         $resultado = $stmt->get_result()->fetch_assoc();
-        return (int)($resultado['total'] ?? 0);
+        return $resultado['caminho'] ?? null;
+    }
+
+    /**
+     * Exclui todos os registros de arquivos de um imóvel. Usado na transação de exclusão.
+     */
+    private function excluirRegistrosDeArquivosPorImovelId($idImovel, $tipo)
+    {
+        $tabela = "imovel_" . $tipo;
+        $query = "DELETE FROM $tabela WHERE id_imovel = ?";
+        $stmt = $this->connection->prepare($query);
+        if (!$stmt) throw new Exception("Erro ao preparar a query de exclusão de registros de arquivos.");
+        $stmt->bind_param("i", $idImovel);
+        if (!$stmt->execute()) throw new Exception("Erro ao excluir registros da tabela $tabela: " . $stmt->error);
     }
 }
