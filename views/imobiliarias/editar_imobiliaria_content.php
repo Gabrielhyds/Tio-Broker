@@ -1,5 +1,5 @@
 <!-- Bloco PHP para exibir uma mensagem de sucesso se um usuário for removido. -->
-<?php if ($usuarioRemovido): ?>
+<?php if (isset($_GET['removido']) && $_GET['removido'] == 1): ?>
     <div class="mb-4 p-4 bg-green-100 text-green-700 rounded">
         <i class="fas fa-check-circle mr-2"></i>
         Usuário removido da imobiliária com sucesso!
@@ -7,7 +7,7 @@
 <?php endif; ?>
 
 <!-- Bloco PHP para exibir uma mensagem de sucesso se um usuário for vinculado. -->
-<?php if ($usuarioIncluidoEscolhido): ?>
+<?php if (isset($_GET['incluidoUsuario']) && $_GET['incluidoUsuario'] == 1): ?>
     <div class="mb-4 p-4 bg-green-100 text-green-700 rounded">
         <i class="fas fa-check-circle mr-2"></i>
         Usuário vinculado à imobiliária com sucesso!
@@ -119,10 +119,9 @@
                                         class="px-2 py-1 text-yellow-600 hover:text-yellow-800">
                                         <i class="fas fa-pen"></i>
                                     </a>
-                                    <!-- Link para remover o vínculo do usuário com esta imobiliária. -->
+                                    <!-- CORREÇÃO: Removido o 'onclick' e adicionada a classe 'btn-remover-usuario' -->
                                     <a href="../../controllers/UsuarioController.php?removerImobiliaria=<?= $user['id_usuario'] ?>&idImobiliaria=<?= $idImobiliaria ?>"
-                                        onclick="return confirm('Deseja realmente remover este usuário da imobiliária?')"
-                                        class="px-2 py-1 text-red-600 hover:text-red-800">
+                                        class="px-2 py-1 text-red-600 hover:text-red-800 btn-remover-usuario">
                                         <i class="fas fa-user-minus"></i>
                                     </a>
                                 </div>
@@ -138,6 +137,7 @@
 </div>
 
 <!-- Scripts JavaScript para validação e formatação de campos. -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     // Função para permitir apenas a digitação de números.
     function apenasNumeros(event) {
@@ -159,7 +159,38 @@
         const cnpj = document.getElementById('cnpj').value.replace(/\D/g, '');
         if (cnpj.length !== 14) {
             event.preventDefault(); // Impede o envio do formulário.
-            alert("CNPJ inválido! Deve conter 14 dígitos.");
+            Swal.fire({
+                icon: 'error',
+                title: 'CNPJ Inválido',
+                text: 'O CNPJ deve conter 14 dígitos.'
+            });
         }
     }
+
+    // CORREÇÃO: Script adicionado para o modal de confirmação de remoção de usuário
+    document.addEventListener('DOMContentLoaded', function() {
+        const botoesRemover = document.querySelectorAll('.btn-remover-usuario');
+
+        botoesRemover.forEach(function(botao) {
+            botao.addEventListener('click', function(event) {
+                event.preventDefault();
+                const urlParaRemover = this.href;
+
+                Swal.fire({
+                    title: 'Tem certeza?',
+                    text: "Deseja realmente remover este usuário da imobiliária?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sim, remover!',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = urlParaRemover;
+                    }
+                });
+            });
+        });
+    });
 </script>
