@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/rotas.php';
 require_once __DIR__ . '/../models/Imovel.php';
 
 if (session_status() == PHP_SESSION_NONE) {

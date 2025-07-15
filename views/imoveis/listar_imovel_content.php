@@ -16,7 +16,6 @@ if ($permissao === 'SuperAdmin') {
         $imoveis = $imovelModel->buscarPorImobiliaria($idSelecionada);
     }
 } else {
-    // ✅ CORREÇÃO APLICADA AQUI
     // Para todas as outras permissões (Corretor, Admin, etc.),
     // busca apenas os imóveis da imobiliária associada ao usuário logado.
     if ($id_imobiliaria_usuario) {
@@ -31,6 +30,8 @@ if ($permissao === 'SuperAdmin') {
 
 <!-- Link para a biblioteca de ícones Bootstrap Icons -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<!-- Adicionando Tailwind CSS para os estilos -->
+<script src="https://cdn.tailwindcss.com"></script>
 
 <style>
     /* Estilos personalizados com o prefixo 'crm-' para evitar conflitos */
@@ -227,9 +228,14 @@ if ($permissao === 'SuperAdmin') {
                                     <p class="text-sm truncate" title="<?= htmlspecialchars($imovel['endereco']) ?>"><?= htmlspecialchars($imovel['endereco']) ?></p>
                                 </div>
                             </div>
-                            <div class="flex justify-end items-center pt-4 mt-4 border-t">
-                                <a href="editar.php?id=<?= $imovel['id_imovel'] ?>" class="font-semibold text-gray-600 hover:text-blue-600 transition-colors px-3 py-1">Editar</a>
-                                <a href="mostrar.php?id=<?= $imovel['id_imovel'] ?>" class="font-semibold text-white bg-gray-800 hover:bg-black rounded-md px-4 py-2 transition-colors ml-2">Ver Detalhes</a>
+                            <div class="flex justify-end items-center pt-4 mt-4 border-t gap-2">
+                                <a href="editar.php?id=<?= $imovel['id_imovel'] ?>" class="flex items-center gap-1 font-semibold text-gray-600 hover:text-blue-600 transition-colors px-2 py-1" title="Editar">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <a href="../../controllers/ImovelController.php?action=excluir&id=<?= $imovel['id_imovel'] ?>"
+                                    class="flex items-center gap-1 font-semibold text-red-600 hover:text-red-800 transition-colors px-2 py-1"
+                                    onclick="return confirm('Tem certeza que deseja excluir este imóvel?')"><i class="bi bi-trash-fill"></i></a>
+                                <a href="mostrar.php?id=<?= $imovel['id_imovel'] ?>" class="font-semibold text-white bg-gray-800 hover:bg-black rounded-md px-4 py-2 transition-colors">Ver Detalhes</a>
                             </div>
                         </div>
                     </div>

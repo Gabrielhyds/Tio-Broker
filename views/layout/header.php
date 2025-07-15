@@ -9,7 +9,7 @@ $primeiraLetra = strtoupper(substr($primeiroNome, 0, 1));
 $fotoPerfil = $usuarioLogado['foto'] ?? null;
 
 $temFoto = !empty($fotoPerfil);
-$caminhoFoto = BASE_URL . ltrim(str_replace('../', '', $fotoPerfil), '/');
+$caminhoFoto = BASE_URL . ltrim(str_replace('../', '', $fotoPerfil ?? ''), '/');
 ?>
 
 <!-- A tag <header> define o cabeçalho da página. -->
