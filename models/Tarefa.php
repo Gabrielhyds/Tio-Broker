@@ -110,4 +110,50 @@ class Tarefa
         $stmt->bind_param("i", $id);
         return $stmt->execute();
     }
+    public function listarPorPermissao($id_usuario, $id_imobiliaria, $permissao, $filtroUsuario = '', $filtroCliente = '')
+    {
+        $sql = "SELECT t.*, u.nome AS nome_usuario, c.nome AS nome_cliente
+            FROM tarefas t
+            LEFT JOIN usuario u ON t.id_usuario = u.id_usuario
+            LEFT JOIN cliente c ON t.id_cliente = c.id_cliente
+            WHERE 1=1";
+
+        $params = [];
+        $types = '';
+
+        // Filtro por permissão
+        if ($permissao === 'Admin' || $permissao === 'Coordenador') {
+            $sql .= " AND t.id_imobiliaria = ?";
+            $params[] = $id_imobiliaria;
+            $types .= 'i';
+        } elseif ($permissao === 'Corretor') {
+            $sql .= " AND t.id_usuario = ?";
+            $params[] = $id_usuario;
+            $types .= 'i';
+        }
+
+        // Filtro por usuário (caso aplicável)
+        if (!empty($filtroUsuario)) {
+            $sql .= " AND t.id_usuario = ?";
+            $params[] = $filtroUsuario;
+            $types .= 'i';
+        }
+
+        // Filtro por cliente (caso aplicável)
+        if (!empty($filtroCliente)) {
+            $sql .= " AND t.id_cliente = ?";
+            $params[] = $filtroCliente;
+            $types .= 'i';
+        }
+
+        $sql .= " ORDER BY t.prazo ASC, t.data_criacao DESC";
+
+        $stmt = $this->conn->prepare($sql);
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+        $resultado = $stmt->get_result();
+        return $resultado ? $resultado->fetch_all(MYSQLI_ASSOC) : [];
+    }
 }
