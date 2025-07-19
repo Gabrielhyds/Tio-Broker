@@ -1,0 +1,41 @@
+{
+    "title": "Configuración de la Cuenta",
+    "accessibility": {
+        "title": "Accesibilidad",
+        "screenReader": "Lector de Pantalla (Narrador)",
+        "fontSize": "Tamaño de Fuente",
+        "fontSmall": "Pequeño",
+        "fontMedium": "Mediano",
+        "fontLarge": "Grande"
+    },
+    "appearance": {
+        "title": "Apariencia",
+        "theme": "Tema",
+        "light": "Claro",
+        "dark": "Oscuro"
+    },
+    "language": {
+        "title": "Idioma",
+        "select": "Seleccione el idioma"
+    },
+    "notifications": {
+        "title": "Notificaciones",
+        "sound": "Notificaciones Sonoras",
+        "visual": "Notificaciones Visuales (Pop-ups)"
+    },
+    "about": {
+        "title": "Acerca de",
+        "privacy": "Política de Privacidad",
+        "terms": "Términos de Servicio",
+        "help": "Ayuda y Soporte",
+        "feedback": "Enviar Comentarios"
+    },
+    "buttons": {
+        "save": "Guardar Cambios",
+        "saving": "Guardando..."
+    },
+    "feedback": {
+        "success": "¡Configuración guardada con éxito!",
+        "error": "Ocurrió un error al guardar."
+    }
+}

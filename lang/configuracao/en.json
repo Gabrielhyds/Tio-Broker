@@ -1,0 +1,41 @@
+{
+    "title": "Account Settings",
+    "accessibility": {
+        "title": "Accessibility",
+        "screenReader": "Screen Reader (Narrator)",
+        "fontSize": "Font Size",
+        "fontSmall": "Small",
+        "fontMedium": "Medium",
+        "fontLarge": "Large"
+    },
+    "appearance": {
+        "title": "Appearance",
+        "theme": "Theme",
+        "light": "Light",
+        "dark": "Dark"
+    },
+    "language": {
+        "title": "Language",
+        "select": "Select language"
+    },
+    "notifications": {
+        "title": "Notifications",
+        "sound": "Sound Notifications",
+        "visual": "Visual Notifications (Pop-ups)"
+    },
+    "about": {
+        "title": "About",
+        "privacy": "Privacy Policy",
+        "terms": "Terms of Service",
+        "help": "Help and Support",
+        "feedback": "Send Feedback"
+    },
+    "buttons": {
+        "save": "Save Changes",
+        "saving": "Saving..."
+    },
+    "feedback": {
+        "success": "Settings saved successfully!",
+        "error": "An error occurred while saving."
+    }
+}

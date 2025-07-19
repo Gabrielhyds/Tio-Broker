@@ -1,4 +1,13 @@
 <?php
+/*
+|--------------------------------------------------------------------------
+| ARQUIVO: views/chat/chat.php
+|--------------------------------------------------------------------------
+| Este é o arquivo principal que prepara os dados e carrega o template.
+| Nenhuma alteração de tradução é necessária aqui, mas ele está incluído
+| para que você tenha o contexto completo.
+*/
+
 // Inclui os arquivos de configuração, o modelo de Usuário e o modelo de Chat.
 require_once '../../config/config.php';
 require_once '../../models/Usuario.php';

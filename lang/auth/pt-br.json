@@ -1,0 +1,49 @@
+{
+    "common": {
+        "emailLabel": "E-mail",
+        "emailPlaceholder": "seu@email.com",
+        "passwordLabel": "Senha",
+        "passwordPlaceholder": "Sua senha",
+        "backToLogin": "Voltar ao Login",
+        "copyright": "Tio Broker."
+    },
+    "login": {
+        "title": "Login - Tio Broker CRM",
+        "mainHeading": "Potencialize sua imobiliária.",
+        "subheading": "Acesse a plataforma completa para gerenciar seus clientes, imóveis e negociações com eficiência.",
+        "formTitle": "Acesso ao Painel",
+        "welcome": "Bem-vindo de volta! Por favor, insira seus dados.",
+        "rememberMe": "Lembrar-me",
+        "forgotPassword": "Esqueci minha senha",
+        "button": "Entrar",
+        "passwordResetSuccess": "Senha redefinida com sucesso! Faça login com sua nova senha."
+    },
+    "recover": {
+        "title": "Recuperar Senha - Tio Broker CRM",
+        "mainHeading": "Não se preocupe, acontece!",
+        "subheading": "Vamos te ajudar a recuperar o acesso à sua conta de forma rápida e segura.",
+        "formTitle": "Redefinir Senha",
+        "instructions": "Informe seu e-mail cadastrado e enviaremos um link para criar uma nova senha.",
+        "button": "Enviar Link de Redefinição"
+    },
+    "confirmation": {
+        "title": "Link Enviado - Tio Broker CRM",
+        "mainHeading": "Tudo certo!",
+        "subheading": "O próximo passo para recuperar seu acesso está na sua caixa de entrada.",
+        "formTitle": "Link Enviado!",
+        "instructions": "Se o e-mail informado estiver em nosso sistema, enviaremos um link de redefinição. Por favor, verifique sua caixa de entrada e também a pasta de spam."
+    },
+    "invalid": {
+        "title": "Login Inválido - Tio Broker CRM",
+        "formTitle": "Ops! Credenciais Inválidas",
+        "instructions": "O e-mail ou a senha que você inseriu não estão corretos. Por favor, verifique os dados e tente novamente."
+    },
+    "noRealty": {
+        "title": "Acesso Bloqueado - Tio Broker CRM",
+        "mainHeading": "Quase lá!",
+        "subheading": "Seu acesso está pendente de uma última etapa para você começar a aproveitar a plataforma.",
+        "formTitle": "Acesso Pendente",
+        "instructions1": "Parece que seu usuário ainda não foi vinculado a uma imobiliária.",
+        "instructions2": "Por favor, entre em contato com o administrador do sistema para solicitar a liberação do seu acesso."
+    }
+}

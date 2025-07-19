@@ -1,0 +1,25 @@
+{
+    "users": {
+        "title": "Usuarios",
+        "filterPlaceholder": "-- Filtrar por Inmobiliaria --",
+        "noConversation": "Ninguna conversación iniciada"
+    },
+    "messages": {
+        "title": "Mensajes",
+        "startConversation": "Selecciona un colaborador para iniciar la conversación.",
+        "noMessages": "Aún no hay mensajes. Inicia la conversación.",
+        "placeholder": "Escribe tu mensaje...",
+        "sendButton": "Enviar"
+    },
+    "dates": {
+        "today": "Hoy",
+        "yesterday": "Ayer",
+        "dateFormat": "d 'de' MMMM"
+    },
+    "options": {
+        "react": "Reaccionar",
+        "edit": "Editar",
+        "reply": "Responder",
+        "delete": "Eliminar"
+    }
+}

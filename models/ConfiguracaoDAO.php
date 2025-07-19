@@ -1,90 +1,109 @@
 <?php
+/*
+|--------------------------------------------------------------------------
+| ARQUIVO: models/DAO/ConfiguracaoDAO.php (VERSÃO CORRIGIDA)
+|--------------------------------------------------------------------------
+| Este DAO foi reescrito para interagir com as colunas individuais
+| na tabela 'usuario', em vez de uma tabela 'configuracoes' separada.
+*/
+
 class ConfiguracaoDAO
 {
     private $conexao;
 
-    // O construtor agora recebe uma conexão MySQLi.
     public function __construct(mysqli $conexao)
     {
         $this->conexao = $conexao;
     }
 
     /**
-     * Salva ou atualiza as configurações de um usuário usando MySQLi.
-     * Utiliza a sintaxe "INSERT ... ON DUPLICATE KEY UPDATE" do MySQL (UPSERT).
-     *
-     * @param int $idUsuario O ID do usuário.
-     * @param array $configuracoes Um array associativo com as configurações.
-     * @return bool Retorna true em caso de sucesso, false em caso de falha.
+     * ATUALIZADO: Salva as configurações diretamente na tabela 'usuario'.
      */
     public function salvarConfiguracoes(int $idUsuario, array $configuracoes): bool
     {
-        // Converte o array de configurações para uma string JSON.
-        $configuracoesJson = json_encode($configuracoes);
+        // Query SQL para ATUALIZAR as colunas de configuração na tabela 'usuario'.
+        $sql = "UPDATE usuario SET 
+                    idioma = ?, 
+                    tema = ?, 
+                    tamanho_fonte = ?, 
+                    notificacao_sonora = ?, 
+                    notificacao_visual = ?, 
+                    narrador = ?
+                WHERE id_usuario = ?";
 
-        // A query SQL para inserir ou atualizar (UPSERT) permanece a mesma.
-        $sql = "INSERT INTO configuracoes (id_usuario, dados_json) 
-                VALUES (?, ?)
-                ON DUPLICATE KEY UPDATE dados_json = ?";
-
-        // Prepara a declaração.
         $stmt = $this->conexao->prepare($sql);
         if ($stmt === false) {
-            // Em caso de erro na preparação, você pode logar o erro.
-            // error_log("Erro ao preparar a query: " . $this->conexao->error);
+            error_log("Erro ao preparar a query de salvar: " . $this->conexao->error);
             return false;
         }
 
-        // Associa os parâmetros ('i' para integer, 's' para string).
-        // Note que dados_json é passado duas vezes para a query.
-        $stmt->bind_param('iss', $idUsuario, $configuracoesJson, $configuracoesJson);
+        // Extrai os valores do array de configurações vindo do frontend.
+        $idioma = $configuracoes['language'];
+        $tema = $configuracoes['appearance']['theme'];
+        $tamanho_fonte = $configuracoes['accessibility']['fontSize'];
+        $notificacao_sonora = $configuracoes['notifications']['sound'] ? 1 : 0; // Converte boolean para 1 ou 0
+        $notificacao_visual = $configuracoes['notifications']['visual'] ? 1 : 0; // Converte boolean para 1 ou 0
+        $narrador = $configuracoes['accessibility']['narrator'] ? 1 : 0; // Converte boolean para 1 ou 0
 
-        // Executa a query.
+        // Associa os parâmetros à declaração.
+        // "sssiii" -> 3 strings, 3 integers, 1 integer (ID)
+        $stmt->bind_param(
+            'sssiiii',
+            $idioma,
+            $tema,
+            $tamanho_fonte,
+            $notificacao_sonora,
+            $notificacao_visual,
+            $narrador,
+            $idUsuario
+        );
+
         $sucesso = $stmt->execute();
-
-        // Fecha a declaração.
+        if (!$sucesso) {
+            error_log("Erro ao executar a query de salvar: " . $stmt->error);
+        }
         $stmt->close();
-
         return $sucesso;
     }
 
     /**
-     * Busca as configurações de um usuário no banco usando MySQLi.
-     *
-     * @param int $idUsuario O ID do usuário.
-     * @return array|null Retorna um array com as configurações ou null se não encontrar.
+     * ATUALIZADO: Busca as configurações diretamente da tabela 'usuario'.
      */
     public function buscarConfiguracoes(int $idUsuario): ?array
     {
-        $sql = "SELECT dados_json FROM configuracoes WHERE id_usuario = ?";
+        // Query para selecionar as colunas de configuração da tabela 'usuario'.
+        $sql = "SELECT idioma, tema, tamanho_fonte, notificacao_sonora, notificacao_visual, narrador 
+                FROM usuario 
+                WHERE id_usuario = ?";
 
-        // Prepara a declaração.
         $stmt = $this->conexao->prepare($sql);
         if ($stmt === false) {
-            // error_log("Erro ao preparar a query de busca: " . $this->conexao->error);
+            error_log("Erro ao preparar a query de busca: " . $this->conexao->error);
             return null;
         }
-
-        // Associa o parâmetro.
         $stmt->bind_param('i', $idUsuario);
-
-        // Executa a query.
         $stmt->execute();
-
-        // Obtém o resultado.
         $resultadoQuery = $stmt->get_result();
-
-        // Busca a linha como um array associativo.
-        $resultado = $resultadoQuery->fetch_assoc();
-
-        // Fecha a declaração.
+        $db_settings = $resultadoQuery->fetch_assoc();
         $stmt->close();
 
-        if ($resultado && isset($resultado['dados_json'])) {
-            // Decodifica a string JSON de volta para um array PHP.
-            return json_decode($resultado['dados_json'], true);
+        if ($db_settings) {
+            // Monta o array no mesmo formato que o frontend espera.
+            return [
+                'language' => $db_settings['idioma'],
+                'appearance' => [
+                    'theme' => $db_settings['tema']
+                ],
+                'accessibility' => [
+                    'fontSize' => $db_settings['tamanho_fonte'],
+                    'narrator' => (bool)$db_settings['narrador']
+                ],
+                'notifications' => [
+                    'sound' => (bool)$db_settings['notificacao_sonora'],
+                    'visual' => (bool)$db_settings['notificacao_visual']
+                ]
+            ];
         }
-
-        return null; // Retorna null se não encontrar configurações para o usuário.
+        return null;
     }
 }

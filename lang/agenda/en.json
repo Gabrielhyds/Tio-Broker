@@ -1,0 +1,50 @@
+{
+    "calendar": {
+        "addEventTitle": "Schedule New Event",
+        "editEventTitle": "Edit Event",
+        "defaultError": "An unknown error occurred.",
+        "fetchError": "Error fetching event data: ",
+        "deleteError": "Error deleting event: ",
+        "updateError": "Error updating event: "
+    },
+    "buttons": {
+        "today": "Today",
+        "month": "Month",
+        "week": "Week",
+        "day": "Day",
+        "list": "List",
+        "delete": "Delete",
+        "cancel": "Cancel",
+        "save": "Save",
+        "confirm": "Confirm"
+    },
+    "form": {
+        "labels": {
+            "title": "Title*",
+            "type": "Type*",
+            "client": "Client",
+            "property": "Visit Property",
+            "start": "Start*",
+            "end": "End*",
+            "description": "Description",
+            "feedback": "Visit Feedback",
+            "reminder": "Enable reminder"
+        },
+        "options": {
+            "meeting": "Meeting",
+            "visit": "Visit",
+            "other": "Other"
+        },
+        "placeholders": {
+            "feedback": "What did the client think of the property?"
+        },
+        "selects": {
+            "chooseClient": "Select a client",
+            "chooseProperty": "Select a property"
+        }
+    },
+    "confirmDelete": {
+        "title": "Confirm Deletion",
+        "message": "Are you sure you want to delete this event?"
+    }
+}
