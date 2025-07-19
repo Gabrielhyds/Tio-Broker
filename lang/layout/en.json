@@ -1,0 +1,41 @@
+{
+    "sidebar": {
+        "home": {
+            "title": "Home",
+            "summary": "Summary"
+        },
+        "realty": {
+            "title": "Realty",
+            "register": "Register",
+            "view": "View Realties"
+        },
+        "user": {
+            "title": "User",
+            "register": "Register User",
+            "manage": "Manage Users"
+        },
+        "tools": {
+            "title": "Tools",
+            "chat": "Chat",
+            "contacts": "Contact Book",
+            "tasks": "Tasks",
+            "schedule": "Schedule"
+        },
+        "properties": {
+            "title": "Properties",
+            "register": "Register Property",
+            "view": "View Properties"
+        }
+    },
+    "header": {
+        "search": "Search...",
+        "profile": "My Profile",
+        "settings": "Settings",
+        "logout": "Logout",
+        "logging_out": "Logging out...",
+        "redirecting": "You will be redirected shortly."
+    },
+    "footer": {
+        "copyright": "Tio Broker. All rights reserved."
+    }
+}

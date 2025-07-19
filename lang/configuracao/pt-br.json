@@ -1,0 +1,41 @@
+{
+    "title": "Configurações da Conta",
+    "accessibility": {
+        "title": "Acessibilidade",
+        "screenReader": "Leitor de Tela (Narrador)",
+        "fontSize": "Tamanho da Fonte",
+        "fontSmall": "Pequeno",
+        "fontMedium": "Médio",
+        "fontLarge": "Grande"
+    },
+    "appearance": {
+        "title": "Aparência",
+        "theme": "Tema",
+        "light": "Claro",
+        "dark": "Escuro"
+    },
+    "language": {
+        "title": "Idioma",
+        "select": "Selecione o idioma"
+    },
+    "notifications": {
+        "title": "Notificações",
+        "sound": "Notificações Sonoras",
+        "visual": "Notificações Visuais (Pop-ups)"
+    },
+    "about": {
+        "title": "Sobre",
+        "privacy": "Política de Privacidade",
+        "terms": "Termos de Serviço",
+        "help": "Ajuda e Suporte",
+        "feedback": "Enviar Feedback"
+    },
+    "buttons": {
+        "save": "Salvar Alterações",
+        "saving": "Salvando..."
+    },
+    "feedback": {
+        "success": "Configurações salvas com sucesso!",
+        "error": "Ocorreu um erro ao salvar."
+    }
+}

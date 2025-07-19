@@ -1,82 +1,66 @@
 <?php
-// --- TESTE FINAL: ISOLAR O FICHEIRO DE CONFIGURAÇÃO ---
-// Sabemos que o erro está num dos includes. Vamos testar apenas o config.php.
+
+
+/*
+|--------------------------------------------------------------------------
+| ARQUIVO: controllers/ConfiguracaoController.php (Versão Final Corrigida)
+|--------------------------------------------------------------------------
+| Este controller agora usa o seu ConfiguracaoDAO para salvar os dados
+| e verifica a chave de sessão correta ('id_usuario').
+*/
 
 @session_start();
-ob_start();
+header('Content-Type: application/json');
 
-// Função de depuração final para capturar erros fatais.
-register_shutdown_function(function () {
-    $error = error_get_last();
-    if ($error !== null && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
-        if (headers_sent()) {
-            return;
-        }
-        ob_clean();
-        http_response_code(500);
-        header('Content-Type: application/json');
-        echo json_encode([
-            'success' => false,
-            'message' => 'Ocorreu um erro fatal no servidor.',
-            'error_details' => [
-                'type'    => $error['type'],
-                'message' => $error['message'],
-                'file'    => $error['file'],
-                'line'    => $error['line'],
-            ]
-        ]);
-        exit;
-    }
-});
+// Inclui os arquivos necessários
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../models/ConfiguracaoDAO.php'; // Usa o seu DAO
 
 class ConfiguracaoController
 {
     public function salvar()
     {
-        $response = ['success' => false, 'message' => 'Ocorreu um erro desconhecido.'];
-        $http_code = 500;
+        // ATENÇÃO: Alterado para 'connection' para corresponder ao seu config.php
+        global $connection;
 
-        try {
-            // Incluímos apenas o config.php. O DAO está comentado.
-            require_once __DIR__ . '/../config/config.php';
-            // require_once __DIR__ . '/../model/DAO/ConfiguracaoDAO.php';
-
-            // Verifica se o ficheiro de configuração realmente criou a variável de conexão.
-            if (!isset($conexao) || !$conexao instanceof mysqli) {
-                throw new Exception('A variável de conexão não foi definida corretamente no ficheiro config.php.');
-            }
-
-            // Verifica se o utilizador está logado.
-            if (!isset($_SESSION['usuario']['id'])) {
-                $http_code = 401; // Não Autorizado
-                throw new Exception('Utilizador não autenticado. A sessão pode ter expirado.');
-            }
-
-            // Se chegarmos aqui, o config.php e a sessão estão a funcionar.
-            $http_code = 200;
-            $response = [
-                'success' => true,
-                'message' => 'Teste final bem-sucedido: config.php e a sessão foram carregados sem erros!'
-            ];
-        } catch (Throwable $e) {
-            if ($http_code === 500) {
-                $http_code = 500;
-            }
-            $response['message'] = $e->getMessage();
+        // **CORREÇÃO**: Verifica a chave 'id_usuario', conforme seu arquivo de teste e banco de dados.
+        if (!isset($_SESSION['usuario']['id_usuario'])) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Usuário não autenticado.']);
+            exit;
         }
 
-        // Limpa qualquer saída que tenha sido bufferizada.
-        ob_clean();
+        $dados = json_decode(file_get_contents('php://input'), true);
 
-        // Envia a resposta final.
-        http_response_code($http_code);
-        header('Content-Type: application/json');
-        echo json_encode($response);
-        exit;
+        if (json_last_error() !== JSON_ERROR_NONE || empty($dados)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Dados inválidos recebidos.']);
+            exit;
+        }
+
+        try {
+            $id_usuario = $_SESSION['usuario']['id_usuario'];
+
+            // Instancia e usa o SEU DAO para salvar as configurações
+            $configuracaoDAO = new ConfiguracaoDAO($connection);
+            $sucesso = $configuracaoDAO->salvarConfiguracoes($id_usuario, $dados);
+
+            if ($sucesso) {
+                // Se salvou no banco, atualiza também a sessão PHP
+                $_SESSION['usuario']['configuracoes'] = $dados;
+
+                echo json_encode(['success' => true, 'message' => 'Configurações salvas com sucesso!']);
+            } else {
+                throw new Exception('Falha ao salvar as configurações no banco de dados.');
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
     }
 }
 
-// --- Roteamento Simples ---
+// Roteamento simples para a ação 'salvar'
 if (isset($_GET['action']) && $_GET['action'] == 'salvar') {
     $controller = new ConfiguracaoController();
     $controller->salvar();

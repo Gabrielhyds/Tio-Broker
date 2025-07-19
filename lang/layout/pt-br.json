@@ -1,0 +1,41 @@
+{
+    "sidebar": {
+        "home": {
+            "title": "Início",
+            "summary": "Resumo"
+        },
+        "realty": {
+            "title": "Imobiliária",
+            "register": "Cadastrar",
+            "view": "Ver Imobiliárias"
+        },
+        "user": {
+            "title": "Usuário",
+            "register": "Cadastrar Usuário",
+            "manage": "Gerenciar Usuários"
+        },
+        "tools": {
+            "title": "Ferramentas",
+            "chat": "Chat",
+            "contacts": "Agenda de Contatos",
+            "tasks": "Tarefas",
+            "schedule": "Agenda"
+        },
+        "properties": {
+            "title": "Imóveis",
+            "register": "Cadastrar Imóvel",
+            "view": "Ver Imóveis"
+        }
+    },
+    "header": {
+        "search": "Buscar...",
+        "profile": "Meu Perfil",
+        "settings": "Configurações",
+        "logout": "Sair",
+        "logging_out": "Encerrando sessão...",
+        "redirecting": "Você será redirecionado em breve."
+    },
+    "footer": {
+        "copyright": "Tio Broker. Todos os direitos reservados."
+    }
+}

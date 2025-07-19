@@ -1,0 +1,49 @@
+{
+    "common": {
+        "emailLabel": "Email",
+        "emailPlaceholder": "your@email.com",
+        "passwordLabel": "Password",
+        "passwordPlaceholder": "Your password",
+        "backToLogin": "Back to Login",
+        "copyright": "Tio Broker."
+    },
+    "login": {
+        "title": "Login - Tio Broker CRM",
+        "mainHeading": "Power up your real estate business.",
+        "subheading": "Access the complete platform to efficiently manage your clients, properties, and deals.",
+        "formTitle": "Dashboard Access",
+        "welcome": "Welcome back! Please enter your details.",
+        "rememberMe": "Remember me",
+        "forgotPassword": "Forgot my password",
+        "button": "Sign In",
+        "passwordResetSuccess": "Password reset successfully! Please log in with your new password."
+    },
+    "recover": {
+        "title": "Recover Password - Tio Broker CRM",
+        "mainHeading": "Don't worry, it happens!",
+        "subheading": "We'll help you regain access to your account quickly and securely.",
+        "formTitle": "Reset Password",
+        "instructions": "Enter your registered email and we will send you a link to create a new password.",
+        "button": "Send Reset Link"
+    },
+    "confirmation": {
+        "title": "Link Sent - Tio Broker CRM",
+        "mainHeading": "All set!",
+        "subheading": "The next step to recover your access is in your inbox.",
+        "formTitle": "Link Sent!",
+        "instructions": "If the provided email is in our system, we will send a reset link. Please check your inbox and also your spam folder."
+    },
+    "invalid": {
+        "title": "Invalid Login - Tio Broker CRM",
+        "formTitle": "Oops! Invalid Credentials",
+        "instructions": "The email or password you entered is incorrect. Please check the details and try again."
+    },
+    "noRealty": {
+        "title": "Access Blocked - Tio Broker CRM",
+        "mainHeading": "Almost there!",
+        "subheading": "Your access is pending one final step before you can start enjoying the platform.",
+        "formTitle": "Access Pending",
+        "instructions1": "It seems your user has not yet been linked to a real estate agency.",
+        "instructions2": "Please contact the system administrator to request access authorization."
+    }
+}

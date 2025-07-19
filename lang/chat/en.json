@@ -1,0 +1,25 @@
+{
+    "users": {
+        "title": "Users",
+        "filterPlaceholder": "-- Filter by Realty --",
+        "noConversation": "No conversation started"
+    },
+    "messages": {
+        "title": "Messages",
+        "startConversation": "Select a colleague to start the conversation.",
+        "noMessages": "No messages yet. Start the conversation.",
+        "placeholder": "Type your message...",
+        "sendButton": "Send"
+    },
+    "dates": {
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "dateFormat": "MMMM d"
+    },
+    "options": {
+        "react": "React",
+        "edit": "Edit",
+        "reply": "Reply",
+        "delete": "Delete"
+    }
+}

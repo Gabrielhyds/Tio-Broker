@@ -1,0 +1,41 @@
+{
+    "sidebar": {
+        "home": {
+            "title": "Inicio",
+            "summary": "Resumen"
+        },
+        "realty": {
+            "title": "Inmobiliaria",
+            "register": "Registrar",
+            "view": "Ver Inmobiliarias"
+        },
+        "user": {
+            "title": "Usuario",
+            "register": "Registrar Usuario",
+            "manage": "Administrar Usuarios"
+        },
+        "tools": {
+            "title": "Herramientas",
+            "chat": "Chat",
+            "contacts": "Agenda de Contactos",
+            "tasks": "Tareas",
+            "schedule": "Agenda"
+        },
+        "properties": {
+            "title": "Inmuebles",
+            "register": "Registrar Inmueble",
+            "view": "Ver Inmuebles"
+        }
+    },
+    "header": {
+        "search": "Buscar...",
+        "profile": "Mi Perfil",
+        "settings": "Configuración",
+        "logout": "Salir",
+        "logging_out": "Cerrando sesión...",
+        "redirecting": "Serás redirigido en breve."
+    },
+    "footer": {
+        "copyright": "Tio Broker. Todos los derechos reservados."
+    }
+}

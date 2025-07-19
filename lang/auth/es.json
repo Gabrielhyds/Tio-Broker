@@ -1,0 +1,49 @@
+{
+    "common": {
+        "emailLabel": "Correo Electrónico",
+        "emailPlaceholder": "su@email.com",
+        "passwordLabel": "Contraseña",
+        "passwordPlaceholder": "Su contraseña",
+        "backToLogin": "Volver al Login",
+        "copyright": "Tio Broker."
+    },
+    "login": {
+        "title": "Login - Tio Broker CRM",
+        "mainHeading": "Potencia tu inmobiliaria.",
+        "subheading": "Accede a la plataforma completa para gestionar tus clientes, inmuebles y negociaciones con eficiencia.",
+        "formTitle": "Acceso al Panel",
+        "welcome": "¡Bienvenido de nuevo! Por favor, introduce tus datos.",
+        "rememberMe": "Recordarme",
+        "forgotPassword": "Olvidé mi contraseña",
+        "button": "Entrar",
+        "passwordResetSuccess": "¡Contraseña restablecida con éxito! Inicia sesión con tu nueva contraseña."
+    },
+    "recover": {
+        "title": "Recuperar Contraseña - Tio Broker CRM",
+        "mainHeading": "¡No te preocupes, sucede!",
+        "subheading": "Te ayudaremos a recuperar el acceso a tu cuenta de forma rápida y segura.",
+        "formTitle": "Restablecer Contraseña",
+        "instructions": "Introduce tu correo electrónico registrado y te enviaremos un enlace para crear una nueva contraseña.",
+        "button": "Enviar Enlace de Restablecimiento"
+    },
+    "confirmation": {
+        "title": "Enlace Enviado - Tio Broker CRM",
+        "mainHeading": "¡Todo listo!",
+        "subheading": "El siguiente paso para recuperar tu acceso está en tu bandeja de entrada.",
+        "formTitle": "¡Enlace Enviado!",
+        "instructions": "Si el correo electrónico proporcionado está en nuestro sistema, enviaremos un enlace de restablecimiento. Por favor, revisa tu bandeja de entrada y también la carpeta de spam."
+    },
+    "invalid": {
+        "title": "Login Inválido - Tio Broker CRM",
+        "formTitle": "¡Ups! Credenciales Inválidas",
+        "instructions": "El correo electrónico o la contraseña que ingresaste no son correctos. Por favor, verifica los datos e inténtalo de nuevo."
+    },
+    "noRealty": {
+        "title": "Acceso Bloqueado - Tio Broker CRM",
+        "mainHeading": "¡Casi listo!",
+        "subheading": "Tu acceso está pendiente de un último paso para que puedas empezar a disfrutar de la plataforma.",
+        "formTitle": "Acceso Pendiente",
+        "instructions1": "Parece que tu usuario aún no ha sido vinculado a una inmobiliaria.",
+        "instructions2": "Por favor, contacta al administrador del sistema para solicitar la liberación de tu acceso."
+    }
+}

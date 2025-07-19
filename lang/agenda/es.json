@@ -1,0 +1,50 @@
+{
+    "calendar": {
+        "addEventTitle": "Agendar Nuevo Evento",
+        "editEventTitle": "Editar Evento",
+        "defaultError": "Ocurrió un error desconocido.",
+        "fetchError": "Error al buscar datos del evento: ",
+        "deleteError": "Error al eliminar el evento: ",
+        "updateError": "Error al actualizar el evento: "
+    },
+    "buttons": {
+        "today": "Hoy",
+        "month": "Mes",
+        "week": "Semana",
+        "day": "Día",
+        "list": "Lista",
+        "delete": "Eliminar",
+        "cancel": "Cancelar",
+        "save": "Guardar",
+        "confirm": "Confirmar"
+    },
+    "form": {
+        "labels": {
+            "title": "Título*",
+            "type": "Tipo*",
+            "client": "Cliente",
+            "property": "Inmueble de la Visita",
+            "start": "Inicio*",
+            "end": "Fin*",
+            "description": "Descripción",
+            "feedback": "Feedback de la Visita",
+            "reminder": "Activar recordatorio"
+        },
+        "options": {
+            "meeting": "Reunión",
+            "visit": "Visita",
+            "other": "Otro"
+        },
+        "placeholders": {
+            "feedback": "¿Qué le pareció el inmueble al cliente?"
+        },
+        "selects": {
+            "chooseClient": "Seleccione un cliente",
+            "chooseProperty": "Seleccione un inmueble"
+        }
+    },
+    "confirmDelete": {
+        "title": "Confirmar Eliminación",
+        "message": "¿Está seguro de que desea eliminar este evento?"
+    }
+}
