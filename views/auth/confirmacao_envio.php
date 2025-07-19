@@ -3,27 +3,16 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Acesso Bloqueado - Tio Broker CRM</title>
+    <title>Link Enviado - Tio Broker CRM</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Font Awesome para ícones -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
     <style>
-        /* Define a fonte base para o corpo do documento */
         body {
             font-family: 'Inter', sans-serif;
         }
 
-        /* Animações de Entrada */
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -46,7 +35,6 @@
             }
         }
 
-        /* Classes utilitárias para aplicar as animações */
         .animate-fade-in {
             animation: fadeIn 0.5s ease-out forwards;
         }
@@ -86,63 +74,27 @@
 </head>
 
 <body class="bg-gray-100 bg-login">
-
     <div class="min-h-screen flex items-center justify-center p-4">
-
-        <!-- Container principal com layout de duas colunas -->
         <div class="flex w-full max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden">
-
-            <!-- Coluna da Esquerda (Branding) - Visível em telas médias e maiores -->
             <div class="hidden md:flex md:w-1/2 bg-gradient-to-br from-blue-700 to-blue-900 p-12 text-white flex-col justify-between relative overflow-hidden opacity-0 animate-fade-in">
-                <!-- Ícone de fundo decorativo -->
-                <div class="absolute inset-0 flex items-center justify-center">
-                    <i class="fas fa-house-chimney text-white opacity-10 text-[18rem] transform -rotate-12"></i>
-                </div>
-
-                <!-- Conteúdo -->
+                <div class="absolute inset-0 flex items-center justify-center"><i class="fas fa-house-chimney text-white opacity-10 text-[18rem] transform -rotate-12"></i></div>
                 <div class="relative z-10">
-                    <!-- Logo completa, com altura definida e largura automática para manter a proporção -->
                     <img src="../assets/img/tio_broker_dark.png" alt="Logo Tio Broker" class="h-12 w-auto mb-8" onerror="this.onerror=null;this.src='https://placehold.co/200x50/ffffff/FFFFFF?text=Tio+Broker&font=inter';">
-                    <h1 class="text-3xl font-bold tracking-tight">Quase lá!</h1>
-                    <p class="mt-4 text-blue-200">Seu acesso está pendente de uma última etapa para você começar a aproveitar a plataforma.</p>
+                    <h1 class="text-3xl font-bold tracking-tight">Tudo certo!</h1>
+                    <p class="mt-4 text-blue-200">O próximo passo para recuperar seu acesso está na sua caixa de entrada.</p>
                 </div>
-                <div class="relative z-10 text-sm text-blue-300">
-                    &copy; <?php echo date('Y'); ?> Tio Broker.
-                </div>
+                <div class="relative z-10 text-sm text-blue-300">&copy; <?= date('Y'); ?> Tio Broker.</div>
             </div>
-
-            <!-- Coluna da Direita (Mensagem de Acesso Bloqueado) -->
             <div class="w-full md:w-1/2 p-8 sm:p-12 flex flex-col justify-center items-center text-center">
-
-                <!-- Ícone de Acesso Pendente -->
-                <div class="text-yellow-500 mb-4 opacity-0 animate-fade-in-up" style="animation-delay: 0.1s;">
-                    <i class="fas fa-user-lock fa-4x"></i>
+                <div class="text-green-500 mb-4 opacity-0 animate-fade-in-up" style="animation-delay: 0.1s;"><i class="fas fa-paper-plane fa-4x"></i></div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2 opacity-0 animate-fade-in-up" style="animation-delay: 0.2s;">Link Enviado!</h2>
+                <p class="text-gray-600 mb-8 max-w-sm opacity-0 animate-fade-in-up" style="animation-delay: 0.3s;">Se o e-mail informado estiver em nosso sistema, enviaremos um link de redefinição. Por favor, verifique sua caixa de entrada e também a pasta de spam.</p>
+                <div class="opacity-0 animate-fade-in-up" style="animation-delay: 0.4s;">
+                    <a href="login.php" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:-translate-y-0.5"><i class="fas fa-arrow-left mr-2"></i> Voltar ao Login</a>
                 </div>
-
-                <!-- Título -->
-                <h2 class="text-2xl font-bold text-gray-800 mb-2 opacity-0 animate-fade-in-up" style="animation-delay: 0.2s;">Acesso Pendente</h2>
-
-                <!-- Mensagem -->
-                <p class="text-gray-600 mb-4 max-w-sm opacity-0 animate-fade-in-up" style="animation-delay: 0.3s;">
-                    Parece que seu usuário ainda não foi vinculado a uma imobiliária.
-                </p>
-                <p class="text-gray-600 mb-8 max-w-sm opacity-0 animate-fade-in-up" style="animation-delay: 0.4s;">
-                    Por favor, entre em contato com o administrador do sistema para solicitar a liberação do seu acesso.
-                </p>
-
-                <!-- Botão de voltar -->
-                <div class="opacity-0 animate-fade-in-up" style="animation-delay: 0.5s;">
-                    <a href="login.php" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:-translate-y-0.5">
-                        <i class="fas fa-arrow-left mr-2"></i> Voltar ao Login
-                    </a>
-                </div>
-
             </div>
-
         </div>
-
     </div>
-
 </body>
 
 </html>

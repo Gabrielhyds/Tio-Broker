@@ -1,52 +1,71 @@
 <?php
+
 class PasswordResetModel
 {
-    // Propriedade privada para armazenar a conexão com o banco de dados.
+    /**
+     * @var mysqli A conexão com o banco de dados.
+     */
     private $conn;
 
-    // Construtor da classe, que recebe a conexão ao ser instanciada.
+    /**
+     * Construtor da classe.
+     * @param mysqli $conn A instância da conexão com o banco de dados.
+     */
     public function __construct($conn)
     {
-        // Atribui a conexão recebida à propriedade da classe.
         $this->conn = $conn;
     }
 
-    // Cria um novo token de redefinição de senha no banco de dados.
+    /**
+     * Cria um novo token de redefinição de senha no banco de dados.
+     * @param int $user_id O ID do usuário.
+     * @param string $token O token seguro gerado.
+     * @return bool Retorna true em caso de sucesso, false em caso de falha.
+     */
     public function createToken($user_id, $token)
     {
-        // Define a data de expiração (1 hora a partir de agora)
+        // Define a data de expiração para 1 hora a partir de agora.
         $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
 
-        $stmt = $this->conn->prepare("INSERT INTO password_resets (user_id, token, created_at, expires_at) VALUES (?, ?, NOW(), ?)");
+        $stmt = $this->conn->prepare(
+            "INSERT INTO password_resets (user_id, token, expires_at, used) VALUES (?, ?, ?, FALSE)"
+        );
+        // "iss" -> integer, string, string
         $stmt->bind_param("iss", $user_id, $token, $expiresAt);
+
         return $stmt->execute();
     }
 
-    // Busca e valida um token no banco de dados.
+    /**
+     * Busca e valida um token no banco de dados.
+     * Retorna os dados do token apenas se ele existir, não tiver sido usado e não tiver expirado.
+     * @param string $token O token a ser validado.
+     * @return array|null Retorna os dados do token ou null se for inválido.
+     */
     public function getToken($token)
     {
-        // Define a SQL para buscar um token que seja válido e tenha sido criado na última hora.
-        $sql = "SELECT * FROM password_resets WHERE token = ? AND created_at >= (NOW() - INTERVAL 1 HOUR)";
-        // Prepara a consulta.
+        // Consulta o token que não foi usado e cuja data de expiração é maior que o tempo atual.
+        $sql = "SELECT * FROM password_resets WHERE token = ? AND used = FALSE AND expires_at > NOW()";
+
         $stmt = $this->conn->prepare($sql);
-        // Associa o token (string 's') à consulta.
         $stmt->bind_param("s", $token);
-        // Executa a consulta.
         $stmt->execute();
-        // Obtém o conjunto de resultados.
         $result = $stmt->get_result();
-        // Retorna os dados do token como um array associativo, ou null se não for encontrado ou tiver expirado.
+
         return $result->fetch_assoc();
     }
 
-    // Deleta um token do banco de dados após ele ter sido usado.
-    public function deleteToken($token)
+    /**
+     * Invalida um token marcando-o como usado no banco de dados.
+     * Esta é uma abordagem mais segura do que deletar, pois mantém um registro da utilização.
+     * @param string $token O token a ser invalidado.
+     * @return bool Retorna true em caso de sucesso, false em caso de falha.
+     */
+    public function invalidateToken($token)
     {
-        // Prepara uma instrução SQL para deletar o registro do token.
-        $stmt = $this->conn->prepare("DELETE FROM password_resets WHERE token = ?");
-        // Associa o token (string 's') à instrução.
+        $stmt = $this->conn->prepare("UPDATE password_resets SET used = TRUE WHERE token = ?");
         $stmt->bind_param("s", $token);
-        // Executa a instrução de exclusão.
-        $stmt->execute();
+
+        return $stmt->execute();
     }
 }
