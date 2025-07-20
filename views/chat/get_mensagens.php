@@ -1,17 +1,13 @@
 <?php
 /*
 |--------------------------------------------------------------------------
-| ARQUIVO: views/chat/get_mensagens.php (VERSÃO FINAL CORRIGIDA)
+| ARQUIVO: views/chat/get_mensagens.php (VERSÃO CORRIGIDA)
 |--------------------------------------------------------------------------
-| Adicionada a classe 'translating' aos botões de opções para evitar
-| o "pisca-pisca" do idioma ao carregar as mensagens.
+| O texto dos botões agora é gerado apenas pelo PHP no servidor.
+| Os atributos 'data-i18n' e a classe 'translating' foram removidos
+| para impedir que o JavaScript do lado do cliente os modifique,
+| resolvendo o problema dos botões em branco.
 */
-
-// Arquivo: get_mensagens.php
-
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
-
 
 require_once '../../config/config.php';
 require_once '../../models/Chat.php';
@@ -77,8 +73,8 @@ foreach ($mensagens as $key => $m) {
     $dataAtual = date('Y-m-d', strtotime($m['data_envio']));
     if ($dataAtual !== $dataAnterior) {
         echo '<div class="flex justify-center my-4">
-                  <span class="bg-gray-200 text-gray-600 text-xs font-semibold px-3 py-1 rounded-full">' . $formatarDataSeparador($dataAtual, $lang) . '</span>
-              </div>';
+                    <span class="bg-gray-200 text-gray-600 text-xs font-semibold px-3 py-1 rounded-full">' . $formatarDataSeparador($dataAtual, $lang) . '</span>
+                  </div>';
         $dataAnterior = $dataAtual;
     }
 
@@ -127,12 +123,12 @@ foreach ($mensagens as $key => $m) {
                         </svg>
                     </button>
                     <div class="dropdown-opcoes absolute z-40 right-0 mt-1 w-36 bg-white border rounded-lg shadow-xl hidden">
-                        <!-- **CORREÇÃO**: Adicionada a classe 'translating' -->
-                        <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 btn-reagir translating" data-i18n="options.react" data-id-mensagem="<?= $m['id_mensagem'] ?>"><?= $t('options.react', 'Reagir') ?></button>
-                        <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 translating" data-i18n="options.edit"><?= $t('options.edit', 'Editar') ?></button>
-                        <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 translating" data-i18n="options.reply"><?= $t('options.reply', 'Responder') ?></button>
+                        <!-- **CORREÇÃO**: Removidos data-i18n e a classe 'translating' -->
+                        <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 btn-reagir" data-id-mensagem="<?= $m['id_mensagem'] ?>"><?= $t('options.react', 'Reagir') ?></button>
+                        <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><?= $t('options.edit', 'Editar') ?></button>
+                        <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><?= $t('options.reply', 'Responder') ?></button>
                         <div class="border-t my-1"></div>
-                        <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 translating" data-i18n="options.delete"><?= $t('options.delete', 'Excluir') ?></button>
+                        <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"><?= $t('options.delete', 'Excluir') ?></button>
                     </div>
                 </div>
             </div>
