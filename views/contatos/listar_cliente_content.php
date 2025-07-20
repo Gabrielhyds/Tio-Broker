@@ -3,6 +3,9 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
+// Garante que a constante BASE_URL esteja disponível neste arquivo.
+require_once __DIR__ . '/../../config/rotas.php';
 ?>
 <style>
     /* Estilo para um corpo de página mais suave */
@@ -136,7 +139,8 @@ if (session_status() === PHP_SESSION_NONE) {
             <span class="translating" data-i18n="list.title">Clientes Cadastrados</span>
         </h2>
         <div class="crm-actions">
-            <a href="index.php?controller=cliente&action=cadastrar" class="crm-btn crm-btn-primary">
+            <!-- CORREÇÃO APLICADA AQUI -->
+            <a href="<?= BASE_URL ?>views/contatos/index.php?controller=cliente&action=cadastrar" class="crm-btn crm-btn-primary">
                 <i class="fas fa-plus-circle mr-2"></i> <span class="translating" data-i18n="list.newClient">Novo Cliente</span>
             </a>
         </div>
@@ -165,7 +169,8 @@ if (session_status() === PHP_SESSION_NONE) {
                 </div>
                 <h3 class="text-xl font-semibold text-gray-800 translating" data-i18n="list.empty.title">Nenhum Cliente Encontrado</h3>
                 <p class="text-gray-500 mt-2 translating" data-i18n="list.empty.message">Parece que ainda não há clientes cadastrados no sistema.</p>
-                <a href="index.php?controller=cliente&action=cadastrar" class="crm-btn crm-btn-primary mt-6">
+                <!-- CORREÇÃO APLICADA AQUI -->
+                <a href="<?= BASE_URL ?>views/contatos/index.php?controller=cliente&action=cadastrar" class="crm-btn crm-btn-primary mt-6">
                     <i class="fas fa-user-plus mr-2"></i> <span class="translating" data-i18n="list.empty.button">Adicionar Primeiro Cliente</span>
                 </a>
             </div>
@@ -227,7 +232,8 @@ if (session_status() === PHP_SESSION_NONE) {
                                     <div class="text-xs text-gray-400"><?= isset($cliente['criado_em']) ? date('H:i', strtotime($cliente['criado_em'])) : '' ?></div>
                                 </td>
                                 <td class="p-4 whitespace-nowrap text-center text-sm font-medium">
-                                    <a href="index.php?controller=cliente&action=mostrar&id_cliente=<?= $cliente['id_cliente'] ?>" class="text-blue-600 hover:text-blue-900 inline-flex items-center">
+                                    <!-- CORREÇÃO APLICADA AQUI -->
+                                    <a href="<?= BASE_URL ?>views/contatos/index.php?controller=cliente&action=mostrar&id_cliente=<?= $cliente['id_cliente'] ?>" class="text-blue-600 hover:text-blue-900 inline-flex items-center">
                                         <i class="fas fa-eye"></i> <!-- Ícone Corrigido -->
                                         <span class="hidden md:inline ml-1 translating" data-i18n="list.table.details">Detalhes</span>
                                     </a>
