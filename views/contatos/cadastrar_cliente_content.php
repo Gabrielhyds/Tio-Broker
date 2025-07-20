@@ -14,6 +14,7 @@ if (session_status() === PHP_SESSION_NONE) {
         cursor: pointer;
         transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
         position: relative;
+        min-height: 150px; /* Garante uma altura mínima */
     }
     .image-upload-container:hover {
         background-color: #f8fafc;
@@ -24,7 +25,7 @@ if (session_status() === PHP_SESSION_NONE) {
         position: relative;
         width: 150px;
         height: 150px;
-        margin: 0 auto;
+        margin: 0; /* CORREÇÃO: Alinha o wrapper da imagem à esquerda */
     }
     .image-preview {
         width: 100%;
@@ -68,7 +69,7 @@ if (session_status() === PHP_SESSION_NONE) {
         <div>
             <label for="nome" class="block text-sm font-medium text-gray-700 translating" data-i18n="add.fullNameLabel">Nome Completo <span class="text-red-500">*</span></label>
             <input type="text" name="nome" id="nome" data-i18n-placeholder="add.fullNamePlaceholder" placeholder="Digite o nome completo"
-                class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 text-gray-900 shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                   class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 text-gray-900 shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
         </div>
         <div>
             <label class="block text-sm font-medium text-gray-700 translating" data-i18n="add.phoneLabel">Número de Telefone <span class="text-red-500">*</span></label>
@@ -79,7 +80,7 @@ if (session_status() === PHP_SESSION_NONE) {
                     <option value="PT">+351 🇵🇹</option>
                 </select>
                 <input type="text" name="numero" id="numero" data-i18n-placeholder="add.phonePlaceholder" placeholder="Digite o telefone"
-                    class="flex-1 rounded-md border border-gray-300 bg-gray-50 text-gray-900 shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                       class="flex-1 rounded-md border border-gray-300 bg-gray-50 text-gray-900 shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
             </div>
         </div>
     </div>
@@ -87,12 +88,12 @@ if (session_status() === PHP_SESSION_NONE) {
         <div>
             <label for="cpf" class="block text-sm font-medium text-gray-700 translating" data-i18n="add.cpfLabel">CPF <span class="text-red-500">*</span></label>
             <input type="text" name="cpf" id="cpf" data-i18n-placeholder="add.cpfPlaceholder" placeholder="000.000.000-00"
-                class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 text-gray-900 shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                   class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 text-gray-900 shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
         </div>
         <div>
             <label for="empreendimento" class="block text-sm font-medium text-gray-700 translating" data-i18n="add.interestLabel">Empreendimento de Interesse</label>
             <input type="text" name="empreendimento" id="empreendimento" data-i18n-placeholder="add.interestPlaceholder" placeholder="Ex: Residencial Alpha"
-                class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 text-gray-900 shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                   class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 text-gray-900 shadow-sm focus:ring-blue-500 focus:border-blue-500">
         </div>
     </div>
     <h3 class="text-md font-semibold text-gray-600 mt-6 translating" data-i18n="add.financialTitle">Informações Financeiras (opcional)</h3>
@@ -101,22 +102,22 @@ if (session_status() === PHP_SESSION_NONE) {
         <div>
             <label for="renda" class="block text-sm font-medium text-gray-700 translating" data-i18n="add.incomeLabel">Renda (R$)</label>
             <input type="text" name="renda" id="renda" data-i18n-placeholder="add.currencyPlaceholder" placeholder="R$ 0,00"
-                class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
+                   class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
         </div>
         <div>
             <label for="entrada" class="block text-sm font-medium text-gray-700 translating" data-i18n="add.downPaymentLabel">Entrada (R$)</label>
             <input type="text" name="entrada" id="entrada" data-i18n-placeholder="add.currencyPlaceholder" placeholder="R$ 0,00"
-                class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
+                   class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
         </div>
         <div>
             <label for="fgts" class="block text-sm font-medium text-gray-700 translating" data-i18n="add.fgtsLabel">FGTS (R$)</label>
             <input type="text" name="fgts" id="fgts" data-i18n-placeholder="add.currencyPlaceholder" placeholder="R$ 0,00"
-                class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
+                   class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
         </div>
         <div>
             <label for="subsidio" class="block text-sm font-medium text-gray-700 translating" data-i18n="add.subsidyLabel">Subsídio (R$)</label>
             <input type="text" name="subsidio" id="subsidio" data-i18n-placeholder="add.currencyPlaceholder" placeholder="R$ 0,00"
-                class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
+                   class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
         </div>
     </div>
 
@@ -124,8 +125,8 @@ if (session_status() === PHP_SESSION_NONE) {
     <div>
         <label class="block text-sm font-medium text-gray-700 translating" data-i18n="add.photoUrlLabel">Foto do Cliente</label>
         <div class="mt-1">
-            <label for="foto_arquivo" id="upload-label" class="image-upload-container">
-                <div id="upload-prompt">
+            <label for="foto_arquivo" id="upload-label" class="image-upload-container flex flex-col justify-center items-center">
+                <div id="upload-prompt" class="text-center">
                     <i class="fas fa-cloud-upload-alt text-4xl text-gray-400"></i>
                     <p class="mt-2 text-sm text-gray-600">
                         <span class="font-semibold text-blue-600">Clique para enviar</span> ou arraste e solte
@@ -147,7 +148,7 @@ if (session_status() === PHP_SESSION_NONE) {
     <div>
         <label for="tipo_lista" class="block text-sm font-medium text-gray-700 translating" data-i18n="add.classificationLabel">Classificação do Cliente <span class="text-red-500">*</span></label>
         <select name="tipo_lista" id="tipo_lista"
-            class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500" required>
+                class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500" required>
             <option disabled selected value="" class="translating" data-i18n="add.selectOption">Selecione uma opção</option>
             <option value="Potencial" class="translating" data-i18n="common.potential">Potencial</option>
             <option value="Não potencial" class="translating" data-i18n="common.notPotential">Não potencial</option>
@@ -167,7 +168,7 @@ if (session_status() === PHP_SESSION_NONE) {
     document.addEventListener('DOMContentLoaded', function() {
         // ... (seu código de tradução e máscaras permanece aqui)
 
-        // Script para o upload de imagem
+        // SCRIPT CORRIGIDO para o upload de imagem
         const inputArquivo = document.getElementById('foto_arquivo');
         const previewWrapper = document.getElementById('image-preview-wrapper');
         const previewImage = document.getElementById('preview-img');
@@ -178,8 +179,10 @@ if (session_status() === PHP_SESSION_NONE) {
             const file = this.files[0];
             if (file) {
                 const reader = new FileReader();
+                // Esconde a área de upload e mostra a pré-visualização
                 uploadLabel.style.display = 'none';
                 previewWrapper.style.display = 'block';
+
                 reader.onload = function(e) {
                     previewImage.src = e.target.result;
                 }
@@ -190,8 +193,9 @@ if (session_status() === PHP_SESSION_NONE) {
         removeButton.addEventListener('click', function() {
             inputArquivo.value = ''; // Limpa o arquivo selecionado
             previewImage.src = '#';
+            // Esconde a pré-visualização e mostra a área de upload novamente
             previewWrapper.style.display = 'none';
-            uploadLabel.style.display = 'block';
+            uploadLabel.style.display = 'flex'; 
         });
 
         // O resto do seu script...
