@@ -1,12 +1,11 @@
 <?php
 /*
 |--------------------------------------------------------------------------
-| ARQUIVO: views/chat/get_mensagens.php (VERSÃO CORRIGIDA)
+| ARQUIVO: views/chat/get_mensagens.php (VERSÃO COM FOTOS)
 |--------------------------------------------------------------------------
-| O texto dos botões agora é gerado apenas pelo PHP no servidor.
-| Os atributos 'data-i18n' e a classe 'translating' foram removidos
-| para impedir que o JavaScript do lado do cliente os modifique,
-| resolvendo o problema dos botões em branco.
+| - Adicionada lógica para exibir a foto real do usuário.
+| - Se não houver foto, exibe um avatar com a inicial do nome como fallback.
+| - Adicionada a classe 'object-cover' para evitar distorção da imagem.
 */
 
 require_once '../../config/config.php';
@@ -88,8 +87,19 @@ foreach ($mensagens as $key => $m) {
     if ($isAgrupada) {
         $bolhaClasses .= $isMinha ? ' rounded-tr-lg' : ' rounded-tl-lg';
     }
-    $avatar_inicial = mb_strtoupper(mb_substr($m['nome_usuario'], 0, 1));
-    $avatar_url = "https://placehold.co/100x100/7c3aed/ffffff?text={$avatar_inicial}";
+
+    // **MELHORIA**: Lógica para definir a URL do avatar.
+    $avatar_url = '';
+    if (!empty($m['foto'])) {
+        // Assume que as fotos estão na pasta 'public/uploads/profile_photos/'
+        // Altere este caminho se suas fotos estiverem em outro lugar.
+        $avatar_url = '../../uploads/' . htmlspecialchars($m['foto']);
+    } else {
+        // Fallback: se não houver foto, gera o avatar com a inicial.
+        $avatar_inicial = mb_strtoupper(mb_substr($m['nome_usuario'], 0, 1));
+        $avatar_url = "https://placehold.co/100x100/7c3aed/ffffff?text={$avatar_inicial}";
+    }
+
     $statusLida = $isMinha ? '<span class="text-xs ml-2 ' . ($m['lida'] ? 'text-blue-400' : 'text-gray-300') . '">✓✓</span>' : '';
     $reacoesHtml = '';
     if (!empty($m['reacoes'])) {
@@ -103,7 +113,8 @@ foreach ($mensagens as $key => $m) {
     <div class="flex items-start gap-3 max-w-xl <?= $isMinha ? 'flex-row-reverse ml-auto' : 'mr-auto' ?> <?= $containerClasses ?>">
         <div class="w-10 h-10 flex-shrink-0">
             <?php if (!$isAgrupada): ?>
-                <img src="<?= $avatar_url ?>" class="w-full h-full rounded-full" alt="Avatar de <?= htmlspecialchars($m['nome_usuario']) ?>">
+                <!-- **MELHORIA**: A classe 'object-cover' garante que a foto preencha o círculo sem distorcer. -->
+                <img src="<?= $avatar_url ?>" class="w-full h-full rounded-full object-cover" alt="Avatar de <?= htmlspecialchars($m['nome_usuario']) ?>">
             <?php endif; ?>
         </div>
         <div class="flex flex-col <?= $isMinha ? 'items-end' : 'items-start' ?>">
@@ -123,7 +134,6 @@ foreach ($mensagens as $key => $m) {
                         </svg>
                     </button>
                     <div class="dropdown-opcoes absolute z-40 right-0 mt-1 w-36 bg-white border rounded-lg shadow-xl hidden">
-                        <!-- **CORREÇÃO**: Removidos data-i18n e a classe 'translating' -->
                         <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 btn-reagir" data-id-mensagem="<?= $m['id_mensagem'] ?>"><?= $t('options.react', 'Reagir') ?></button>
                         <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><?= $t('options.edit', 'Editar') ?></button>
                         <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><?= $t('options.reply', 'Responder') ?></button>

@@ -89,9 +89,11 @@ class Chat
     // MÉTODO ATUALIZADO: Lista todas as mensagens de uma conversa, incluindo suas reações.
     public function listarMensagensDaConversa($id_conversa)
     {
-        // 1. Busca todas as mensagens da conversa, juntando com a tabela de usuários para obter o nome do remetente.
+        // 1. Busca todas as mensagens, juntando com a tabela de usuários para obter o nome e a foto do perfil.
         $query_mensagens = "
-            SELECT m.id_mensagem, m.id_conversa, m.id_usuario, m.mensagem, m.data_envio, m.lida, u.nome AS nome_usuario
+            SELECT 
+                m.id_mensagem, m.id_conversa, m.id_usuario, m.mensagem, m.data_envio, m.lida, 
+                u.nome AS nome_usuario, u.foto
             FROM mensagens m
             JOIN usuario u ON m.id_usuario = u.id_usuario
             WHERE m.id_conversa = ?
@@ -103,24 +105,21 @@ class Chat
         $result_mensagens = $stmt_mensagens->get_result();
         $mensagens = $result_mensagens ? $result_mensagens->fetch_all(MYSQLI_ASSOC) : [];
 
-        // Se não houver mensagens, retorna um array vazio.
         if (empty($mensagens)) {
             return [];
         }
 
-        // 2. Extrai todos os IDs das mensagens encontradas para uma nova lista.
+        // 2. Extrai os IDs das mensagens para buscar as reações.
         $ids_mensagens = array_column($mensagens, 'id_mensagem');
 
-        // 3. Busca todas as reações para a lista de IDs de mensagens em uma única consulta otimizada.
+        // 3. Busca todas as reações para as mensagens em uma única consulta.
         $reacoes = $this->buscarReacoesParaMensagens($ids_mensagens);
 
-        // 4. Itera sobre cada mensagem e anexa o array de reações correspondente.
+        // 4. Anexa as reações a cada mensagem correspondente.
         foreach ($mensagens as $key => $mensagem) {
-            // Usa o ID da mensagem como chave para encontrar suas reações. Se não houver, anexa um array vazio.
             $mensagens[$key]['reacoes'] = $reacoes[$mensagem['id_mensagem']] ?? [];
         }
 
-        // Retorna o array de mensagens, agora com as reações aninhadas.
         return $mensagens;
     }
 
@@ -292,4 +291,5 @@ class Chat
         }
         return $reacoes_agrupadas;
     }
+    
 }
