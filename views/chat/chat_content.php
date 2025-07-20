@@ -1,11 +1,10 @@
 <?php
 /*
 |--------------------------------------------------------------------------
-| ARQUIVO: views/chat/chat_content.php (VERSÃO FINAL)
+| ARQUIVO: views/chat/chat_content.php (VERSÃO COM TÍTULO DINÂMICO)
 |--------------------------------------------------------------------------
-| Adicionada a classe 'translating' para evitar o "pisca-pisca" do idioma.
-| O script foi simplificado para carregar apenas as traduções do módulo 'chat',
-| pois o template_base.php já cuida da tradução do layout.
+| - O título da coluna de mensagens agora exibe o nome do destinatário.
+| - Mantém as melhorias anteriores de avatares na lista de usuários.
 */
 ?>
 <!-- Estrutura principal da interface de chat -->
@@ -29,11 +28,29 @@
         <ul id="lista-usuarios" class="divide-y divide-gray-200">
             <?php foreach ($usuariosDisponiveis as $u): ?>
                 <?php if ($u['id_usuario'] == $id_usuario_logado) continue; ?>
-                <li>
-                    <a href="chat.php?id_destino=<?= $u['id_usuario'] ?>&id_imobiliaria=<?= $id_imobiliaria_filtro ?>" class="block px-4 py-3 hover:bg-gray-100 rounded-lg">
-                        <div class="font-semibold text-gray-800"><?= htmlspecialchars($u['nome']) ?></div>
-                        <div class="text-sm text-gray-500" data-user-id="<?= $u['id_usuario'] ?>">
-                            <?= isset($ultimasMensagens[$u['id_usuario']]) ? htmlspecialchars(substr($ultimasMensagens[$u['id_usuario']]['mensagem'], 0, 30)) . '...' : '<span class="translating" data-i18n="users.noConversation">Nenhuma conversa iniciada</span>' ?>
+                <li data-user-id="<?= $u['id_usuario'] ?>">
+                    <a href="chat.php?id_destino=<?= $u['id_usuario'] ?>&id_imobiliaria=<?= $id_imobiliaria_filtro ?>" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 rounded-lg">
+                        <div class="w-10 h-10 flex-shrink-0">
+                            <?php
+                            $avatar_url = '';
+                            if (!empty($u['foto'])) {
+                                $avatar_url = '../../public/uploads/profile_photos/' . htmlspecialchars($u['foto']);
+                            } else {
+                                $inicial = mb_strtoupper(mb_substr($u['nome'], 0, 1));
+                                $avatar_url = "https://placehold.co/100x100/7c3aed/ffffff?text={$inicial}";
+                            }
+                            ?>
+                            <img src="<?= $avatar_url ?>" class="w-full h-full rounded-full object-cover" alt="Avatar de <?= htmlspecialchars($u['nome']) ?>">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-center">
+                                <div class="font-semibold text-gray-800 truncate"><?= htmlspecialchars($u['nome']) ?></div>
+                                <span class="bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden" data-unread-count-for="<?= $u['id_usuario'] ?>"></span>
+                            </div>
+                            <div class="text-sm text-gray-500 truncate" data-last-message-for="<?= $u['id_usuario'] ?>">
+                                <?= isset($ultimasMensagens[$u['id_usuario']]) ? htmlspecialchars($ultimasMensagens[$u['id_usuario']]['mensagem']) : '<span class="translating" data-i18n="users.noConversation">Nenhuma conversa iniciada</span>' ?>
+                            </div>
+                            <input type="hidden" class="timestamp" value="<?= isset($ultimasMensagens[$u['id_usuario']]) ? strtotime($ultimasMensagens[$u['id_usuario']]['data_envio']) : 0 ?>">
                         </div>
                     </a>
                 </li>
@@ -43,7 +60,17 @@
 
     <!-- Coluna de Mensagens -->
     <div class="lg:col-span-3 bg-white rounded-xl shadow-md p-5">
-        <h2 class="text-xl font-bold mb-4 translating" data-i18n="messages.title">Mensagens</h2>
+        <!-- **MELHORIA**: O título agora é dinâmico. -->
+        <h2 class="text-xl font-bold mb-4">
+            <?php
+            if (isset($nome_destino) && $id_conversa_ativa) {
+                echo htmlspecialchars($nome_destino);
+            } else {
+                // Fallback para o título genérico se nenhuma conversa estiver ativa.
+                echo '<span class="translating" data-i18n="messages.title">Mensagens</span>';
+            }
+            ?>
+        </h2>
         <div id="mensagens" class="h-[calc(100vh-300px)] overflow-y-auto bg-gray-50 rounded p-4 space-y-2 relative overflow-visible">
             <?php if (!$id_conversa_ativa): ?>
                 <p class="text-center text-gray-400 translating" data-i18n="messages.startConversation">Selecione um colaborador para iniciar a conversa.</p>
@@ -87,7 +114,6 @@
 
         function applyTranslations() {
             document.querySelectorAll('[data-i18n]').forEach(el => {
-                // Não traduz novamente os elementos da sidebar, pois o template_base já fez isso.
                 if (!el.closest('#sidebar')) {
                     const key = el.dataset.i18n;
                     const translation = t(key);
@@ -131,6 +157,59 @@
                 });
         }
 
+        function updateUserList() {
+            fetch('get_chat_updates.php?t=' + Date.now())
+                .then(res => res.json())
+                .then(data => {
+                    const userList = document.getElementById('lista-usuarios');
+                    if (!userList) return;
+
+                    const userItems = Array.from(userList.querySelectorAll('li'));
+                    let needsReordering = false;
+
+                    userItems.forEach(item => {
+                        const userId = item.dataset.userId;
+                        if (!userId) return;
+                        
+                        const lastMessageEl = item.querySelector(`[data-last-message-for="${userId}"]`);
+                        const unreadCountEl = item.querySelector(`[data-unread-count-for="${userId}"]`);
+                        const timestampInput = item.querySelector('.timestamp');
+
+                        if (data[userId]) {
+                            const update = data[userId];
+                            const currentTimestamp = parseInt(timestampInput.value, 10);
+
+                            if (update.data_envio > currentTimestamp) {
+                                needsReordering = true;
+                                timestampInput.value = update.data_envio;
+                                if (lastMessageEl) {
+                                    lastMessageEl.textContent = update.mensagem.substring(0, 30) + (update.mensagem.length > 30 ? '...' : '');
+                                }
+                            }
+                            
+                            if (unreadCountEl) {
+                                if (update.total_nao_lidas > 0) {
+                                    unreadCountEl.textContent = update.total_nao_lidas;
+                                    unreadCountEl.classList.remove('hidden');
+                                } else {
+                                    unreadCountEl.classList.add('hidden');
+                                }
+                            }
+                        }
+                    });
+
+                    if (needsReordering) {
+                        const sortedItems = userItems.sort((a, b) => {
+                            const timeA = parseInt(a.querySelector('.timestamp').value, 10);
+                            const timeB = parseInt(b.querySelector('.timestamp').value, 10);
+                            return timeB - timeA;
+                        });
+                        sortedItems.forEach(item => userList.appendChild(item));
+                    }
+                })
+                .catch(console.error);
+        }
+
         function esconderSeletorReacao() {
             seletorReacao.classList.add('hidden');
         }
@@ -154,7 +233,6 @@
 
         async function initializeChat() {
             currentLang = "<?= $_SESSION['usuario']['configuracoes']['language'] ?? '' ?>" || localStorage.getItem('calendarLang') || 'pt-br';
-
             await loadChatTranslations(currentLang);
 
             const idConversa = <?= json_encode($id_conversa_ativa ?? null) ?>;
@@ -162,6 +240,8 @@
                 carregarMensagens();
                 pollingInterval = setInterval(carregarMensagens, 3000);
             }
+            
+            setInterval(updateUserList, 5000);
         }
 
         initializeChat();
@@ -170,30 +250,39 @@
             const btnOpcoes = e.target.closest('.btn-opcoes');
             if (btnOpcoes) {
                 e.stopPropagation();
-                document.querySelectorAll('.dropdown-opcoes').forEach(d => d.classList.add('hidden'));
-                const dropdown = btnOpcoes.nextElementSibling;
-                if (dropdown) dropdown.classList.toggle('hidden');
+                const allDropdowns = document.querySelectorAll('.dropdown-opcoes');
+                const currentDropdown = btnOpcoes.nextElementSibling;
+                allDropdowns.forEach(d => {
+                    if (d !== currentDropdown) {
+                        d.classList.add('hidden');
+                    }
+                });
+                if (currentDropdown) currentDropdown.classList.toggle('hidden');
                 return;
             }
+            
             const btnReagir = e.target.closest('.btn-reagir');
             if (btnReagir) {
                 e.stopPropagation();
                 const idMensagem = btnReagir.dataset.idMensagem;
                 seletorReacao.dataset.idMensagem = idMensagem;
                 const rect = btnReagir.getBoundingClientRect();
-                seletorReacao.style.top = `${rect.bottom + 5}px`;
-                seletorReacao.style.left = `${rect.left + rect.width / 2 - seletorReacao.offsetWidth / 2}px`;
+                seletorReacao.style.top = `${window.scrollY + rect.bottom + 5}px`;
+                seletorReacao.style.left = `${window.scrollX + rect.left + rect.width / 2 - seletorReacao.offsetWidth / 2}px`;
                 seletorReacao.classList.remove('hidden');
                 return;
             }
+            
             const emoji = e.target.closest('.emoji-reacao');
             if (emoji) {
                 const id = seletorReacao.dataset.idMensagem;
                 enviarReacao(id, emoji.dataset.reacao);
                 return;
             }
+
             esconderSeletorReacao();
             document.querySelectorAll('.dropdown-opcoes').forEach(d => d.classList.add('hidden'));
+            
             const emojiBtn = document.getElementById('emoji-btn');
             const emojiPicker = document.querySelector('emoji-picker');
             if (emojiBtn && emojiPicker && !emojiBtn.contains(e.target) && !emojiPicker.contains(e.target)) {

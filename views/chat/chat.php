@@ -1,11 +1,10 @@
 <?php
 /*
 |--------------------------------------------------------------------------
-| ARQUIVO: views/chat/chat.php
+| ARQUIVO: views/chat/chat.php (VERSÃO ATUALIZADA)
 |--------------------------------------------------------------------------
-| Este é o arquivo principal que prepara os dados e carrega o template.
-| Nenhuma alteração de tradução é necessária aqui, mas ele está incluído
-| para que você tenha o contexto completo.
+| - Adicionada lógica para buscar o nome do usuário de destino.
+| - A variável $nome_destino agora é passada para o template.
 */
 
 // Inclui os arquivos de configuração, o modelo de Usuário e o modelo de Chat.
@@ -70,10 +69,18 @@ usort($usuariosDisponiveis, function ($a, $b) use ($ultimasMensagens) {
 
 // Obtém o ID do usuário de destino da URL para iniciar ou abrir uma conversa.
 $id_destino = $_GET['id_destino'] ?? null;
-// Inicializa a variável da conversa ativa como nula.
 $id_conversa_ativa = null;
+$nome_destino = null; // **NOVO**: Inicializa a variável para o nome.
+
 // Se um usuário de destino foi selecionado.
 if ($id_destino) {
+    // **NOVO**: Busca os dados do usuário de destino para obter o nome.
+    // (Assumindo que seu modelo tem um método como 'buscarPorId')
+    $usuarioDestino = $usuarioModel->buscarPorId($id_destino); 
+    if ($usuarioDestino) {
+        $nome_destino = $usuarioDestino['nome'];
+    }
+
     // Busca se já existe uma conversa privada entre o usuário logado e o destino.
     $id_conversa_ativa = $chat->buscarConversaPrivadaEntre($id_usuario_logado, $id_destino);
     // Se não existir uma conversa.
