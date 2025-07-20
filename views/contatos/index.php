@@ -1,8 +1,4 @@
 <?php
-// Habilita a exibição de todos os erros para depuração.
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 
 // Garante que uma sessão PHP seja iniciada se ainda não estiver ativa.
 if (session_status() == PHP_SESSION_NONE) {
@@ -40,7 +36,7 @@ if (file_exists($controllerFile)) {
                 echo "Erro de Roteamento: A ação '{$action}' não foi encontrada no controller '{$controllerClass}'.";
                 exit;
             }
-        // CORREÇÃO: O bloco catch agora exibirá a mensagem de erro detalhada.
+            // CORREÇÃO: O bloco catch agora exibirá a mensagem de erro detalhada.
         } catch (Exception $e) {
             echo "<h1>Erro Crítico</h1>";
             echo "<p>Ocorreu um erro ao tentar carregar o controller '{$controllerClass}'.</p>";
