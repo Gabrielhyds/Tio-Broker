@@ -34,7 +34,7 @@
                             <?php
                             $avatar_url = '';
                             if (!empty($u['foto'])) {
-                                $avatar_url = '../../public/uploads/profile_photos/' . htmlspecialchars($u['foto']);
+                                $avatar_url = '../../uploads/' . htmlspecialchars($u['foto']);
                             } else {
                                 $inicial = mb_strtoupper(mb_substr($u['nome'], 0, 1));
                                 $avatar_url = "https://placehold.co/100x100/7c3aed/ffffff?text={$inicial}";
