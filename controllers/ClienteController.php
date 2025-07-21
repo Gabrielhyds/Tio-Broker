@@ -82,10 +82,11 @@ class ClienteController
                 'numero' => $_POST['numero'],
                 'cpf' => $_POST['cpf'],
                 'empreendimento' => $_POST['empreendimento'] ?? null,
-                'renda' => !empty($_POST['renda']) ? (float)str_replace(['R$', '.', ','], ['', '', '.'], $_POST['renda']) : null,
-                'entrada' => !empty($_POST['entrada']) ? (float)str_replace(['R$', '.', ','], ['', '', '.'], $_POST['entrada']) : null,
-                'fgts' => !empty($_POST['fgts']) ? (float)str_replace(['R$', '.', ','], ['', '', '.'], $_POST['fgts']) : null,
-                'subsidio' => !empty($_POST['subsidio']) ? (float)str_replace(['R$', '.', ','], ['', '', '.'], $_POST['subsidio']) : null,
+                // CORREÇÃO: Converte o valor diretamente para float, pois o JS já o envia limpo (ex: "1234.56").
+                'renda' => !empty($_POST['renda']) ? (float)$_POST['renda'] : null,
+                'entrada' => !empty($_POST['entrada']) ? (float)$_POST['entrada'] : null,
+                'fgts' => !empty($_POST['fgts']) ? (float)$_POST['fgts'] : null,
+                'subsidio' => !empty($_POST['subsidio']) ? (float)$_POST['subsidio'] : null,
                 'foto' => $caminhoFoto,
                 'tipo_lista' => $_POST['tipo_lista'],
                 'id_usuario' => $_SESSION['usuario']['id_usuario'],
@@ -130,7 +131,6 @@ class ClienteController
     {
         $this->verificarLogin();
         if (!isset($_GET['id_cliente']) || !is_numeric($_GET['id_cliente'])) {
-            // CORREÇÃO: Usa uma variável de sessão específica para a lista
             $_SESSION['mensagem_erro_lista'] = "ID do cliente inválido para edição.";
             header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=listar');
             exit;
@@ -160,10 +160,11 @@ class ClienteController
                 'numero' => $_POST['numero'],
                 'cpf' => $_POST['cpf'],
                 'empreendimento' => $_POST['empreendimento'] ?? null,
-                'renda' => !empty($_POST['renda']) ? (float)str_replace(['R$', '.', ','], ['', '', '.'], $_POST['renda']) : null,
-                'entrada' => !empty($_POST['entrada']) ? (float)str_replace(['R$', '.', ','], ['', '', '.'], $_POST['entrada']) : null,
-                'fgts' => !empty($_POST['fgts']) ? (float)str_replace(['R$', '.', ','], ['', '', '.'], $_POST['fgts']) : null,
-                'subsidio' => !empty($_POST['subsidio']) ? (float)str_replace(['R$', '.', ','], ['', '', '.'], $_POST['subsidio']) : null,
+                // CORREÇÃO: Converte o valor diretamente para float, pois o JS já o envia limpo (ex: "1234.56").
+                'renda' => !empty($_POST['renda']) ? (float)$_POST['renda'] : null,
+                'entrada' => !empty($_POST['entrada']) ? (float)$_POST['entrada'] : null,
+                'fgts' => !empty($_POST['fgts']) ? (float)$_POST['fgts'] : null,
+                'subsidio' => !empty($_POST['subsidio']) ? (float)$_POST['subsidio'] : null,
                 'foto' => $caminhoFotoFinal,
                 'tipo_lista' => $_POST['tipo_lista'],
             ];
@@ -179,7 +180,6 @@ class ClienteController
         } else {
             $cliente = $this->clienteModel->buscarPorId($idCliente);
             if (!$cliente) {
-                // CORREÇÃO: Usa uma variável de sessão específica para a lista
                 $_SESSION['mensagem_erro_lista'] = "Não foi possível carregar os dados do cliente para edição.";
                 header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=listar');
                 exit;
@@ -201,7 +201,6 @@ class ClienteController
             if ($this->clienteModel->excluir($idCliente)) {
                 $_SESSION['mensagem_sucesso'] = "Cliente excluído com sucesso!";
             } else {
-                // CORREÇÃO: Usa uma variável de sessão específica para a lista
                 $_SESSION['mensagem_erro_lista'] = "Erro ao excluir cliente.";
             }
         }
