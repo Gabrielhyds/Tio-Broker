@@ -76,13 +76,30 @@ class ClienteController
     {
         $this->verificarLogin();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+            // --- VALIDAÇÃO DOS DADOS DE ENTRADA ---
+            if (!validarCpf($_POST['cpf'])) {
+                $_SESSION['mensagem_erro_form'] = "CPF inválido. Por favor, verifique o número digitado.";
+                // ALTERAÇÃO: Salva os dados do formulário na sessão antes de redirecionar
+                $_SESSION['form_data'] = $_POST;
+                header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=cadastrar');
+                exit;
+            }
+            if (!validarTelefone($_POST['numero'])) {
+                $_SESSION['mensagem_erro_form'] = "Número de telefone inválido.";
+                // ALTERAÇÃO: Salva os dados do formulário na sessão antes de redirecionar
+                $_SESSION['form_data'] = $_POST;
+                header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=cadastrar');
+                exit;
+            }
+            // --- FIM DA VALIDAÇÃO ---
+
             $caminhoFoto = $this->handleFileUpload();
             $dados = [
                 'nome' => $_POST['nome'],
                 'numero' => $_POST['numero'],
                 'cpf' => $_POST['cpf'],
                 'empreendimento' => $_POST['empreendimento'] ?? null,
-                // CORREÇÃO: Converte o valor diretamente para float, pois o JS já o envia limpo (ex: "1234.56").
                 'renda' => !empty($_POST['renda']) ? (float)$_POST['renda'] : null,
                 'entrada' => !empty($_POST['entrada']) ? (float)$_POST['entrada'] : null,
                 'fgts' => !empty($_POST['fgts']) ? (float)$_POST['fgts'] : null,
@@ -100,6 +117,8 @@ class ClienteController
                 if ($caminhoFoto && file_exists(__DIR__ . '/../' . $caminhoFoto)) {
                     unlink(__DIR__ . '/../' . $caminhoFoto);
                 }
+                // ALTERAÇÃO: Salva os dados do formulário na sessão em caso de erro no banco
+                $_SESSION['form_data'] = $_POST;
                 header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=cadastrar');
             }
             exit;
@@ -138,6 +157,24 @@ class ClienteController
         $idCliente = (int)$_GET['id_cliente'];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+            // --- VALIDAÇÃO DOS DADOS DE ENTRADA ---
+            if (!validarCpf($_POST['cpf'])) {
+                $_SESSION['mensagem_erro_form'] = "CPF inválido. Por favor, verifique o número digitado.";
+                // ALTERAÇÃO: Salva os dados do formulário na sessão antes de redirecionar
+                $_SESSION['form_data'] = $_POST;
+                header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=editar&id_cliente=' . $idCliente);
+                exit;
+            }
+            if (!validarTelefone($_POST['numero'])) {
+                $_SESSION['mensagem_erro_form'] = "Número de telefone inválido.";
+                // ALTERAÇÃO: Salva os dados do formulário na sessão antes de redirecionar
+                $_SESSION['form_data'] = $_POST;
+                header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=editar&id_cliente=' . $idCliente);
+                exit;
+            }
+            // --- FIM DA VALIDAÇÃO ---
+
             $clienteAtual = $this->clienteModel->buscarPorId($idCliente);
             $caminhoFotoAntiga = $clienteAtual['foto'];
             $caminhoFotoFinal = $caminhoFotoAntiga;
@@ -160,7 +197,6 @@ class ClienteController
                 'numero' => $_POST['numero'],
                 'cpf' => $_POST['cpf'],
                 'empreendimento' => $_POST['empreendimento'] ?? null,
-                // CORREÇÃO: Converte o valor diretamente para float, pois o JS já o envia limpo (ex: "1234.56").
                 'renda' => !empty($_POST['renda']) ? (float)$_POST['renda'] : null,
                 'entrada' => !empty($_POST['entrada']) ? (float)$_POST['entrada'] : null,
                 'fgts' => !empty($_POST['fgts']) ? (float)$_POST['fgts'] : null,
@@ -174,6 +210,8 @@ class ClienteController
                 header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=mostrar&id_cliente=' . $idCliente);
             } else {
                 $_SESSION['mensagem_erro'] = "Erro ao atualizar cliente.";
+                // ALTERAÇÃO: Salva os dados do formulário na sessão em caso de erro no banco
+                $_SESSION['form_data'] = $_POST;
                 header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=editar&id_cliente=' . $idCliente);
             }
             exit;
