@@ -1,18 +1,30 @@
 <?php
+/**
+ * @file
+ * Este arquivo renderiza o formulário para edição de um cliente existente.
+ * Ele pré-popula os campos com os dados do cliente carregados do banco de dados.
+ * Em caso de erro de validação, os campos são preenchidos com os dados submetidos
+ * anteriormente (armazenados na sessão).
+ * Inclui manipulação de UI via JavaScript para máscaras, formatação de moeda e
+ * gerenciamento da foto do cliente (exibição, substituição e remoção).
+ */
+
+// Verifica se os dados do cliente foram carregados. Se não, exibe um erro e interrompe a execução.
 if (!isset($cliente) || empty($cliente)) {
     echo "<div class='p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg' role='alert'>Não foi possível carregar os dados do cliente.</div>";
     return;
 }
 
-// ALTERAÇÃO: Pega os dados antigos do formulário da sessão, se existirem (após um erro de validação).
+// Recupera dados do formulário da sessão, se existirem (após um redirecionamento por erro de validação).
 $old_data = $_SESSION['form_data'] ?? [];
-// ALTERAÇÃO: Limpa os dados da sessão para não repopular o formulário em futuras visitas.
+// Limpa os dados da sessão para não serem reutilizados indevidamente.
 unset($_SESSION['form_data']);
 ?>
+<!-- Inclusão da biblioteca SweetAlert2 para exibição de alertas. -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <style>
-    /* Estilos permanecem os mesmos */
+    /* Estilização para o container de upload de imagem e sua pré-visualização. */
     .image-upload-container { border: 2px dashed #cbd5e1; border-radius: 0.5rem; padding: 1.5rem; text-align: center; cursor: pointer; transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out; position: relative; }
     .image-upload-container:hover { background-color: #f8fafc; border-color: #3b82f6; }
     .image-preview-wrapper { display: none; position: relative; width: 150px; height: 150px; margin: 0; }
@@ -26,6 +38,7 @@ unset($_SESSION['form_data']);
         <i class="fas fa-pencil-alt text-blue-600"></i> Editar Cliente
     </h2>
 
+    <?php // Exibe uma mensagem de erro geral do formulário, se houver uma na sessão. ?>
     <?php if (isset($_SESSION['mensagem_erro_form'])): ?>
         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
             <strong class="font-bold">Erro:</strong>
@@ -34,12 +47,13 @@ unset($_SESSION['form_data']);
         <?php unset($_SESSION['mensagem_erro_form']); ?>
     <?php endif; ?>
 
+    <!-- O formulário aponta para a action 'editar' e passa o ID do cliente como parâmetro na URL. -->
     <form method="POST" action="<?= BASE_URL ?>views/contatos/index.php?controller=cliente&action=editar&id_cliente=<?= htmlspecialchars($cliente['id_cliente']) ?>" class="space-y-6" id="edit-cliente-form" enctype="multipart/form-data">
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label for="nome" class="block text-sm font-medium text-gray-700">Nome Completo <span class="text-red-500">*</span></label>
-                <!-- ALTERAÇÃO: Prioriza os dados da sessão; se não houver, usa os dados do banco. -->
+                <!-- Prioriza dados da sessão ($old_data). Se não existirem, usa os dados do cliente vindos do banco. -->
                 <input type="text" name="nome" id="nome" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" value="<?= htmlspecialchars($old_data['nome'] ?? $cliente['nome'] ?? '') ?>" required>
             </div>
             <div>
@@ -90,11 +104,14 @@ unset($_SESSION['form_data']);
                 </label>
                 <div id="image-preview-wrapper" class="image-preview-wrapper">
                     <div class="image-preview">
+                        <!-- Exibe a foto existente do cliente, se houver. -->
                         <img id="preview-img" src="<?= !empty($cliente['foto']) ? BASE_URL . htmlspecialchars($cliente['foto']) : '#' ?>" alt="Pré-visualização da imagem">
                     </div>
                     <button type="button" id="remove-image" class="remove-image-btn" title="Remover foto">&times;</button>
                 </div>
+                <!-- Input de arquivo real (oculto). -->
                 <input type="file" name="foto_arquivo" id="foto_arquivo" class="hidden" accept="image/png, image/jpeg, image/gif">
+                <!-- Campo oculto para sinalizar ao backend a intenção de remover a foto existente. -->
                 <input type="hidden" name="remover_foto_existente" id="remover_foto_existente" value="0">
             </div>
         </div>
@@ -102,7 +119,7 @@ unset($_SESSION['form_data']);
         <div>
             <label for="tipo_lista" class="block text-sm font-medium text-gray-700">Classificação <span class="text-red-500">*</span></label>
             <select name="tipo_lista" id="tipo_lista" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
-                <!-- ALTERAÇÃO: Define qual valor deve ser selecionado -->
+                <!-- Determina o valor a ser selecionado, priorizando dados de sessão sobre os do banco. -->
                 <?php $selectedValue = $old_data['tipo_lista'] ?? $cliente['tipo_lista'] ?? ''; ?>
                 <option value="Potencial" <?= ($selectedValue === 'Potencial') ? 'selected' : '' ?>>Potencial</option>
                 <option value="Não potencial" <?= ($selectedValue === 'Não potencial') ? 'selected' : '' ?>>Não potencial</option>
@@ -117,7 +134,6 @@ unset($_SESSION['form_data']);
 </div>
 
 <script>
-// O JavaScript permanece o mesmo, pois a lógica de repopular é feita no PHP.
 document.addEventListener('DOMContentLoaded', function() {
     const inputArquivo = document.getElementById('foto_arquivo');
     const previewWrapper = document.getElementById('image-preview-wrapper');
@@ -125,7 +141,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const uploadLabel = document.getElementById('upload-label');
     const removeButton = document.getElementById('remove-image');
     const removerFotoExistenteInput = document.getElementById('remover_foto_existente');
+
+    // Verifica via PHP se já existe uma foto para o cliente e passa essa informação para o JS.
     const fotoExistente = <?= !empty($cliente['foto']) ? 'true' : 'false' ?>;
+
+    // Controla a exibição inicial: mostra a foto existente ou o prompt de upload.
     if (fotoExistente) {
         uploadLabel.style.display = 'none';
         previewWrapper.style.display = 'block';
@@ -133,28 +153,35 @@ document.addEventListener('DOMContentLoaded', function() {
         uploadLabel.style.display = 'block';
         previewWrapper.style.display = 'none';
     }
+
+    // Evento para quando um novo arquivo é selecionado.
     inputArquivo.addEventListener('change', function() {
         const file = this.files[0];
         if (file) {
             const reader = new FileReader();
             uploadLabel.style.display = 'none';
             previewWrapper.style.display = 'block';
-            removerFotoExistenteInput.value = '0'; 
+            removerFotoExistenteInput.value = '0'; // Se uma nova foto é escolhida, não remove a antiga (ela será substituída).
             reader.onload = (e) => { previewImage.src = e.target.result; }
             reader.readAsDataURL(file);
         }
     });
+
+    // Evento para o botão de remover a imagem.
     removeButton.addEventListener('click', function() {
-        inputArquivo.value = '';
+        inputArquivo.value = ''; // Limpa a seleção de arquivo.
         previewImage.src = '#';
         previewWrapper.style.display = 'none';
         uploadLabel.style.display = 'block';
-        removerFotoExistenteInput.value = '1';
+        removerFotoExistenteInput.value = '1'; // Sinaliza que a foto existente deve ser removida.
     });
+
+    /**
+     * Máscaras de entrada para campos de formulário.
+     */
     const cpfInput = document.getElementById('cpf');
     const telefoneInput = document.getElementById('numero');
-    const form = document.getElementById('edit-cliente-form');
-    const camposDinheiro = ['renda', 'entrada', 'fgts', 'subsidio'];
+    
     if (cpfInput) {
         cpfInput.addEventListener('input', function() {
             let value = cpfInput.value.replace(/\D/g, '');
@@ -165,6 +192,7 @@ document.addEventListener('DOMContentLoaded', function() {
             cpfInput.value = value;
         });
     }
+
     if (telefoneInput) {
         telefoneInput.addEventListener('input', function() {
             let value = telefoneInput.value.replace(/\D/g, '');
@@ -174,6 +202,14 @@ document.addEventListener('DOMContentLoaded', function() {
             telefoneInput.value = value;
         });
     }
+
+    /**
+     * Formatação de campos monetários.
+     */
+    const form = document.getElementById('edit-cliente-form');
+    const camposDinheiro = ['renda', 'entrada', 'fgts', 'subsidio'];
+
+    // Função para formatar um valor numérico para o padrão de moeda BRL.
     const formatToCurrency = (value) => {
         let digits = String(value).replace(/\D/g, '');
         if (!digits) return '';
@@ -183,17 +219,23 @@ document.addEventListener('DOMContentLoaded', function() {
             currency: 'BRL'
         }).format(valueAsNumber);
     };
+
+    // Aplica a formatação monetária aos campos relevantes.
     camposDinheiro.forEach(id => {
         const input = document.getElementById(id);
         if (input) {
+            // Formata o valor inicial carregado do banco.
             if(input.value) {
                 input.value = formatToCurrency(input.value);
             }
+            // Adiciona o listener para formatar enquanto o usuário digita.
             input.addEventListener('input', (e) => {
                 e.target.value = formatToCurrency(e.target.value);
             });
         }
     });
+
+    // Antes de submeter, converte os valores monetários de volta para um formato numérico (ex: 1234.56).
     if (form) {
         form.addEventListener('submit', () => {
             camposDinheiro.forEach(id => {

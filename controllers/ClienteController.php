@@ -1,6 +1,6 @@
 <?php
 
-// Importa os Models e arquivos de configuração
+// Importa os Models e arquivos de configuração necessários
 require_once __DIR__ . '/../models/Cliente.php';
 require_once __DIR__ . '/../models/Interacao.php';
 require_once __DIR__ . '/../models/DocumentoModel.php';
@@ -21,12 +21,15 @@ class ClienteController
         $this->clienteModel = new Cliente($this->db);
         $this->interacaoModel = new Interacao($this->db);
         $this->documentoModel = new DocumentoModel($this->db);
+        
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
+
         $this->dashboardBaseUrl = '../../index.php';
     }
 
+    // Garante que o usuário esteja autenticado
     private function verificarLogin()
     {
         if (!isset($_SESSION['usuario'])) {
@@ -36,17 +39,21 @@ class ClienteController
         }
     }
 
+    // Lista todos os clientes com base na permissão do usuário
     public function listar()
     {
         $this->verificarLogin();
-        $dashboardUrl = $this->dashboardBaseUrl;
+
         $idImobiliaria = $_SESSION['usuario']['id_imobiliaria'] ?? null;
         $idUsuario = $_SESSION['usuario']['id_usuario'] ?? null;
         $isSuperAdmin = ($_SESSION['usuario']['permissao'] ?? '') === 'SuperAdmin';
+
         $clientes = $this->clienteModel->listar($idImobiliaria, $idUsuario, $isSuperAdmin);
+
         require __DIR__ . '/../views/contatos/listar_clientes.php';
     }
 
+    // Processa upload de imagem do cliente (foto de perfil)
     private function handleFileUpload()
     {
         if (isset($_FILES['foto_arquivo']) && $_FILES['foto_arquivo']['error'] === UPLOAD_ERR_OK) {
@@ -54,47 +61,53 @@ class ClienteController
             $fileName = $_FILES['foto_arquivo']['name'];
             $fileSize = $_FILES['foto_arquivo']['size'];
             $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
             $newFileName = md5(time() . $fileName) . '.' . $fileExtension;
             $allowedfileExtensions = ['jpg', 'gif', 'png', 'jpeg'];
-            $maxFileSize = 2 * 1024 * 1024;
+            $maxFileSize = 2 * 1024 * 1024; // 2MB
 
             if (in_array($fileExtension, $allowedfileExtensions) && $fileSize < $maxFileSize) {
                 $uploadFileDir = __DIR__ . '/../uploads/fotos_clientes/';
                 $dest_path = $uploadFileDir . $newFileName;
+
                 if (!is_dir($uploadFileDir)) {
                     mkdir($uploadFileDir, 0777, true);
                 }
+
                 if (move_uploaded_file($fileTmpPath, $dest_path)) {
                     return 'uploads/fotos_clientes/' . $newFileName;
                 }
             }
         }
+
         return null;
     }
 
+    // Exibe o formulário de cadastro e processa os dados enviados
     public function cadastrar()
     {
         $this->verificarLogin();
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-            // --- VALIDAÇÃO DOS DADOS DE ENTRADA ---
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Valida CPF
             if (!validarCpf($_POST['cpf'])) {
-                $_SESSION['mensagem_erro_form'] = "CPF inválido. Por favor, verifique o número digitado.";
-                // ALTERAÇÃO: Salva os dados do formulário na sessão antes de redirecionar
+                $_SESSION['mensagem_erro_form'] = "CPF inválido.";
                 $_SESSION['form_data'] = $_POST;
                 header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=cadastrar');
                 exit;
             }
+
+            // Valida telefone
             if (!validarTelefone($_POST['numero'])) {
                 $_SESSION['mensagem_erro_form'] = "Número de telefone inválido.";
-                // ALTERAÇÃO: Salva os dados do formulário na sessão antes de redirecionar
                 $_SESSION['form_data'] = $_POST;
                 header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=cadastrar');
                 exit;
             }
-            // --- FIM DA VALIDAÇÃO ---
 
             $caminhoFoto = $this->handleFileUpload();
+
+            // Prepara os dados do cliente para inserção
             $dados = [
                 'nome' => $_POST['nome'],
                 'numero' => $_POST['numero'],
@@ -109,6 +122,7 @@ class ClienteController
                 'id_usuario' => $_SESSION['usuario']['id_usuario'],
                 'id_imobiliaria' => $_SESSION['usuario']['id_imobiliaria'] ?? null
             ];
+
             if ($this->clienteModel->cadastrar($dados)) {
                 $_SESSION['mensagem_sucesso'] = "Cliente cadastrado com sucesso!";
                 header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=listar');
@@ -117,68 +131,76 @@ class ClienteController
                 if ($caminhoFoto && file_exists(__DIR__ . '/../' . $caminhoFoto)) {
                     unlink(__DIR__ . '/../' . $caminhoFoto);
                 }
-                // ALTERAÇÃO: Salva os dados do formulário na sessão em caso de erro no banco
                 $_SESSION['form_data'] = $_POST;
                 header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=cadastrar');
             }
+
             exit;
         }
+
         require __DIR__ . '/../views/contatos/cadastrar_cliente.php';
     }
 
+    // Exibe os detalhes de um cliente específico
     public function mostrar()
     {
         $this->verificarLogin();
+
         if (!isset($_GET['id_cliente']) || !is_numeric($_GET['id_cliente'])) {
             header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=listar');
             exit;
         }
+
         $idCliente = (int)$_GET['id_cliente'];
         $cliente = $this->clienteModel->buscarPorId($idCliente);
+
         if (!$cliente) {
             header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=listar');
             exit;
         }
+
         $interacoes = $this->interacaoModel->listarPorCliente($idCliente);
         $documentos = $this->documentoModel->buscarPorCliente($idCliente);
+
         $activeMenu = 'contatos';
         $conteudo = __DIR__ . '/../views/contatos/mostrar_cliente.php';
+
         require_once __DIR__ . '/../views/layout/template_base.php';
     }
 
+    // Exibe formulário de edição e processa atualizações
     public function editar()
     {
         $this->verificarLogin();
+
         if (!isset($_GET['id_cliente']) || !is_numeric($_GET['id_cliente'])) {
             $_SESSION['mensagem_erro_lista'] = "ID do cliente inválido para edição.";
             header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=listar');
             exit;
         }
+
         $idCliente = (int)$_GET['id_cliente'];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-            // --- VALIDAÇÃO DOS DADOS DE ENTRADA ---
             if (!validarCpf($_POST['cpf'])) {
-                $_SESSION['mensagem_erro_form'] = "CPF inválido. Por favor, verifique o número digitado.";
-                // ALTERAÇÃO: Salva os dados do formulário na sessão antes de redirecionar
+                $_SESSION['mensagem_erro_form'] = "CPF inválido.";
                 $_SESSION['form_data'] = $_POST;
-                header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=editar&id_cliente=' . $idCliente);
+                header("Location: " . BASE_URL . "views/contatos/index.php?controller=cliente&action=editar&id_cliente=$idCliente");
                 exit;
             }
+
             if (!validarTelefone($_POST['numero'])) {
                 $_SESSION['mensagem_erro_form'] = "Número de telefone inválido.";
-                // ALTERAÇÃO: Salva os dados do formulário na sessão antes de redirecionar
                 $_SESSION['form_data'] = $_POST;
-                header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=editar&id_cliente=' . $idCliente);
+                header("Location: " . BASE_URL . "views/contatos/index.php?controller=cliente&action=editar&id_cliente=$idCliente");
                 exit;
             }
-            // --- FIM DA VALIDAÇÃO ---
 
             $clienteAtual = $this->clienteModel->buscarPorId($idCliente);
             $caminhoFotoAntiga = $clienteAtual['foto'];
             $caminhoFotoFinal = $caminhoFotoAntiga;
 
+            // Verifica se nova foto foi enviada
             $novoCaminhoFoto = $this->handleFileUpload();
             if ($novoCaminhoFoto) {
                 $caminhoFotoFinal = $novoCaminhoFoto;
@@ -192,6 +214,7 @@ class ClienteController
                 $caminhoFotoFinal = null;
             }
 
+            // Prepara dados para atualização
             $dadosAtualizar = [
                 'nome' => $_POST['nome'],
                 'numero' => $_POST['numero'],
@@ -207,13 +230,13 @@ class ClienteController
 
             if ($this->clienteModel->atualizar($idCliente, $dadosAtualizar)) {
                 $_SESSION['mensagem_sucesso'] = "Cliente atualizado com sucesso!";
-                header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=mostrar&id_cliente=' . $idCliente);
+                header("Location: " . BASE_URL . "views/contatos/index.php?controller=cliente&action=mostrar&id_cliente=$idCliente");
             } else {
                 $_SESSION['mensagem_erro'] = "Erro ao atualizar cliente.";
-                // ALTERAÇÃO: Salva os dados do formulário na sessão em caso de erro no banco
                 $_SESSION['form_data'] = $_POST;
-                header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=editar&id_cliente=' . $idCliente);
+                header("Location: " . BASE_URL . "views/contatos/index.php?controller=cliente&action=editar&id_cliente=$idCliente");
             }
+
             exit;
         } else {
             $cliente = $this->clienteModel->buscarPorId($idCliente);
@@ -222,26 +245,31 @@ class ClienteController
                 header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=listar');
                 exit;
             }
+
             require __DIR__ . '/../views/contatos/editar_cliente.php';
         }
     }
 
+    // Exclui um cliente e sua foto, se existir
     public function excluir()
     {
         $this->verificarLogin();
         $idCliente = (int)($_GET['id_cliente'] ?? 0);
+
         if ($idCliente > 0) {
             $cliente = $this->clienteModel->buscarPorId($idCliente);
+
             if ($cliente && !empty($cliente['foto']) && file_exists(__DIR__ . '/../' . $cliente['foto'])) {
                 unlink(__DIR__ . '/../' . $cliente['foto']);
             }
-            
+
             if ($this->clienteModel->excluir($idCliente)) {
                 $_SESSION['mensagem_sucesso'] = "Cliente excluído com sucesso!";
             } else {
                 $_SESSION['mensagem_erro_lista'] = "Erro ao excluir cliente.";
             }
         }
+
         header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=listar');
         exit;
     }
