@@ -46,7 +46,7 @@
         "fgtsLabel": "FGTS ($)",
         "subsidyLabel": "Subsidy ($)",
         "currencyPlaceholder": "$ 0.00",
-        "photoUrlLabel": "Client's Photo URL",
+        "photoUrlLabel": "Client's Photo",
         "photoUrlPlaceholder": "https://example.com/image.jpg",
         "classificationLabel": "Client Classification",
         "selectOption": "Select an option",
