@@ -35,3 +35,24 @@ function validarCpf($cpf)
     // Se passou por todas as verificações, o CPF é válido
     return true;
 }
+
+/**
+ * Função para validar um número de telefone.
+ * Verifica se, após remover a formatação, o número contém 10 ou 11 dígitos (padrão brasileiro).
+ *
+ * @param string $telefone O número de telefone a ser validado.
+ * @return bool Retorna true se o telefone for válido, false caso contrário.
+ */
+function validarTelefone($telefone)
+{
+    // Remove todos os caracteres que não são dígitos
+    $telefone = preg_replace('/\D/', '', $telefone);
+
+    // Verifica se o número de telefone tem 10 (fixo) ou 11 (celular) dígitos
+    $tamanho = strlen($telefone);
+    if ($tamanho >= 10 && $tamanho <= 11) {
+        return true; // Telefone válido
+    }
+
+    return false; // Telefone inválido
+}

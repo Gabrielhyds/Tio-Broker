@@ -5,9 +5,22 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-// Inclui o arquivo de configuração principal que define a variável $connection.
-require_once __DIR__ . '/../../config/config.php';
-require_once __DIR__ . '/../../config/rotas.php'; // Adicionado para garantir que a BASE_URL esteja sempre disponível
+// --- Definição de Caminho Raiz para Inclusões Robustas ---
+// Define uma constante para o diretório raiz do projeto para evitar problemas com caminhos relativos.
+// __DIR__ é '.../views/contatos', então subimos dois níveis para chegar em 'Tio-Broker/'.
+if (!defined('PROJECT_ROOT')) {
+    define('PROJECT_ROOT', realpath(__DIR__ . '/../../'));
+}
+
+// Inclui os arquivos de configuração usando o caminho absoluto.
+require_once PROJECT_ROOT . '/config/config.php';
+require_once PROJECT_ROOT . '/config/rotas.php';
+
+// Verifica se a conexão com o banco de dados foi estabelecida em config.php.
+if (!isset($connection)) {
+    echo "<h1>Erro Crítico</h1><p>A variável de conexão com o banco de dados (\$connection) não foi definida no arquivo config.php.</p>";
+    exit;
+}
 
 // Obtém o nome do controller e da action da URL.
 $controllerName = $_GET['controller'] ?? 'cliente';
@@ -16,14 +29,14 @@ $action = $_GET['action'] ?? 'listar';
 // Formata o nome da classe do Controller.
 $controllerClass = ucfirst(strtolower($controllerName)) . 'Controller';
 
-// Constrói o caminho completo para o arquivo do Controller.
-$controllerFile = __DIR__ . '/../../controllers/' . $controllerClass . '.php';
+// Constrói o caminho completo e normalizado para o arquivo do Controller.
+$controllerFile = PROJECT_ROOT . '/controllers/' . $controllerClass . '.php';
 
 // Verifica se o arquivo do Controller existe.
 if (file_exists($controllerFile)) {
     require_once $controllerFile;
 
-    // Verifica se a classe do Controller existe.
+    // Verifica se a classe do Controller existe após a inclusão.
     if (class_exists($controllerClass)) {
         try {
             // Instancia o Controller, passando a conexão com o banco de dados.
@@ -31,26 +44,24 @@ if (file_exists($controllerFile)) {
 
             // Verifica se o método (a action) existe no controller.
             if (method_exists($controllerInstance, $action)) {
+                // Executa a ação.
                 $controllerInstance->$action();
             } else {
-                echo "Erro de Roteamento: A ação '{$action}' não foi encontrada no controller '{$controllerClass}'.";
+                echo "<h1>Erro de Roteamento</h1><p>A ação '{$action}' não foi encontrada no controller '{$controllerClass}'.</p>";
                 exit;
             }
-            // CORREÇÃO: O bloco catch agora exibirá a mensagem de erro detalhada.
         } catch (Exception $e) {
-            echo "<h1>Erro Crítico</h1>";
-            echo "<p>Ocorreu um erro ao tentar carregar o controller '{$controllerClass}'.</p>";
+            // Captura qualquer outra exceção durante a instanciação ou execução.
+            echo "<h1>Erro Crítico na Execução</h1>";
+            echo "<p>Ocorreu um erro ao tentar executar o controller '{$controllerClass}'.</p>";
             echo "<p><strong>Mensagem de Erro:</strong> " . $e->getMessage() . "</p>";
-            echo "<p><strong>Arquivo:</strong> " . $e->getFile() . "</p>";
-            echo "<p><strong>Linha:</strong> " . $e->getLine() . "</p>";
-            echo "<pre>Stack Trace:\n" . $e->getTraceAsString() . "</pre>";
             exit;
         }
     } else {
-        echo "Erro de Roteamento: A classe '{$controllerClass}' não foi encontrada no arquivo '{$controllerFile}'.";
+        echo "<h1>Erro de Roteamento</h1><p>A classe '{$controllerClass}' não foi encontrada no arquivo '{$controllerFile}'. Verifique se o nome da classe está correto e se não há erros de sintaxe no arquivo.</p>";
         exit;
     }
 } else {
-    echo "Erro de Roteamento: O arquivo do controller '{$controllerFile}' não foi encontrado.";
+    echo "<h1>Erro de Roteamento</h1><p>O arquivo do controller '{$controllerFile}' não foi encontrado.</p>";
     exit;
 }
