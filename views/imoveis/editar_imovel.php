@@ -184,7 +184,7 @@ try {
                                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
                                         <?php foreach ($imagens as $img): ?>
                                             <div class="relative group">
-                                                <img src="<?= BASE_URL . str_replace('\\', '/', ltrim($img['caminho'], '/')) ?>" alt="Imagem do Imóvel" class="rounded-lg w-full h-28 object-cover transition-transform duration-300 group-hover:scale-105">
+                                                <img src="/tio-broker/<?= str_replace('\\', '/', ltrim($img['caminho'], '/')) ?>" alt="Imagem do Imóvel" class="rounded-lg w-full h-28 object-cover transition-transform duration-300 group-hover:scale-105">
                                                 <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-300 rounded-lg flex items-center justify-center">
                                                     <button
                                                         type="button"
