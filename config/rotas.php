@@ -1,18 +1,19 @@
 <?php
 
 $basePath = '/tio-broker/';
-
 $projectRoot = realpath(__DIR__ . '/../..');
-$temApp = is_dir($projectRoot . '/app/views');
 
-// Define o caminho base da URL para o frontend
-define('BASE_URL', $basePath . ($temApp ? 'app/' : ''));
+// Se o diretório "app/views" existir, assumimos estrutura com /app
+$usandoEstruturaComApp = is_dir($projectRoot . '/app/views');
 
-// Caminho base absoluto (para servidor)
-define('BASE_DIR', $projectRoot . '/');
+// BASE_URL: para usar em <img>, <a>, etc.
+define('BASE_URL', $basePath . ($usandoEstruturaComApp ? 'app/' : ''));
 
-// Diretório de uploads no servidor
-define('UPLOADS_DIR', BASE_DIR . ($temApp ? 'app/uploads/' : 'uploads/'));
+// Caminho físico absoluto até a raiz do projeto
+define('BASE_DIR', $projectRoot . ($usandoEstruturaComApp ? '/app/' : '/'));
 
-// Diretório de uploads acessível via navegador
-define('UPLOADS_URL', BASE_URL . 'uploads/');
+// Caminho físico para salvar arquivos
+define('UPLOADS_DIR', $projectRoot . '/uploads/');
+
+// Caminho público para acessar os uploads
+define('UPLOADS_URL', $basePath . 'uploads/');
