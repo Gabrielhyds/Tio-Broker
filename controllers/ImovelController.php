@@ -74,8 +74,6 @@ function cadastrarImovel($model)
         $videos = salvarUploads('videos', 'videos_imoveis');
         $documentos = salvarUploads('documentos', 'documentos_imoveis');
 
-        // **AÇÃO NECESSÁRIA**: Altere seu método no Model para lançar uma exceção em caso de erro.
-        // Ex: if (!$stmt->execute()) { throw new Exception($stmt->error); }
         $model->cadastrar($dados, $imagens, $videos, $documentos);
 
         // Se tudo deu certo, confirma a transação
@@ -115,7 +113,6 @@ function editarImovel($model)
         $videos = salvarUploads('videos', 'videos_imoveis');
         $documentos = salvarUploads('documentos', 'documentos_imoveis');
 
-        // **AÇÃO NECESSÁRIA**: Altere seu método no Model para lançar uma exceção em caso de erro.
         $model->editar($dados, $imagens, $videos, $documentos);
 
         // Se tudo deu certo, confirma a transação
@@ -167,12 +164,22 @@ function salvarUploads($campo, $subpasta)
     $destinoAbsoluto = UPLOADS_DIR . trim($subpasta, '/') . '/';
 
     if (!empty($_FILES[$campo]['name'][0])) {
-        error_log("Tentando criar: $destinoAbsoluto");
-        if (!mkdir($destinoAbsoluto, 0755, true)) {
-            error_log("FALHA: Não foi possível criar $destinoAbsoluto");
-            throw new Exception("Falha ao criar a pasta de uploads.");
-        }
+        
+        // VERIFICA SE O DIRETÓRIO JÁ NÃO EXISTE ANTES DE TENTAR CRIAR
+        if (!is_dir($destinoAbsoluto)) {
+            // ===== INÍCIO DA NOVA VERIFICAÇÃO =====
+            // ANTES DE TENTAR CRIAR, VERIFICA SE O DIRETÓRIO PAI (UPLOADS) TEM PERMISSÃO DE ESCRITA
+            if (!is_writable(UPLOADS_DIR)) {
+                 throw new Exception("Erro de permissão: O diretório de uploads principal ('" . UPLOADS_DIR . "') não tem permissão de escrita pelo servidor.");
+            }
+            // ===== FIM DA NOVA VERIFICAÇÃO =====
 
+            // Se o pai tem permissão, tenta criar o subdiretório
+            if (!mkdir($destinoAbsoluto, 0755, true)) {
+                // Se a criação falhar, lança a exceção
+                throw new Exception("Falha ao criar a pasta de uploads ('" . $destinoAbsoluto . "'). Verifique as permissões do servidor.");
+            }
+        }
 
         foreach ($_FILES[$campo]['tmp_name'] as $index => $tmp) {
             if (empty($tmp) || $_FILES[$campo]['error'][$index] !== UPLOAD_ERR_OK) {
