@@ -7,7 +7,7 @@ $idSelecionada = null; // Inicializa a variável
 
 // Lógica para SuperAdmin
 if ($permissao === 'SuperAdmin') {
-    $stmt = $connection->query("SELECT id_imobiliaria, nome FROM imobiliaria ORDER BY nome");
+    $stmt = $connection->query("SELECT id_imobiliaria, nome FROM imobiliaria WHERE is_deleted = 0 ORDER BY nome");
     $imobiliarias = $stmt->fetch_all(MYSQLI_ASSOC);
     $idSelecionada = $_GET['id_imobiliaria'] ?? null;
 
