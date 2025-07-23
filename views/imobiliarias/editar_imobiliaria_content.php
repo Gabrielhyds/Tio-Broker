@@ -1,18 +1,3 @@
-<!-- Bloco PHP para exibir uma mensagem de sucesso se um usuário for removido. -->
-<?php if (isset($_GET['removido']) && $_GET['removido'] == 1): ?>
-    <div class="mb-4 p-4 bg-green-100 text-green-700 rounded">
-        <i class="fas fa-check-circle mr-2"></i>
-        Usuário removido da imobiliária com sucesso!
-    </div>
-<?php endif; ?>
-
-<!-- Bloco PHP para exibir uma mensagem de sucesso se um usuário for vinculado. -->
-<?php if (isset($_GET['incluidoUsuario']) && $_GET['incluidoUsuario'] == 1): ?>
-    <div class="mb-4 p-4 bg-green-100 text-green-700 rounded">
-        <i class="fas fa-check-circle mr-2"></i>
-        Usuário vinculado à imobiliária com sucesso!
-    </div>
-<?php endif; ?>
 
 <!-- Título da página de edição. -->
 <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">

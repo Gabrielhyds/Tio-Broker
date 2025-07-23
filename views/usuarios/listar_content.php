@@ -132,13 +132,7 @@
             </div>
         </div>
 
-        <!-- Mensagem de sucesso -->
-        <?php if (isset($_SESSION['sucesso'])): ?>
-            <div class="crm-alert crm-alert-success">
-                <?= htmlspecialchars($_SESSION['sucesso']); ?>
-            </div>
-            <?php unset($_SESSION['sucesso']); ?>
-        <?php endif; ?>
+
 
         <!-- Seção de Filtro e Conteúdo Principal -->
         <div class="p-6 md:p-8">

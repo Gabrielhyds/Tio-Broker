@@ -74,7 +74,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_POST['creci'] ?? null,
             $fotoPath
         );
-
+        //Define a mensagem de sucesso na sessão.
+        $_SESSION['sucesso'] = "Usuário cadastrado com sucesso!";
         header('Location: ../views/usuarios/listar.php?sucesso=1');
         exit;
     }
@@ -112,6 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_POST['creci'] ?? null,
             $fotoPath
         );
+        $_SESSION['sucesso'] = "Usuário atualizado com sucesso!";
         header('Location: ../views/usuarios/listar.php?atualizado=1');
         exit;
     }

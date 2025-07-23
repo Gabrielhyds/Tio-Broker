@@ -5,22 +5,6 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 ?>
 
-<?php if (isset($_SESSION['erro'])) : ?>
-    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 relative" role="alert">
-        <strong class="font-bold">Erro!</strong>
-        <span class="block sm:inline"><?= htmlspecialchars($_SESSION['erro']); ?></span>
-        <?php unset($_SESSION['erro']); ?>
-    </div>
-<?php endif; ?>
-
-<?php if (isset($_SESSION['sucesso'])) : ?>
-    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 relative" role="alert">
-        <strong class="font-bold">Sucesso!</strong>
-        <span class="block sm:inline"><?= htmlspecialchars($_SESSION['sucesso']); ?></span>
-        <?php unset($_SESSION['sucesso']); ?>
-    </div>
-<?php endif; ?>
-
 <!-- O action deve apontar para o seu script de controller -->
 <form action="../../controllers/ImovelController.php" method="POST" enctype="multipart/form-data" class="space-y-6 bg-white p-8 rounded-lg shadow-md">
     <input type="hidden" name="action" value="cadastrar">

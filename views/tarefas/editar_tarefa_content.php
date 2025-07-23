@@ -118,23 +118,6 @@ $nome_usuario_logado = $_SESSION['usuario']['nome'];
         <!-- CONTAINER DO FORMULÁRIO -->
         <div class="bg-white p-6 md:p-8 rounded-lg shadow-sm">
 
-            <!-- MENSAGEM DE ERRO -->
-            <?php if (isset($_SESSION['erro'])): ?>
-                <div id="error-alert" class="bg-red-100 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-md relative mb-6" role="alert">
-                    <div class="flex">
-                        <div class="py-1">
-                            <svg class="w-6 h-6 text-red-500 mr-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="font-bold">Erro!</p>
-                            <p class="text-sm"><?= htmlspecialchars($_SESSION['erro']); ?></p>
-                        </div>
-                    </div>
-                    <?php unset($_SESSION['erro']); ?>
-                </div>
-            <?php endif; ?>
 
             <form action="../../controllers/TarefaController.php" method="POST" class="space-y-6" onsubmit="return validarFormulario()">
                 <input type="hidden" name="action" value="editar">

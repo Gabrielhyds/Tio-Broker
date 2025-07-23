@@ -20,22 +20,6 @@
                 </div>
             </div>
 
-            <!-- Alertas de Sucesso/Erro -->
-            <?php if (isset($_SESSION['sucesso'])): ?>
-                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md mb-6" role="alert">
-                    <p class="font-bold">Sucesso!</p>
-                    <p><?= htmlspecialchars($_SESSION['sucesso']); ?></p>
-                    <?php unset($_SESSION['sucesso']); ?>
-                </div>
-            <?php endif; ?>
-            <?php if (isset($_SESSION['erro'])): ?>
-                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md mb-6" role="alert">
-                    <p class="font-bold">Erro!</p>
-                    <p><?= htmlspecialchars($_SESSION['erro']); ?></p>
-                    <?php unset($_SESSION['erro']); ?>
-                </div>
-            <?php endif; ?>
-
 
             <input type="hidden" name="action" value="editar">
             <input type="hidden" name="id_imovel" value="<?= htmlspecialchars($imovel['id_imovel']) ?>">
