@@ -19,7 +19,6 @@
 
 if (!isset($filtroUsuario)) $filtroUsuario = $_GET['usuario'] ?? '';
 if (!isset($filtroCliente)) $filtroCliente = $_GET['cliente'] ?? '';
-// --- Fim do Mock de Dados ---
 
 
 // Lógica para agrupar tarefas por status para o Kanban
@@ -248,7 +247,8 @@ foreach ($tarefas as $tarefa) {
                         </div>
                         <ul id="coluna-<?= $status ?>" data-status="<?= $status ?>" class="p-4 min-h-[400px] flex flex-col gap-4">
                             <?php if (empty($tarefasDaColuna)): ?>
-                                <li class="text-center text-slate-400 text-sm mt-4">Nenhuma tarefa aqui.</li>
+                                <!-- BUG FIX: Adicionada classe 'kanban-placeholder' para ser ignorada pelo SortableJS -->
+                                <li class="text-center text-slate-400 text-sm mt-4 kanban-placeholder">Nenhuma tarefa aqui.</li>
                             <?php else: ?>
                                 <?php foreach ($tarefasDaColuna as $t): ?>
                                     <li class="bg-white rounded-lg p-4 shadow-sm cursor-grab border-l-4 border-slate-200 hover:shadow-md hover:border-indigo-500 transition-all duration-200"
@@ -382,8 +382,11 @@ foreach ($tarefas as $tarefa) {
                 }, 4000);
             }
 
+            // --- KANBAN LOGIC (BUG FIX) ---
+
             const statuses = ['pendente', 'em andamento', 'concluida'];
 
+            // Função para atualizar a contagem de cards em uma coluna
             function updateColumnCount(status) {
                 const column = document.getElementById(`coluna-${status}`);
                 const countElement = document.getElementById(`count-${status}`);
@@ -392,7 +395,28 @@ foreach ($tarefas as $tarefa) {
                     countElement.textContent = count;
                 }
             }
+            
+            // Função para exibir/ocultar a mensagem de "Nenhuma tarefa"
+            function togglePlaceholder(column) {
+                if (!column) return;
+                const placeholder = column.querySelector('.kanban-placeholder');
+                const taskItems = column.querySelectorAll('li[data-id]');
 
+                if (taskItems.length === 0) {
+                    if (!placeholder) {
+                        const newPlaceholder = document.createElement('li');
+                        newPlaceholder.className = 'text-center text-slate-400 text-sm mt-4 kanban-placeholder';
+                        newPlaceholder.textContent = 'Nenhuma tarefa aqui.';
+                        column.appendChild(newPlaceholder);
+                    }
+                } else {
+                    if (placeholder) {
+                        placeholder.remove();
+                    }
+                }
+            }
+
+            // Inicializa o SortableJS para cada coluna
             statuses.forEach(status => {
                 const columnEl = document.getElementById(`coluna-${status}`);
                 if (columnEl) {
@@ -401,15 +425,26 @@ foreach ($tarefas as $tarefa) {
                         animation: 150,
                         ghostClass: 'sortable-ghost',
                         dragClass: 'sortable-drag',
-                        onAdd: function(evt) {
-                            const tarefaId = evt.item.dataset.id;
-                            const novoStatus = evt.to.dataset.status;
-                            const antigoStatus = evt.from.dataset.status;
+                        filter: '.kanban-placeholder', // Ignora o placeholder ao arrastar
+                        onEnd: function(evt) {
+                            const fromColumn = evt.from;
+                            const toColumn = evt.to;
+                            const item = evt.item;
+                            
+                            // Atualiza contagens e placeholders
+                            updateColumnCount(fromColumn.dataset.status);
+                            togglePlaceholder(fromColumn);
+                            if (fromColumn !== toColumn) {
+                                updateColumnCount(toColumn.dataset.status);
+                                togglePlaceholder(toColumn);
+                            }
 
-                            updateColumnCount(novoStatus);
-                            updateColumnCount(antigoStatus);
+                            // Se o card mudou de coluna, atualiza no backend
+                            if (fromColumn !== toColumn) {
+                                const tarefaId = item.dataset.id;
+                                const novoStatus = toColumn.dataset.status;
 
-                            fetch('../../controllers/atualizar_status_tarefa.php', {
+                                fetch('../../controllers/atualizar_status_tarefa.php', {
                                     method: 'POST',
                                     headers: {
                                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -430,10 +465,14 @@ foreach ($tarefas as $tarefa) {
                                 .catch(error => {
                                     showToast(error.toString(), 'error');
                                     // Reverte a ação no front-end em caso de erro
-                                    evt.from.appendChild(evt.item);
-                                    updateColumnCount(novoStatus);
-                                    updateColumnCount(antigoStatus);
+                                    fromColumn.appendChild(item);
+                                    // Atualiza a UI novamente após reverter
+                                    updateColumnCount(fromColumn.dataset.status);
+                                    updateColumnCount(toColumn.dataset.status);
+                                    togglePlaceholder(fromColumn);
+                                    togglePlaceholder(toColumn);
                                 });
+                            }
                         }
                     });
                 }
