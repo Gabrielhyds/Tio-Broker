@@ -13,10 +13,9 @@ $activeMenu = $activeMenu ?? '';
 require_once __DIR__ . '/../../config/rotas.php';
 ?>
 <aside id="sidebar" class="w-64 flex-shrink-0 bg-white border-r border-gray-200 p-4 transform lg:transform-none lg:relative fixed h-full z-30 transition-transform duration-300 ease-in-out -translate-x-full lg:translate-x-0">
-    <div class="flex items-center justify-between mb-8">
+    <div class="flex items-center justify-center mb-8">
         <a href="<?= BASE_URL ?>views/dashboards/dashboard_unificado.php" class="flex items-center space-x-2">
-            <i class="fas fa-chart-pie text-2xl text-blue-600"></i>
-            <span class="text-xl font-bold text-gray-800">Tio Broker</span>
+            <img src="<?= BASE_URL ?>views/assets/img/tio_broker_ligth.png" alt="Logo Tio Broker" class="h-10 w-auto max-w-[160px] object-contain"> 
         </a>
         <button id="close-sidebar-btn" class="lg:hidden text-gray-500 hover:text-gray-800">
             <i class="fas fa-times text-xl"></i>
