@@ -151,7 +151,7 @@ function coletarDados()
         'descricao' => $_POST['descricao'] ?? '',
         'tipo' => $_POST['tipo'] ?? '',
         'status' => $_POST['status'] ?? '',
-        'preco' => (float) str_replace(['.', ','], ['', '.'], $_POST['preco'] ?? 0),
+        'preco' => (float) ($_POST['preco'] ?? 0),
         'endereco' => $_POST['endereco'] ?? '',
         'latitude' => !empty($_POST['latitude']) ? $_POST['latitude'] : null,
         'longitude' => !empty($_POST['longitude']) ? $_POST['longitude'] : null,
