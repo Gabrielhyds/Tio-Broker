@@ -160,7 +160,9 @@ function salvarUploads($campo, $subpasta)
     $arquivosSalvos = [];
     $permitidas = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'mp4', 'doc', 'docx', 'xls', 'xlsx'];
 
-
+    if (!defined('UPLOADS_DIR')) {
+        throw new Exception("UPLOADS_DIR não está definido. Verifique se config.php foi incluído.");
+    }
     $destinoRelativo = 'uploads/' . trim($subpasta, '/') . '/';
     $destinoAbsoluto = UPLOADS_DIR . trim($subpasta, '/') . '/';
 
