@@ -167,11 +167,12 @@ function salvarUploads($campo, $subpasta)
     $destinoAbsoluto = UPLOADS_DIR . trim($subpasta, '/') . '/';
 
     if (!empty($_FILES[$campo]['name'][0])) {
-        if (!is_dir($destinoAbsoluto)) {
-            if (!mkdir($destinoAbsoluto, 0755, true)) {
-                throw new Exception("Falha ao criar a pasta de uploads.");
-            }
+        error_log("Tentando criar: $destinoAbsoluto");
+        if (!mkdir($destinoAbsoluto, 0755, true)) {
+            error_log("FALHA: Não foi possível criar $destinoAbsoluto");
+            throw new Exception("Falha ao criar a pasta de uploads.");
         }
+
 
         foreach ($_FILES[$campo]['tmp_name'] as $index => $tmp) {
             if (empty($tmp) || $_FILES[$campo]['error'][$index] !== UPLOAD_ERR_OK) {
