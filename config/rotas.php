@@ -4,7 +4,7 @@
 $basePath = '/tio-broker/';
 
 // Caminho absoluto até a raiz do projeto
-$projectRoot = realpath(__DIR__ . '/../..');
+$projectRoot = realpath(__DIR__ . '/../');
 
 // BASE_URL: para uso em <img>, <a>, etc.
 define('BASE_URL', $basePath);

@@ -1,6 +1,5 @@
 <?php
 
-
 class Imovel
 {
     /**
@@ -19,14 +18,13 @@ class Imovel
     }
 
     /**
-     * Cadastra um novo imóvel e seus arquivos associados usando uma transação.
-     * Lança uma exceção em caso de erro para que o rollback possa ser acionado.
+     * Cadastra um novo imóvel e seus arquivos.
+     * Lança uma exceção em caso de erro para que a transação no Controller possa fazer o rollback.
+     * ✅ CORREÇÃO: Removida a gestão de transação (begin_transaction, commit, rollback) daqui.
+     * O Controller agora é o único responsável por gerir a transação.
      */
     public function cadastrar($dados, $imagens = [], $videos = [], $documentos = [])
     {
-        // Inicia a transação
-        $this->connection->begin_transaction();
-
         try {
             $query = "INSERT INTO imovel (id_imobiliaria, titulo, descricao, tipo, status, preco, endereco, latitude, longitude)
                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -55,21 +53,15 @@ class Imovel
 
             $idImovel = $stmt->insert_id;
 
-            // Se chegou até aqui, o imóvel foi inserido. Agora, salvamos os arquivos.
-            // Se qualquer um desses métodos lançar uma exceção, o catch abaixo fará o rollback.
+            // Salva os arquivos associados. Se qualquer um falhar, a exceção será lançada.
             $this->salvarArquivos($idImovel, 'imagem', $imagens);
             $this->salvarArquivos($idImovel, 'video', $videos);
             $this->salvarArquivos($idImovel, 'documento', $documentos);
-
-            // Se tudo correu bem, confirma a transação
-            $this->connection->commit();
             
             return $idImovel; // Retorna o ID do imóvel criado
 
         } catch (Exception $e) {
-            // Em caso de qualquer erro, desfaz a transação
-            $this->connection->rollback();
-            // Lança a exceção novamente para que o código que chamou saiba do erro
+            // Lança a exceção novamente para que o Controller possa capturá-la e fazer o rollback.
             throw $e;
         }
     }
@@ -106,6 +98,7 @@ class Imovel
             throw new Exception("Erro ao executar a edição do imóvel: " . $stmt->error);
         }
 
+        // Adiciona os novos arquivos
         $this->salvarArquivos($dados['id_imovel'], 'imagem', $imagens);
         $this->salvarArquivos($dados['id_imovel'], 'video', $videos);
         $this->salvarArquivos($dados['id_imovel'], 'documento', $documentos);
@@ -140,12 +133,14 @@ class Imovel
             throw $e;
         }
 
+        // Exclui os arquivos físicos após o commit da transação
         foreach ($todosArquivos as $arquivo) {
             $caminhoCompleto = UPLOADS_DIR . str_replace('uploads/', '', $arquivo['caminho']);
             if (file_exists($caminhoCompleto)) {
                 unlink($caminhoCompleto);
             }
         }
+        return true;
     }
 
     /**
@@ -173,6 +168,7 @@ class Imovel
                 if (file_exists($caminhoCompleto)) {
                     unlink($caminhoCompleto);
                 }
+                return true;
             } else {
                 throw new Exception("Erro ao excluir o registro do arquivo: " . $stmt->error);
             }
@@ -181,9 +177,8 @@ class Imovel
         }
     }
 
-     /**
+    /**
      * Salva os caminhos dos arquivos no banco de dados. Lança exceção em caso de erro.
-     * Este método agora faz parte da transação iniciada em `cadastrar`.
      */
     private function salvarArquivos($idImovel, $tipo, $arquivos)
     {
@@ -203,7 +198,6 @@ class Imovel
 
             $stmt->bind_param("is", $idImovel, $caminhoRelativo);
             if (!$stmt->execute()) {
-                // Se a execução falhar, lança uma exceção que será capturada pelo bloco try/catch em `cadastrar`
                 throw new Exception("Erro ao salvar o arquivo '$caminhoRelativo' no banco: " . $stmt->error);
             }
         }
@@ -256,7 +250,6 @@ class Imovel
      */
     public function buscarPorImobiliaria($id_imobiliaria)
     {
-        // Reseta as informações de depuração para esta chamada específica
         $this->debugInfo = [
             'metodo' => 'buscarPorImobiliaria',
             'id_passado' => $id_imobiliaria,
@@ -271,7 +264,7 @@ class Imovel
         }
 
         $query = "SELECT * FROM imovel WHERE id_imobiliaria = ? ORDER BY data_cadastro DESC";
-        $this->debugInfo['query_sql'] = $query; // Salva a query para depuração
+        $this->debugInfo['query_sql'] = $query;
 
         $stmt = $this->connection->prepare($query);
         if (!$stmt) {
@@ -290,18 +283,13 @@ class Imovel
             $this->debugInfo['erro'] = "Erro ao obter o resultado da busca: " . $this->connection->error;
             throw new Exception($this->debugInfo['erro']);
         }
-
-        // Salva o número de linhas encontradas para depuração
+        
         $this->debugInfo['num_resultados'] = $result->num_rows;
-
         return $result->fetch_all(MYSQLI_ASSOC);
     }
 
     // --- MÉTODOS AUXILIARES ---
 
-    /**
-     * Busca o caminho de um arquivo pelo seu ID de registro.
-     */
     private function buscarCaminhoArquivoPorId($tipo, $idArquivo)
     {
         if (empty($idArquivo) || !is_numeric($idArquivo)) return null;
@@ -320,9 +308,6 @@ class Imovel
         return $resultado['caminho'] ?? null;
     }
 
-    /**
-     * Exclui todos os registros de arquivos de um imóvel. Usado na transação de exclusão.
-     */
     private function excluirRegistrosDeArquivosPorImovelId($idImovel, $tipo)
     {
         $tabela = "imovel_" . $tipo;

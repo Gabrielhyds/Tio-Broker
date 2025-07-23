@@ -28,11 +28,16 @@ switch ($action) {
         $id = $_GET['id'] ?? null;
         $idImobiliariaQuery = isset($_GET['id_imobiliaria']) ? '&id_imobiliaria=' . $_GET['id_imobiliaria'] : '';
 
-        if ($id && $imovelModel->excluir($id)) {
-            $_SESSION['sucesso'] = "Imóvel excluído com sucesso.";
-        } else {
-            $_SESSION['erro'] = "Erro ao excluir imóvel.";
+        try {
+            if ($id && $imovelModel->excluir($id)) {
+                $_SESSION['sucesso'] = "Imóvel excluído com sucesso.";
+            } else {
+                $_SESSION['erro'] = "Erro ao excluir imóvel.";
+            }
+        } catch (Exception $e) {
+             $_SESSION['erro'] = "Erro ao excluir imóvel: " . $e->getMessage();
         }
+        
         header('Location: ../views/imoveis/listar.php?' . ltrim($idImobiliariaQuery, '&'));
         exit;
 
@@ -41,11 +46,16 @@ switch ($action) {
         $idArquivo = $_POST['id_arquivo'] ?? null;
         $idImovel = $_POST['id_imovel'] ?? null;
 
-        if ($tipo && $idArquivo && $imovelModel->excluirArquivo($tipo, $idArquivo)) {
-            $_SESSION['sucesso'] = ucfirst($tipo) . " excluído com sucesso.";
-        } else {
-            $_SESSION['erro'] = "Erro ao excluir o arquivo.";
+        try {
+            if ($tipo && $idArquivo && $imovelModel->excluirArquivo($tipo, $idArquivo)) {
+                $_SESSION['sucesso'] = ucfirst($tipo) . " excluído com sucesso.";
+            } else {
+                $_SESSION['erro'] = "Erro ao excluir o arquivo.";
+            }
+        } catch (Exception $e) {
+            $_SESSION['erro'] = "Erro ao excluir o arquivo: " . $e->getMessage();
         }
+        
         header("Location: ../views/imoveis/editar.php?id=" . $idImovel);
         exit;
 
@@ -141,7 +151,7 @@ function coletarDados()
         'descricao' => $_POST['descricao'] ?? '',
         'tipo' => $_POST['tipo'] ?? '',
         'status' => $_POST['status'] ?? '',
-        'preco' => (float) ($_POST['preco'] ?? 0),
+        'preco' => (float) str_replace(['.', ','], ['', '.'], $_POST['preco'] ?? 0),
         'endereco' => $_POST['endereco'] ?? '',
         'latitude' => !empty($_POST['latitude']) ? $_POST['latitude'] : null,
         'longitude' => !empty($_POST['longitude']) ? $_POST['longitude'] : null,
@@ -155,7 +165,7 @@ function coletarDados()
 function salvarUploads($campo, $subpasta)
 {
     $arquivosSalvos = [];
-    $permitidas = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'mp4', 'doc', 'docx', 'xls', 'xlsx'];
+    $permitidas = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'mp4', 'doc', 'docx', 'xls', 'xlsx', 'webp'];
 
     if (!defined('UPLOADS_DIR')) {
         throw new Exception("UPLOADS_DIR não está definido. Verifique se config.php foi incluído.");
@@ -165,18 +175,11 @@ function salvarUploads($campo, $subpasta)
 
     if (!empty($_FILES[$campo]['name'][0])) {
         
-        // VERIFICA SE O DIRETÓRIO JÁ NÃO EXISTE ANTES DE TENTAR CRIAR
         if (!is_dir($destinoAbsoluto)) {
-            // ===== INÍCIO DA NOVA VERIFICAÇÃO =====
-            // ANTES DE TENTAR CRIAR, VERIFICA SE O DIRETÓRIO PAI (UPLOADS) TEM PERMISSÃO DE ESCRITA
             if (!is_writable(UPLOADS_DIR)) {
                  throw new Exception("Erro de permissão: O diretório de uploads principal ('" . UPLOADS_DIR . "') não tem permissão de escrita pelo servidor.");
             }
-            // ===== FIM DA NOVA VERIFICAÇÃO =====
-
-            // Se o pai tem permissão, tenta criar o subdiretório
             if (!mkdir($destinoAbsoluto, 0755, true)) {
-                // Se a criação falhar, lança a exceção
                 throw new Exception("Falha ao criar a pasta de uploads ('" . $destinoAbsoluto . "'). Verifique as permissões do servidor.");
             }
         }
@@ -190,15 +193,14 @@ function salvarUploads($campo, $subpasta)
             if (!in_array($extensao, $permitidas)) continue;
 
             $nomeArquivoOriginal = basename($_FILES[$campo]['name'][$index]);
-            $nomeSeguro = preg_replace("/[^a-zA-Z0-9-_\.]/", "", $nomeArquivoOriginal);
-            $nomeFinal = uniqid() . '_' . $nomeSeguro;
+            $nomeSeguro = preg_replace("/[^a-zA-Z0-9-_\.]/", "", pathinfo($nomeArquivoOriginal, PATHINFO_FILENAME));
+            $nomeFinal = $nomeSeguro . '_' . uniqid() . '.' . $extensao;
             $caminhoCompleto = $destinoAbsoluto . $nomeFinal;
             $caminhoRelativo = $destinoRelativo . $nomeFinal;
 
             if (move_uploaded_file($tmp, $caminhoCompleto)) {
                 $arquivosSalvos[] = $caminhoRelativo;
             } else {
-                // Se o upload falhar, lança uma exceção para acionar o rollback.
                 throw new Exception("Falha ao mover o arquivo enviado: " . $nomeArquivoOriginal);
             }
         }
