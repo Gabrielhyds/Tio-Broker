@@ -20,39 +20,58 @@ class Imovel
 
     /**
      * Cadastra um novo imóvel e seus arquivos associados usando uma transação.
-     * Lança uma exceção em caso de erro.
+     * Lança uma exceção em caso de erro para que o rollback possa ser acionado.
      */
     public function cadastrar($dados, $imagens = [], $videos = [], $documentos = [])
     {
-        $query = "INSERT INTO imovel (id_imobiliaria, titulo, descricao, tipo, status, preco, endereco, latitude, longitude)
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        // Inicia a transação
+        $this->connection->begin_transaction();
 
-        $stmt = $this->connection->prepare($query);
-        if (!$stmt) {
-            throw new Exception("Erro ao preparar a query de cadastro: " . $this->connection->error);
+        try {
+            $query = "INSERT INTO imovel (id_imobiliaria, titulo, descricao, tipo, status, preco, endereco, latitude, longitude)
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+            $stmt = $this->connection->prepare($query);
+            if (!$stmt) {
+                throw new Exception("Erro ao preparar a query de cadastro: " . $this->connection->error);
+            }
+
+            $stmt->bind_param(
+                "issssdssd",
+                $dados['id_imobiliaria'],
+                $dados['titulo'],
+                $dados['descricao'],
+                $dados['tipo'],
+                $dados['status'],
+                $dados['preco'],
+                $dados['endereco'],
+                $dados['latitude'],
+                $dados['longitude']
+            );
+
+            if (!$stmt->execute()) {
+                throw new Exception("Erro ao executar o cadastro do imóvel: " . $stmt->error);
+            }
+
+            $idImovel = $stmt->insert_id;
+
+            // Se chegou até aqui, o imóvel foi inserido. Agora, salvamos os arquivos.
+            // Se qualquer um desses métodos lançar uma exceção, o catch abaixo fará o rollback.
+            $this->salvarArquivos($idImovel, 'imagem', $imagens);
+            $this->salvarArquivos($idImovel, 'video', $videos);
+            $this->salvarArquivos($idImovel, 'documento', $documentos);
+
+            // Se tudo correu bem, confirma a transação
+            $this->connection->commit();
+            
+            return $idImovel; // Retorna o ID do imóvel criado
+
+        } catch (Exception $e) {
+            // Em caso de qualquer erro, desfaz a transação
+            $this->connection->rollback();
+            // Lança a exceção novamente para que o código que chamou saiba do erro
+            throw $e;
         }
-
-        $stmt->bind_param(
-            "issssdssd",
-            $dados['id_imobiliaria'],
-            $dados['titulo'],
-            $dados['descricao'],
-            $dados['tipo'],
-            $dados['status'],
-            $dados['preco'],
-            $dados['endereco'],
-            $dados['latitude'],
-            $dados['longitude']
-        );
-
-        if (!$stmt->execute()) {
-            throw new Exception("Erro ao executar o cadastro do imóvel: " . $stmt->error);
-        }
-
-        $idImovel = $stmt->insert_id;
-        $this->salvarArquivos($idImovel, 'imagem', $imagens);
-        $this->salvarArquivos($idImovel, 'video', $videos);
-        $this->salvarArquivos($idImovel, 'documento', $documentos);
     }
 
     /**
@@ -162,27 +181,34 @@ class Imovel
         }
     }
 
-    /**
+     /**
      * Salva os caminhos dos arquivos no banco de dados. Lança exceção em caso de erro.
+     * Este método agora faz parte da transação iniciada em `cadastrar`.
      */
     private function salvarArquivos($idImovel, $tipo, $arquivos)
     {
-        if (empty($arquivos)) return;
+        if (empty($arquivos) || !is_array($arquivos)) {
+            return; // Nenhum arquivo para salvar
+        }
 
-        $tabela = "imovel_" . $tipo;
+        $tabela = "imovel_" . $tipo; // Ex: imovel_imagem
         $query = "INSERT INTO $tabela (id_imovel, caminho) VALUES (?, ?)";
         $stmt = $this->connection->prepare($query);
         if (!$stmt) {
-            throw new Exception("Erro ao preparar a query para salvar arquivos: " . $this->connection->error);
+            throw new Exception("Erro ao preparar a query para salvar arquivos do tipo '$tipo': " . $this->connection->error);
         }
 
-        foreach ($arquivos as $arquivo) {
-            $stmt->bind_param("is", $idImovel, $arquivo);
+        foreach ($arquivos as $caminhoRelativo) {
+            if (empty($caminhoRelativo)) continue;
+
+            $stmt->bind_param("is", $idImovel, $caminhoRelativo);
             if (!$stmt->execute()) {
-                throw new Exception("Erro ao salvar o arquivo '$arquivo' no banco: " . $stmt->error);
+                // Se a execução falhar, lança uma exceção que será capturada pelo bloco try/catch em `cadastrar`
+                throw new Exception("Erro ao salvar o arquivo '$caminhoRelativo' no banco: " . $stmt->error);
             }
         }
     }
+
 
     /**
      * Busca um imóvel pelo seu ID, com tratamento de erros robusto.
