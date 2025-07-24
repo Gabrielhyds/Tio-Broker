@@ -1,23 +1,21 @@
 <?php
-// Verifica permissão do usuário
+// Este código deve estar no início do seu ficheiro `listar.php` ou onde você define as variáveis.
 $permissao = $_SESSION['usuario']['permissao'] ?? '';
 $id_imobiliaria_usuario = $_SESSION['usuario']['id_imobiliaria'] ?? null;
 $imobiliarias = [];
-$imoveis = []; // Inicializa a variável para evitar erros
-$idSelecionada = $_GET['id_imobiliaria'] ?? null; // Inicializa a variável
+$imoveis = [];
+$idSelecionada = $_GET['id_imobiliaria'] ?? null;
 
 // Lógica para SuperAdmin
 if ($permissao === 'SuperAdmin') {
     $stmt = $connection->query("SELECT id_imobiliaria, nome FROM imobiliaria WHERE is_deleted = 0 ORDER BY nome");
     $imobiliarias = $stmt->fetch_all(MYSQLI_ASSOC);
 
-    // Se uma imobiliária foi selecionada, busca os imóveis
     if (!empty($idSelecionada)) {
         $imoveis = $imovelModel->buscarPorImobiliaria($idSelecionada);
     }
-    // Se nenhum id for selecionado, $imoveis continua vazio, mostrando a mensagem para selecionar.
 } else {
-    // Para todas as outras permissões, busca apenas os imóveis da imobiliária do usuário.
+    // Para outras permissões, busca imóveis da imobiliária do usuário.
     if ($id_imobiliaria_usuario) {
         $imoveis = $imovelModel->buscarPorImobiliaria($id_imobiliaria_usuario);
     }
@@ -30,7 +28,7 @@ if ($permissao === 'SuperAdmin') {
 <script src="https://cdn.tailwindcss.com"></script>
 
 <style>
-    /* Estilos personalizados com o prefixo 'crm-' para evitar conflitos */
+    /* Estilos personalizados para o CRM */
     .crm-card {
         background-color: #ffffff;
         border-radius: 0.75rem;
@@ -93,7 +91,6 @@ if ($permissao === 'SuperAdmin') {
 
 <!-- Card Principal de Conteúdo -->
 <div class="crm-card">
-    <!-- ✅ CABEÇALHO REFATORADO COM FILTRO INTEGRADO -->
     <div class="crm-header">
         <h2 class="crm-title">
             <i class="bi bi-building"></i>
@@ -101,7 +98,6 @@ if ($permissao === 'SuperAdmin') {
         </h2>
         
         <div class="flex flex-col md:flex-row items-stretch md:items-center gap-4 w-full md:w-auto">
-            <!-- Filtro (só para SuperAdmin) -->
             <?php if ($permissao === 'SuperAdmin'): ?>
                 <form action="" method="GET" id="filter-form" class="flex items-center gap-2">
                     <select name="id_imobiliaria" id="id_imobiliaria_select" class="w-full md:w-64 p-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
@@ -120,7 +116,6 @@ if ($permissao === 'SuperAdmin') {
                 </form>
             <?php endif; ?>
             
-            <!-- Botão Novo Imóvel -->
             <?php $podeCadastrar = ($permissao !== 'SuperAdmin' || ($permissao === 'SuperAdmin' && !empty($idSelecionada))); ?>
             <?php if ($podeCadastrar): ?>
                 <a href="cadastrar.php<?= !empty($idSelecionada) ? '?id_imobiliaria=' . $idSelecionada : '' ?>" class="crm-btn crm-btn-primary">
@@ -131,7 +126,6 @@ if ($permissao === 'SuperAdmin') {
         </div>
     </div>
 
-    <!-- Conteúdo Principal (Grid de Imóveis ou Mensagem de Vazio) -->
     <div class="p-6 md:p-8">
         <?php if (empty($imoveis)): ?>
             <div class="crm-empty-state">
@@ -180,7 +174,8 @@ if ($permissao === 'SuperAdmin') {
                             </div>
                             <div class="flex justify-end items-center pt-4 mt-4 border-t gap-2">
                                 <a href="editar.php?id=<?= $imovel['id_imovel'] ?>" class="font-semibold text-gray-600 hover:text-blue-600 p-1" title="Editar"><i class="bi bi-pencil-square"></i></a>
-                                <a href="../../controllers/ImovelController.php?action=excluir&id=<?= $imovel['id_imovel'] ?>" class="font-semibold text-red-600 hover:text-red-800 p-1" onclick="return confirm('Tem certeza que deseja excluir este imóvel?')" title="Excluir"><i class="bi bi-trash-fill"></i></a>
+                                <!-- ✅ CORREÇÃO: Removido o 'onclick' e adicionada a classe 'btn-excluir' -->
+                                <a href="../../controllers/ImovelController.php?action=excluir&id=<?= $imovel['id_imovel'] ?>" class="font-semibold text-red-600 hover:text-red-800 p-1 btn-excluir" title="Excluir"><i class="bi bi-trash-fill"></i></a>
                                 <a href="mostrar.php?id=<?= $imovel['id_imovel'] ?>" class="font-semibold text-white bg-gray-800 hover:bg-black rounded-md px-4 py-2 transition-colors text-sm">Ver Detalhes</a>
                             </div>
                         </div>
@@ -191,15 +186,41 @@ if ($permissao === 'SuperAdmin') {
     </div>
 </div>
 
-<!-- ✅ SCRIPT PARA FILTRO AUTOMÁTICO -->
+<!-- ✅ INCLUSÃO DA BIBLIOTECA SWEETALERT2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- ✅ SCRIPT PARA FILTRO E MODAL DE EXCLUSÃO -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Lógica para o filtro automático
     const filterSelect = document.getElementById('id_imobiliaria_select');
     if(filterSelect) {
         filterSelect.addEventListener('change', function() {
-            // Ao selecionar uma opção, submete o formulário
             document.getElementById('filter-form').submit();
         });
     }
+
+    // Lógica para o modal de exclusão com SweetAlert2
+    const botoesExcluir = document.querySelectorAll('.btn-excluir');
+    botoesExcluir.forEach(function(botao) {
+        botao.addEventListener('click', function(event) {
+            event.preventDefault();
+            const urlParaExcluir = this.href;
+            Swal.fire({
+                title: 'Você tem certeza?',
+                text: "Esta ação não poderá ser revertida!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Sim, excluir!',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = urlParaExcluir;
+                }
+            });
+        });
+    });
 });
 </script>
