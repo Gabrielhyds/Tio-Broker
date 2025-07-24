@@ -4,6 +4,7 @@
 require_once __DIR__ . '/../models/Cliente.php';
 require_once __DIR__ . '/../models/Interacao.php';
 require_once __DIR__ . '/../models/DocumentoModel.php';
+require_once __DIR__ . '/../models/Usuario.php';
 require_once __DIR__ . '/../config/validadores.php';
 require_once __DIR__ . '/../config/rotas.php';
 
@@ -12,6 +13,7 @@ class ClienteController
     private $clienteModel;
     private $interacaoModel;
     private $documentoModel;
+    private $usuarioModel;
     private $db;
     private $dashboardBaseUrl;
 
@@ -21,7 +23,8 @@ class ClienteController
         $this->clienteModel = new Cliente($this->db);
         $this->interacaoModel = new Interacao($this->db);
         $this->documentoModel = new DocumentoModel($this->db);
-        
+        $this->usuarioModel = new Usuario($this->db);
+
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
@@ -46,9 +49,18 @@ class ClienteController
 
         $idImobiliaria = $_SESSION['usuario']['id_imobiliaria'] ?? null;
         $idUsuario = $_SESSION['usuario']['id_usuario'] ?? null;
-        $isSuperAdmin = ($_SESSION['usuario']['permissao'] ?? '') === 'SuperAdmin';
+        $permissao = $_SESSION['usuario']['permissao'] ?? '';
+        $isSuperAdmin = $permissao === 'SuperAdmin';
 
-        $clientes = $this->clienteModel->listar($idImobiliaria, $idUsuario, $isSuperAdmin);
+        $filtroCorretor = isset($_GET['filtro_corretor']) && is_numeric($_GET['filtro_corretor']) ? (int)$_GET['filtro_corretor'] : null;
+
+        $clientes = $this->clienteModel->listar($idImobiliaria, $idUsuario, $isSuperAdmin, $permissao, $filtroCorretor);
+
+        $corretoresFiltro = [];
+        if (in_array($permissao, ['Admin', 'Coordenador', 'SuperAdmin'])) {
+            $idImobiliariaParaFiltro = $isSuperAdmin ? null : $idImobiliaria;
+            $corretoresFiltro = $this->usuarioModel->listarPorImobiliaria($idImobiliariaParaFiltro);
+        }
 
         require __DIR__ . '/../views/contatos/listar_clientes.php';
     }
@@ -89,7 +101,6 @@ class ClienteController
         $this->verificarLogin();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Valida CPF
             if (!validarCpf($_POST['cpf'])) {
                 $_SESSION['mensagem_erro_form'] = "CPF inválido.";
                 $_SESSION['form_data'] = $_POST;
@@ -97,7 +108,6 @@ class ClienteController
                 exit;
             }
 
-            // Valida telefone
             if (!validarTelefone($_POST['numero'])) {
                 $_SESSION['mensagem_erro_form'] = "Número de telefone inválido.";
                 $_SESSION['form_data'] = $_POST;
@@ -107,7 +117,6 @@ class ClienteController
 
             $caminhoFoto = $this->handleFileUpload();
 
-            // Prepara os dados do cliente para inserção
             $dados = [
                 'nome' => $_POST['nome'],
                 'numero' => $_POST['numero'],
@@ -173,13 +182,12 @@ class ClienteController
     {
         $this->verificarLogin();
 
-        if (!isset($_GET['id_cliente']) || !is_numeric($_GET['id_cliente'])) {
+        $idCliente = (int)($_GET['id_cliente'] ?? 0);
+        if ($idCliente <= 0) {
             $_SESSION['mensagem_erro_lista'] = "ID do cliente inválido para edição.";
             header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=listar');
             exit;
         }
-
-        $idCliente = (int)$_GET['id_cliente'];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!validarCpf($_POST['cpf'])) {
@@ -200,7 +208,6 @@ class ClienteController
             $caminhoFotoAntiga = $clienteAtual['foto'];
             $caminhoFotoFinal = $caminhoFotoAntiga;
 
-            // Verifica se nova foto foi enviada
             $novoCaminhoFoto = $this->handleFileUpload();
             if ($novoCaminhoFoto) {
                 $caminhoFotoFinal = $novoCaminhoFoto;
@@ -214,7 +221,20 @@ class ClienteController
                 $caminhoFotoFinal = null;
             }
 
-            // Prepara dados para atualização
+            $idUsuarioAtribuido = $_POST['id_usuario'] ?? $clienteAtual['id_usuario'];
+            
+            // ALTERAÇÃO: Lógica para atualizar a imobiliária do cliente junto com o corretor
+            $idImobiliariaFinal = $clienteAtual['id_imobiliaria'];
+            $permissao = $_SESSION['usuario']['permissao'] ?? '';
+
+            if ($permissao === 'SuperAdmin' && $idUsuarioAtribuido != $clienteAtual['id_usuario']) {
+                $novoCorretor = $this->usuarioModel->buscarPorId($idUsuarioAtribuido);
+                if ($novoCorretor) {
+                    $idImobiliariaFinal = $novoCorretor['id_imobiliaria'];
+                }
+            }
+            // FIM DA ALTERAÇÃO
+
             $dadosAtualizar = [
                 'nome' => $_POST['nome'],
                 'numero' => $_POST['numero'],
@@ -226,6 +246,8 @@ class ClienteController
                 'subsidio' => !empty($_POST['subsidio']) ? (float)$_POST['subsidio'] : null,
                 'foto' => $caminhoFotoFinal,
                 'tipo_lista' => $_POST['tipo_lista'],
+                'id_usuario' => $idUsuarioAtribuido,
+                'id_imobiliaria' => $idImobiliariaFinal // ALTERAÇÃO: Passa a imobiliária correta
             ];
 
             if ($this->clienteModel->atualizar($idCliente, $dadosAtualizar)) {
@@ -244,6 +266,14 @@ class ClienteController
                 $_SESSION['mensagem_erro_lista'] = "Não foi possível carregar os dados do cliente para edição.";
                 header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=listar');
                 exit;
+            }
+            
+            $corretoresDisponiveis = [];
+            $permissao = $_SESSION['usuario']['permissao'] ?? '';
+            
+            if (in_array($permissao, ['Admin', 'Coordenador', 'SuperAdmin'])) {
+                $idImobiliariaParaListar = ($permissao === 'SuperAdmin') ? null : $cliente['id_imobiliaria'];
+                $corretoresDisponiveis = $this->usuarioModel->listarPorImobiliaria($idImobiliariaParaListar);
             }
 
             require __DIR__ . '/../views/contatos/editar_cliente.php';

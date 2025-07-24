@@ -68,25 +68,57 @@ class Cliente
         return $success;
     }
 
-    public function listar($idImobiliaria = null, $idUsuario = null, $isSuperAdmin = false)
+    public function listar($idImobiliaria = null, $idUsuario = null, $isSuperAdmin = false, $permissao = 'Corretor', $filtroCorretor = null)
     {
         $clientes = [];
-        $orderBy = "ORDER BY c.nome ASC";
+        $params = [];
+        $types = '';
+
         $sql = "SELECT c.*, u.nome as nome_corretor, im.nome as nome_imobiliaria
                 FROM cliente c 
                 LEFT JOIN usuario u ON c.id_usuario = u.id_usuario 
                 LEFT JOIN imobiliaria im ON c.id_imobiliaria = im.id_imobiliaria
-                {$orderBy}";
+                WHERE 1=1";
+
+        if ($isSuperAdmin) {
+            if ($filtroCorretor) {
+                $sql .= " AND c.id_usuario = ?";
+                $params[] = $filtroCorretor;
+                $types .= 'i';
+            }
+        } elseif (in_array($permissao, ['Admin', 'Coordenador'])) {
+            $sql .= " AND c.id_imobiliaria = ?";
+            $params[] = $idImobiliaria;
+            $types .= 'i';
+            if ($filtroCorretor) {
+                $sql .= " AND c.id_usuario = ?";
+                $params[] = $filtroCorretor;
+                $types .= 'i';
+            }
+        } else {
+            $sql .= " AND c.id_usuario = ?";
+            $params[] = $idUsuario;
+            $types .= 'i';
+        }
+        
+        $sql .= " ORDER BY c.nome ASC";
+
         $stmt = $this->db->prepare($sql);
         if (!$stmt) {
             error_log("Falha no prepare (listar): (" . $this->db->errno . ") " . $this->db->error);
-            return $clientes;
+            return [];
         }
+
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+
         if (!$stmt->execute()) {
             error_log("Falha na execução (listar): (" . $stmt->errno . ") " . $stmt->error);
             $stmt->close();
-            return $clientes;
+            return [];
         }
+        
         $result = $stmt->get_result();
         while ($row = $result->fetch_assoc()) {
             $clientes[] = $row;
@@ -98,7 +130,7 @@ class Cliente
     public function buscarPorId($idCliente)
     {
         $sql = "SELECT c.*, u.nome as nome_corretor, u.email as email_corretor, u.telefone as telefone_corretor, 
-                       im.nome as nome_imobiliaria
+                       im.nome as nome_imobiliaria, c.id_imobiliaria
                 FROM cliente c
                 LEFT JOIN usuario u ON c.id_usuario = u.id_usuario
                 LEFT JOIN imobiliaria im ON c.id_imobiliaria = im.id_imobiliaria
@@ -122,21 +154,25 @@ class Cliente
 
     public function atualizar($idCliente, $dados)
     {
-        $sql = "UPDATE cliente SET nome = ?, numero = ?, cpf = ?, empreendimento = ?, renda = ?, entrada = ?, fgts = ?, subsidio = ?, foto = ?, tipo_lista = ?
+        // Adicionado o campo 'id_imobiliaria = ?' na query SQL.
+        $sql = "UPDATE cliente SET nome = ?, numero = ?, cpf = ?, empreendimento = ?, renda = ?, entrada = ?, fgts = ?, subsidio = ?, foto = ?, tipo_lista = ?, id_usuario = ?, id_imobiliaria = ?
                 WHERE id_cliente = ?";
         $stmt = $this->db->prepare($sql);
         if (!$stmt) {
             error_log("Falha no prepare (atualizar): (" . $this->db->errno . ") " . $this->db->error);
             return false;
         }
+        
         $renda = !empty($dados['renda']) ? (float)$dados['renda'] : 0.0;
         $entrada = !empty($dados['entrada']) ? (float)$dados['entrada'] : 0.0;
         $fgts = !empty($dados['fgts']) ? (float)$dados['fgts'] : 0.0;
         $subsidio = !empty($dados['subsidio']) ? (float)$dados['subsidio'] : 0.0;
         $foto = $dados['foto'] ?? null;
         $empreendimento = $dados['empreendimento'] ?? null;
+        
+        // Adicionado 'i' para o novo id_imobiliaria e o próprio valor no bind_param.
         $stmt->bind_param(
-            "ssssddddssi",
+            "ssssddddssiii", // String de tipos atualizada
             $dados['nome'],
             $dados['numero'],
             $dados['cpf'],
@@ -147,6 +183,8 @@ class Cliente
             $subsidio,
             $foto,
             $dados['tipo_lista'],
+            $dados['id_usuario'],
+            $dados['id_imobiliaria'], // Novo parâmetro
             $idCliente
         );
         $success = $stmt->execute();

@@ -117,6 +117,26 @@ unset($_SESSION['form_data']);
             </select>
         </div>
 
+        <!-- ALTERAÇÃO: Bloco para seleção do corretor responsável -->
+        <?php
+        $permissao = $_SESSION['usuario']['permissao'] ?? '';
+        // Exibe o campo apenas para perfis de gestão e se houver corretores disponíveis
+        if (in_array($permissao, ['Admin', 'Coordenador', 'SuperAdmin']) && !empty($corretoresDisponiveis)):
+        ?>
+            <div>
+                <label for="id_usuario" class="block text-sm font-medium text-gray-700">Corretor Responsável <span class="text-red-500">*</span></label>
+                <select name="id_usuario" id="id_usuario" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
+                    <option disabled value="">Selecione um corretor...</option>
+                    <?php foreach ($corretoresDisponiveis as $corretor): ?>
+                        <option value="<?= $corretor['id_usuario'] ?>" <?= ($cliente['id_usuario'] == $corretor['id_usuario']) ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($corretor['nome']) ?> (<?= htmlspecialchars($corretor['permissao']) ?>)
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        <?php endif; ?>
+        <!-- FIM DA ALTERAÇÃO -->
+
         <div class="flex justify-end space-x-3 pt-4">
             <a href="index.php?controller=cliente&action=mostrar&id_cliente=<?= htmlspecialchars($cliente['id_cliente']) ?>" class="bg-gray-100 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-200">Cancelar</a>
             <button type="submit" class="bg-green-600 text-white px-5 py-2 rounded-md hover:bg-green-700">Salvar Alterações</button>

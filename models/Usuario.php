@@ -24,7 +24,6 @@ class Usuario
         $senha_hash = md5($senha); // AVISO: md5 é inseguro. Use password_hash().
         $stmt = $this->conn->prepare("INSERT INTO usuario (nome, email, cpf, telefone, senha, permissao, id_imobiliaria, creci, foto) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
         
-        // --- CORREÇÃO ---
         if ($stmt === false) {
             return false;
         }
@@ -40,9 +39,7 @@ class Usuario
     {
         $stmt = $this->conn->prepare("SELECT * FROM usuario WHERE email = ? AND is_deleted = 0");
 
-        // --- CORREÇÃO ---
         if ($stmt === false) {
-            // error_log("Erro ao preparar login: " . $this->conn->error); // Opcional: logar o erro
             return false;
         }
 
@@ -65,7 +62,6 @@ class Usuario
     {
         $stmt = $this->conn->prepare("SELECT * FROM usuario WHERE id_usuario = ? AND is_deleted = 0");
         
-        // --- CORREÇÃO ---
         if ($stmt === false) {
             return null;
         }
@@ -122,7 +118,6 @@ class Usuario
         $stmt = $this->conn->prepare($sql);
 
         if ($stmt === false) {
-            // $_SESSION['erro'] = "ERRO DE SQL (prepare): " . $this->conn->error; // Evitar uso de $_SESSION em models
             return false;
         }
 
@@ -137,7 +132,6 @@ class Usuario
     {
         $stmt = $this->conn->prepare("UPDATE usuario SET nome = ?, email = ?, cpf = ?, telefone = ?, permissao = ?, id_imobiliaria = ?, creci = ?, foto = ? WHERE id_usuario = ?");
         
-        // --- CORREÇÃO ---
         if ($stmt === false) {
             return false;
         }
@@ -153,7 +147,6 @@ class Usuario
     {
         $stmt = $this->conn->prepare("UPDATE usuario SET is_deleted = 1 WHERE id_usuario = ?");
 
-        // --- CORREÇÃO ---
         if ($stmt === false) {
             return false;
         }
@@ -163,21 +156,50 @@ class Usuario
     }
 
     /**
-     * Lista usuários por imobiliária.
+     * Lista usuários. Se um ID de imobiliária for fornecido, filtra por essa imobiliária.
+     * Se o ID for null, lista todos os usuários do sistema (comportamento para SuperAdmin).
+     *
+     * @param int|null $id_imobiliaria O ID da imobiliária para filtrar, ou null para listar todos.
+     * @return array Uma lista de usuários.
      */
     public function listarPorImobiliaria($id_imobiliaria)
     {
-        $stmt = $this->conn->prepare("SELECT * FROM usuario WHERE id_imobiliaria = ? AND is_deleted = 0 ORDER BY nome ASC");
+        $usuarios = [];
+        $params = [];
+        $types = '';
 
-        // --- CORREÇÃO ---
-        if ($stmt === false) {
+        $sql = "SELECT id_usuario, nome, email, permissao FROM usuario WHERE is_deleted = 0";
+
+        if ($id_imobiliaria !== null) {
+            $sql .= " AND id_imobiliaria = ?";
+            $params[] = $id_imobiliaria;
+            $types .= 'i';
+        }
+
+        $sql .= " ORDER BY nome ASC";
+
+        $stmt = $this->conn->prepare($sql);
+        if (!$stmt) {
+            error_log("Falha no prepare (listarPorImobiliaria): " . $this->conn->error);
             return [];
         }
 
-        $stmt->bind_param("i", $id_imobiliaria);
-        $stmt->execute();
-        $resultado = $stmt->get_result();
-        return $resultado ? $resultado->fetch_all(MYSQLI_ASSOC) : [];
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+
+        if (!$stmt->execute()) {
+            error_log("Falha na execução (listarPorImobiliaria): " . $stmt->error);
+            $stmt->close();
+            return [];
+        }
+
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $usuarios[] = $row;
+        }
+        $stmt->close();
+        return $usuarios;
     }
 
     /**

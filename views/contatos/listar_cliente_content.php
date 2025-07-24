@@ -121,6 +121,7 @@ require_once __DIR__ . '/../../config/rotas.php';
         .crm-actions {
             flex-direction: row;
             width: auto;
+            align-items: center;
         }
     }
 
@@ -139,6 +140,26 @@ require_once __DIR__ . '/../../config/rotas.php';
             <span class="translating" data-i18n="list.title">Clientes Cadastrados</span>
         </h2>
         <div class="crm-actions">
+            <!-- ALTERAÇÃO: Formulário de filtro por corretor -->
+            <?php
+            $permissaoFiltro = $_SESSION['usuario']['permissao'] ?? '';
+            if (in_array($permissaoFiltro, ['Admin', 'Coordenador', 'SuperAdmin']) && !empty($corretoresFiltro)):
+            ?>
+            <form method="GET" action="index.php" class="flex items-center gap-2">
+                <input type="hidden" name="controller" value="cliente">
+                <input type="hidden" name="action" value="listar">
+                <select name="filtro_corretor" onchange="this.form.submit()" class="p-2 border border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Filtrar por Corretor</option>
+                    <?php foreach($corretoresFiltro as $corretor): ?>
+                        <option value="<?= $corretor['id_usuario'] ?>" <?= (($_GET['filtro_corretor'] ?? '') == $corretor['id_usuario']) ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($corretor['nome']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </form>
+            <?php endif; ?>
+            <!-- FIM DA ALTERAÇÃO -->
+
             <a href="<?= BASE_URL ?>views/contatos/index.php?controller=cliente&action=cadastrar" class="crm-btn crm-btn-primary">
                 <i class="fas fa-plus-circle mr-2"></i> <span class="translating" data-i18n="list.newClient">Novo Cliente</span>
             </a>
