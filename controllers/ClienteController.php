@@ -183,14 +183,12 @@ class ClienteController
     {
         $this->verificarLogin();
 
-<<<<<<< HEAD
+
         $idCliente = (int)($_GET['id_cliente'] ?? 0);
         if ($idCliente <= 0) {
-            $_SESSION['mensagem_erro_lista'] = "ID do cliente inválido para edição.";
-=======
+            $_SESSION['erro'] = "ID do cliente inválido para edição.";
         if (!isset($_GET['id_cliente']) || !is_numeric($_GET['id_cliente'])) {
             $_SESSION['erro'] = "ID do cliente inválido para edição.";
->>>>>>> 2609364af3c2f0f9e41401911d8ed7ae4aaab94a
             header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=listar');
             exit;
         }
@@ -285,6 +283,7 @@ class ClienteController
             require __DIR__ . '/../views/contatos/editar_cliente.php';
         }
     }
+}
 
     // Exclui um cliente e sua foto, se existir
     public function excluir()
@@ -310,3 +309,4 @@ class ClienteController
         exit;
     }
 }
+
