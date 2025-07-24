@@ -12,7 +12,7 @@ if (!isset($_SESSION['usuario'])) {
 // Esta variável deve ser preenchida pelo script que chama este arquivo.
 if (!isset($cliente) || empty($cliente)) {
     // Se não houver dados do cliente, define uma mensagem de erro na sessão.
-    $_SESSION['mensagem_erro'] = "Não foi possível carregar os dados do cliente para edição.";
+    $_SESSION['erro'] = "Não foi possível carregar os dados do cliente para edição.";
     // Verifica se os cabeçalhos HTTP ainda não foram enviados para o navegador.
     if (!headers_sent()) {
         // Se não foram enviados, redireciona para a página de listagem de clientes.
