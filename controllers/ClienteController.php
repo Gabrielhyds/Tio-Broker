@@ -102,14 +102,14 @@ class ClienteController
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!validarCpf($_POST['cpf'])) {
-                $_SESSION['mensagem_erro_form'] = "CPF inválido.";
+                $_SESSION['erro'] = "CPF inválido.";
                 $_SESSION['form_data'] = $_POST;
                 header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=cadastrar');
                 exit;
             }
 
             if (!validarTelefone($_POST['numero'])) {
-                $_SESSION['mensagem_erro_form'] = "Número de telefone inválido.";
+                $_SESSION['erro'] = "Número de telefone inválido.";
                 $_SESSION['form_data'] = $_POST;
                 header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=cadastrar');
                 exit;
@@ -133,10 +133,10 @@ class ClienteController
             ];
 
             if ($this->clienteModel->cadastrar($dados)) {
-                $_SESSION['mensagem_sucesso'] = "Cliente cadastrado com sucesso!";
+                $_SESSION['sucesso'] = "Cliente cadastrado com sucesso!";
                 header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=listar');
             } else {
-                $_SESSION['mensagem_erro'] = "Erro ao cadastrar cliente.";
+                $_SESSION['erro'] = "Erro ao cadastrar cliente.";
                 if ($caminhoFoto && file_exists(__DIR__ . '/../' . $caminhoFoto)) {
                     unlink(__DIR__ . '/../' . $caminhoFoto);
                 }
@@ -184,21 +184,21 @@ class ClienteController
 
         $idCliente = (int)($_GET['id_cliente'] ?? 0);
         if ($idCliente <= 0) {
-            $_SESSION['mensagem_erro_lista'] = "ID do cliente inválido para edição.";
+            $_SESSION['erro'] = "ID do cliente inválido para edição.";
             header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=listar');
             exit;
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!validarCpf($_POST['cpf'])) {
-                $_SESSION['mensagem_erro_form'] = "CPF inválido.";
+                $_SESSION['erro'] = "CPF inválido.";
                 $_SESSION['form_data'] = $_POST;
                 header("Location: " . BASE_URL . "views/contatos/index.php?controller=cliente&action=editar&id_cliente=$idCliente");
                 exit;
             }
 
             if (!validarTelefone($_POST['numero'])) {
-                $_SESSION['mensagem_erro_form'] = "Número de telefone inválido.";
+                $_SESSION['erro'] = "Número de telefone inválido.";
                 $_SESSION['form_data'] = $_POST;
                 header("Location: " . BASE_URL . "views/contatos/index.php?controller=cliente&action=editar&id_cliente=$idCliente");
                 exit;
@@ -251,10 +251,10 @@ class ClienteController
             ];
 
             if ($this->clienteModel->atualizar($idCliente, $dadosAtualizar)) {
-                $_SESSION['mensagem_sucesso'] = "Cliente atualizado com sucesso!";
+                $_SESSION['sucesso'] = "Cliente atualizado com sucesso!";
                 header("Location: " . BASE_URL . "views/contatos/index.php?controller=cliente&action=mostrar&id_cliente=$idCliente");
             } else {
-                $_SESSION['mensagem_erro'] = "Erro ao atualizar cliente.";
+                $_SESSION['erro'] = "Erro ao atualizar cliente.";
                 $_SESSION['form_data'] = $_POST;
                 header("Location: " . BASE_URL . "views/contatos/index.php?controller=cliente&action=editar&id_cliente=$idCliente");
             }
@@ -263,7 +263,7 @@ class ClienteController
         } else {
             $cliente = $this->clienteModel->buscarPorId($idCliente);
             if (!$cliente) {
-                $_SESSION['mensagem_erro_lista'] = "Não foi possível carregar os dados do cliente para edição.";
+                $_SESSION['erro'] = "Não foi possível carregar os dados do cliente para edição.";
                 header('Location: ' . BASE_URL . 'views/contatos/index.php?controller=cliente&action=listar');
                 exit;
             }
@@ -294,9 +294,9 @@ class ClienteController
             }
 
             if ($this->clienteModel->excluir($idCliente)) {
-                $_SESSION['mensagem_sucesso'] = "Cliente excluído com sucesso!";
+                $_SESSION['sucesso'] = "Cliente excluído com sucesso!";
             } else {
-                $_SESSION['mensagem_erro_lista'] = "Erro ao excluir cliente.";
+                $_SESSION['erro'] = "Erro ao excluir cliente.";
             }
         }
 
