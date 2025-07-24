@@ -113,22 +113,6 @@
         </div>
     </form>
 </div>
-<!-- Bloco para exibir um alerta de erro do SweetAlert, se houver uma mensagem de erro na sessão. -->
-<?php if (isset($_SESSION['mensagem_erro'])): ?>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            Swal.fire({
-                icon: 'error',
-                title: 'Erro',
-                text: "<?= addslashes($_SESSION['mensagem_erro']) ?>", // `addslashes` evita que aspas na mensagem quebrem o JS.
-                confirmButtonColor: '#3085d6',
-                confirmButtonText: 'OK'
-            });
-        });
-    </script>
-    <?php unset($_SESSION['mensagem_erro']); // Limpa a mensagem da sessão após exibi-la. 
-    ?>
-<?php endif; ?>
 
 <!-- Script para aplicar máscaras de formatação nos campos de CPF e Telefone. -->
 <script>

@@ -1,6 +1,5 @@
 <?php
 
-
 class Imovel
 {
     /**
@@ -19,49 +18,65 @@ class Imovel
     }
 
     /**
-     * Cadastra um novo imóvel e seus arquivos associados usando uma transação.
-     * Lança uma exceção em caso de erro.
+     * Cadastra um novo imóvel com a estrutura de endereço refatorada.
      */
     public function cadastrar($dados, $imagens = [], $videos = [], $documentos = [])
     {
-        $query = "INSERT INTO imovel (id_imobiliaria, titulo, descricao, tipo, status, preco, endereco, latitude, longitude)
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try {
+            // ✅ CORREÇÃO: Query atualizada para os novos campos de endereço.
+            $query = "INSERT INTO imovel (id_imobiliaria, titulo, descricao, tipo, status, preco, endereco, cep, numero, complemento, bairro, cidade, estado)
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        $stmt = $this->connection->prepare($query);
-        if (!$stmt) {
-            throw new Exception("Erro ao preparar a query de cadastro: " . $this->connection->error);
+            $stmt = $this->connection->prepare($query);
+            if (!$stmt) {
+                throw new Exception("Erro ao preparar a query de cadastro: " . $this->connection->error);
+            }
+
+            // ✅ CORREÇÃO: bind_param atualizado para corresponder aos novos campos.
+            $stmt->bind_param(
+                "issssdsssssss",
+                $dados['id_imobiliaria'],
+                $dados['titulo'],
+                $dados['descricao'],
+                $dados['tipo'],
+                $dados['status'],
+                $dados['preco'],
+                $dados['endereco'],
+                $dados['cep'],
+                $dados['numero'],
+                $dados['complemento'],
+                $dados['bairro'],
+                $dados['cidade'],
+                $dados['estado']
+            );
+
+            if (!$stmt->execute()) {
+                throw new Exception("Erro ao executar o cadastro do imóvel: " . $stmt->error);
+            }
+
+            $idImovel = $stmt->insert_id;
+
+            $this->salvarArquivos($idImovel, 'imagem', $imagens);
+            $this->salvarArquivos($idImovel, 'video', $videos);
+            $this->salvarArquivos($idImovel, 'documento', $documentos);
+            
+            return $idImovel;
+
+        } catch (Exception $e) {
+            throw $e;
         }
-
-        $stmt->bind_param(
-            "issssdssd",
-            $dados['id_imobiliaria'],
-            $dados['titulo'],
-            $dados['descricao'],
-            $dados['tipo'],
-            $dados['status'],
-            $dados['preco'],
-            $dados['endereco'],
-            $dados['latitude'],
-            $dados['longitude']
-        );
-
-        if (!$stmt->execute()) {
-            throw new Exception("Erro ao executar o cadastro do imóvel: " . $stmt->error);
-        }
-
-        $idImovel = $stmt->insert_id;
-        $this->salvarArquivos($idImovel, 'imagem', $imagens);
-        $this->salvarArquivos($idImovel, 'video', $videos);
-        $this->salvarArquivos($idImovel, 'documento', $documentos);
     }
 
     /**
-     * Edita um imóvel existente e adiciona novos arquivos.
-     * Lança uma exceção em caso de erro.
+     * Edita um imóvel existente com a estrutura de endereço refatorada.
      */
     public function editar($dados, $imagens = [], $videos = [], $documentos = [])
     {
-        $query = "UPDATE imovel SET id_imobiliaria = ?, titulo = ?, descricao = ?, tipo = ?, status = ?, preco = ?, endereco = ?, latitude = ?, longitude = ? 
+        // ✅ CORREÇÃO: Query atualizada para os novos campos de endereço.
+        $query = "UPDATE imovel SET 
+                    id_imobiliaria = ?, titulo = ?, descricao = ?, tipo = ?, 
+                    status = ?, preco = ?, endereco = ?, cep = ?, numero = ?, 
+                    complemento = ?, bairro = ?, cidade = ?, estado = ? 
                   WHERE id_imovel = ?";
 
         $stmt = $this->connection->prepare($query);
@@ -69,8 +84,9 @@ class Imovel
             throw new Exception("Erro ao preparar a query de edição: " . $this->connection->error);
         }
 
+        // ✅ CORREÇÃO: bind_param atualizado para corresponder aos novos campos.
         $stmt->bind_param(
-            "issssdssdi",
+            "issssdsssssssi",
             $dados['id_imobiliaria'],
             $dados['titulo'],
             $dados['descricao'],
@@ -78,8 +94,12 @@ class Imovel
             $dados['status'],
             $dados['preco'],
             $dados['endereco'],
-            $dados['latitude'],
-            $dados['longitude'],
+            $dados['cep'],
+            $dados['numero'],
+            $dados['complemento'],
+            $dados['bairro'],
+            $dados['cidade'],
+            $dados['estado'],
             $dados['id_imovel']
         );
 
@@ -93,8 +113,7 @@ class Imovel
     }
 
     /**
-     * Exclui um imóvel e todos os seus arquivos associados (registros e arquivos físicos)
-     * usando uma transação. Lança uma exceção em caso de erro.
+     * Exclui um imóvel e todos os seus arquivos associados.
      */
     public function excluir($id)
     {
@@ -127,11 +146,11 @@ class Imovel
                 unlink($caminhoCompleto);
             }
         }
+        return true;
     }
 
     /**
      * Exclui um arquivo específico (registro e arquivo físico).
-     * Lança uma exceção em caso de erro.
      */
     public function excluirArquivo($tipo, $idArquivo)
     {
@@ -154,6 +173,7 @@ class Imovel
                 if (file_exists($caminhoCompleto)) {
                     unlink($caminhoCompleto);
                 }
+                return true;
             } else {
                 throw new Exception("Erro ao excluir o registro do arquivo: " . $stmt->error);
             }
@@ -163,29 +183,33 @@ class Imovel
     }
 
     /**
-     * Salva os caminhos dos arquivos no banco de dados. Lança exceção em caso de erro.
+     * Salva os caminhos dos arquivos no banco de dados.
      */
     private function salvarArquivos($idImovel, $tipo, $arquivos)
     {
-        if (empty($arquivos)) return;
+        if (empty($arquivos) || !is_array($arquivos)) {
+            return;
+        }
 
         $tabela = "imovel_" . $tipo;
         $query = "INSERT INTO $tabela (id_imovel, caminho) VALUES (?, ?)";
         $stmt = $this->connection->prepare($query);
         if (!$stmt) {
-            throw new Exception("Erro ao preparar a query para salvar arquivos: " . $this->connection->error);
+            throw new Exception("Erro ao preparar a query para salvar arquivos do tipo '$tipo': " . $this->connection->error);
         }
 
-        foreach ($arquivos as $arquivo) {
-            $stmt->bind_param("is", $idImovel, $arquivo);
+        foreach ($arquivos as $caminhoRelativo) {
+            if (empty($caminhoRelativo)) continue;
+
+            $stmt->bind_param("is", $idImovel, $caminhoRelativo);
             if (!$stmt->execute()) {
-                throw new Exception("Erro ao salvar o arquivo '$arquivo' no banco: " . $stmt->error);
+                throw new Exception("Erro ao salvar o arquivo '$caminhoRelativo' no banco: " . $stmt->error);
             }
         }
     }
 
     /**
-     * Busca um imóvel pelo seu ID, com tratamento de erros robusto.
+     * Busca um imóvel pelo seu ID.
      */
     public function buscarPorId($id)
     {
@@ -205,7 +229,7 @@ class Imovel
     }
 
     /**
-     * Busca todos os arquivos de um determinado tipo para um imóvel, com tratamento de erros.
+     * Busca todos os arquivos de um determinado tipo para um imóvel.
      */
     public function buscarArquivos($idImovel, $tipo)
     {
@@ -226,56 +250,32 @@ class Imovel
     }
 
     /**
-     * Lista todos os imóveis de uma imobiliária específica, com tratamento de erros e depuração.
+     * Lista todos os imóveis de uma imobiliária específica.
      */
     public function buscarPorImobiliaria($id_imobiliaria)
     {
-        // Reseta as informações de depuração para esta chamada específica
-        $this->debugInfo = [
-            'metodo' => 'buscarPorImobiliaria',
-            'id_passado' => $id_imobiliaria,
-            'query_sql' => '',
-            'num_resultados' => 0,
-            'erro' => null
-        ];
-
+        $this->debugInfo = [];
         if (empty($id_imobiliaria) || !is_numeric($id_imobiliaria)) {
-            $this->debugInfo['erro'] = 'ID da imobiliária é inválido ou está vazio.';
             return [];
         }
 
         $query = "SELECT * FROM imovel WHERE id_imobiliaria = ? ORDER BY data_cadastro DESC";
-        $this->debugInfo['query_sql'] = $query; // Salva a query para depuração
-
         $stmt = $this->connection->prepare($query);
         if (!$stmt) {
-            $this->debugInfo['erro'] = "Erro ao preparar a query: " . $this->connection->error;
-            throw new Exception($this->debugInfo['erro']);
+            throw new Exception("Erro ao preparar a query: " . $this->connection->error);
         }
 
         $stmt->bind_param("i", $id_imobiliaria);
         if (!$stmt->execute()) {
-            $this->debugInfo['erro'] = "Erro ao executar a query: " . $stmt->error;
-            throw new Exception($this->debugInfo['erro']);
+            throw new Exception("Erro ao executar a query: " . $stmt->error);
         }
 
         $result = $stmt->get_result();
-        if (!$result) {
-            $this->debugInfo['erro'] = "Erro ao obter o resultado da busca: " . $this->connection->error;
-            throw new Exception($this->debugInfo['erro']);
-        }
-
-        // Salva o número de linhas encontradas para depuração
-        $this->debugInfo['num_resultados'] = $result->num_rows;
-
         return $result->fetch_all(MYSQLI_ASSOC);
     }
 
     // --- MÉTODOS AUXILIARES ---
 
-    /**
-     * Busca o caminho de um arquivo pelo seu ID de registro.
-     */
     private function buscarCaminhoArquivoPorId($tipo, $idArquivo)
     {
         if (empty($idArquivo) || !is_numeric($idArquivo)) return null;
@@ -294,9 +294,6 @@ class Imovel
         return $resultado['caminho'] ?? null;
     }
 
-    /**
-     * Exclui todos os registros de arquivos de um imóvel. Usado na transação de exclusão.
-     */
     private function excluirRegistrosDeArquivosPorImovelId($idImovel, $tipo)
     {
         $tabela = "imovel_" . $tipo;

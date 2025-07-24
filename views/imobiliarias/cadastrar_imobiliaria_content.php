@@ -1,12 +1,3 @@
-<!-- Bloco PHP para exibir uma mensagem de sucesso, se existir na sessão. -->
-<?php if (isset($_SESSION['sucesso'])): ?>
-    <div class="mb-4 p-4 bg-green-100 text-green-700 rounded">
-        <?= htmlspecialchars($_SESSION['sucesso']); // Exibe a mensagem de forma segura.
-        unset($_SESSION['sucesso']); // Remove a mensagem da sessão para não ser exibida novamente. 
-        ?>
-    </div>
-<?php endif; ?>
-
 <!-- Contêiner principal do formulário, com estilo de cartão. -->
 <div class="max-w-xl mx-auto bg-white p-6 rounded-xl shadow-md">
     <!-- Título do formulário. -->

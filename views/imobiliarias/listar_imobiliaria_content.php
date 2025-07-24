@@ -1,23 +1,3 @@
-<?php if (isset($_SESSION['sucesso'])): ?>
-    <!-- Bloco PHP para exibir uma mensagem de sucesso, se existir na sessão. -->
-    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-        <i class="fas fa-check-circle mr-2"></i>
-        <?= htmlspecialchars($_SESSION['sucesso']); // Exibe a mensagem com segurança.
-        unset($_SESSION['sucesso']); // Remove a mensagem da sessão para não ser exibida novamente. 
-        ?>
-    </div>
-<?php endif; ?>
-
-<!-- CORREÇÃO: Bloco adicionado para exibir mensagens de erro -->
-<?php if (isset($_SESSION['erro'])): ?>
-    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-        <i class="fas fa-exclamation-triangle mr-2"></i>
-        <?= htmlspecialchars($_SESSION['erro']); // Exibe a mensagem de erro.
-        unset($_SESSION['erro']); // Remove a mensagem da sessão.
-        ?>
-    </div>
-<?php endif; ?>
-
 
 <!-- Cabeçalho da página com título e botão de ação. -->
 <div class="flex justify-between items-center mb-6">

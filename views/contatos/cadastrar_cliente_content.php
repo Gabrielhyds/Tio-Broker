@@ -41,16 +41,7 @@ unset($_SESSION['form_data']);
     <span class="translating" data-i18n="add.title">Cadastrar Novo Cliente</span>
 </h2>
 
-<?php // Bloco para exibir uma mensagem de erro geral do formulário, se houver uma na sessão. ?>
-<?php if (isset($_SESSION['mensagem_erro_form'])): ?>
-    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-        <strong class="font-bold">Erro:</strong>
-        <!-- Exibe a mensagem de erro, usando htmlspecialchars para prevenir ataques XSS. -->
-        <span class="block sm:inline"><?= htmlspecialchars($_SESSION['mensagem_erro_form']); ?></span>
-    </div>
-    <?php // Limpa a mensagem da sessão após exibi-la. ?>
-    <?php unset($_SESSION['mensagem_erro_form']); ?>
-<?php endif; ?>
+
 
 <!-- Formulário de cadastro de cliente. A action aponta para o controller 'cliente' e a action 'cadastrar'. -->
 <!-- 'enctype="multipart/form-data"' é essencial para permitir o upload de arquivos (a foto do cliente). -->

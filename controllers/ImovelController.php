@@ -66,7 +66,6 @@ function cadastrarImovel($model)
         exit;
     }
 
-    // Inicia a transação
     $model->connection->begin_transaction();
 
     try {
@@ -74,17 +73,12 @@ function cadastrarImovel($model)
         $videos = salvarUploads('videos', 'videos_imoveis');
         $documentos = salvarUploads('documentos', 'documentos_imoveis');
 
-        // **AÇÃO NECESSÁRIA**: Altere seu método no Model para lançar uma exceção em caso de erro.
-        // Ex: if (!$stmt->execute()) { throw new Exception($stmt->error); }
         $model->cadastrar($dados, $imagens, $videos, $documentos);
 
-        // Se tudo deu certo, confirma a transação
         $model->connection->commit();
         $_SESSION['sucesso'] = "Imóvel cadastrado com sucesso.";
     } catch (Exception $e) {
-        // Se algo deu errado, desfaz a transação
         $model->connection->rollback();
-        // Salva a mensagem de erro real para depuração
         $_SESSION['erro'] = "Erro ao cadastrar imóvel: " . $e->getMessage();
     }
 
@@ -107,7 +101,6 @@ function editarImovel($model)
     $dados = coletarDados();
     $dados['id_imovel'] = $id;
 
-    // Inicia a transação
     $model->connection->begin_transaction();
 
     try {
@@ -115,14 +108,11 @@ function editarImovel($model)
         $videos = salvarUploads('videos', 'videos_imoveis');
         $documentos = salvarUploads('documentos', 'documentos_imoveis');
 
-        // **AÇÃO NECESSÁRIA**: Altere seu método no Model para lançar uma exceção em caso de erro.
         $model->editar($dados, $imagens, $videos, $documentos);
 
-        // Se tudo deu certo, confirma a transação
         $model->connection->commit();
         $_SESSION['sucesso'] = "Imóvel atualizado com sucesso.";
     } catch (Exception $e) {
-        // Se algo deu errado, desfaz a transação
         $model->connection->rollback();
         $_SESSION['erro'] = "Erro ao atualizar imóvel: " . $e->getMessage();
     }
@@ -132,7 +122,7 @@ function editarImovel($model)
 }
 
 /**
- * Coleta os dados do formulário e define o id_imobiliaria corretamente.
+ * Coleta os dados do formulário com a nova estrutura de endereço.
  */
 function coletarDados()
 {
@@ -145,32 +135,39 @@ function coletarDados()
         'tipo' => $_POST['tipo'] ?? '',
         'status' => $_POST['status'] ?? '',
         'preco' => (float) ($_POST['preco'] ?? 0),
-        'endereco' => $_POST['endereco'] ?? '',
-        'latitude' => !empty($_POST['latitude']) ? $_POST['latitude'] : null,
-        'longitude' => !empty($_POST['longitude']) ? $_POST['longitude'] : null,
+        'endereco' => $_POST['endereco'] ?? '', // Logradouro
+        // ✅ CAMPOS REFATORADOS: Latitude e Longitude foram substituídos.
+        'cep' => $_POST['cep'] ?? '',
+        'bairro' => $_POST['bairro'] ?? '',
+        'cidade' => $_POST['cidade'] ?? '',
+        'estado' => $_POST['estado'] ?? '',
+        'numero' => $_POST['numero'] ?? '',
+        'complemento' => $_POST['complemento'] ?? '',
     ];
 }
 
 /**
  * Processa o upload de múltiplos arquivos.
- * Lança uma exceção se o upload falhar.
  */
 function salvarUploads($campo, $subpasta)
 {
     $arquivosSalvos = [];
-    $permitidas = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'mp4', 'doc', 'docx', 'xls', 'xlsx'];
+    $permitidas = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'mp4', 'doc', 'docx', 'xls', 'xlsx', 'webp'];
 
     if (!defined('UPLOADS_DIR')) {
-        define('UPLOADS_DIR', __DIR__ . '/../uploads/');
+        throw new Exception("UPLOADS_DIR não está definido. Verifique se config.php foi incluído.");
     }
-
     $destinoRelativo = 'uploads/' . trim($subpasta, '/') . '/';
     $destinoAbsoluto = UPLOADS_DIR . trim($subpasta, '/') . '/';
 
     if (!empty($_FILES[$campo]['name'][0])) {
+        
         if (!is_dir($destinoAbsoluto)) {
+            if (!is_writable(UPLOADS_DIR)) {
+                 throw new Exception("Erro de permissão: O diretório de uploads principal ('" . UPLOADS_DIR . "') não tem permissão de escrita pelo servidor.");
+            }
             if (!mkdir($destinoAbsoluto, 0755, true)) {
-                throw new Exception("Falha ao criar a pasta de uploads.");
+                throw new Exception("Falha ao criar a pasta de uploads ('" . $destinoAbsoluto . "'). Verifique as permissões do servidor.");
             }
         }
 
@@ -183,15 +180,14 @@ function salvarUploads($campo, $subpasta)
             if (!in_array($extensao, $permitidas)) continue;
 
             $nomeArquivoOriginal = basename($_FILES[$campo]['name'][$index]);
-            $nomeSeguro = preg_replace("/[^a-zA-Z0-9-_\.]/", "", $nomeArquivoOriginal);
-            $nomeFinal = uniqid() . '_' . $nomeSeguro;
+            $nomeSeguro = preg_replace("/[^a-zA-Z0-9-_\.]/", "", pathinfo($nomeArquivoOriginal, PATHINFO_FILENAME));
+            $nomeFinal = $nomeSeguro . '_' . uniqid() . '.' . $extensao;
             $caminhoCompleto = $destinoAbsoluto . $nomeFinal;
             $caminhoRelativo = $destinoRelativo . $nomeFinal;
 
             if (move_uploaded_file($tmp, $caminhoCompleto)) {
                 $arquivosSalvos[] = $caminhoRelativo;
             } else {
-                // Se o upload falhar, lança uma exceção para acionar o rollback.
                 throw new Exception("Falha ao mover o arquivo enviado: " . $nomeArquivoOriginal);
             }
         }

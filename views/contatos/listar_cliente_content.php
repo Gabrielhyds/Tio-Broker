@@ -145,19 +145,6 @@ require_once __DIR__ . '/../../config/rotas.php';
         </div>
     </div>
 
-    <!-- Mensagens de Sucesso/Erro -->
-    <?php if (isset($_SESSION['mensagem_sucesso'])): ?>
-        <div class="crm-alert crm-alert-success">
-            <i class="fas fa-check-circle mr-2"></i> <?= htmlspecialchars($_SESSION['mensagem_sucesso']); ?>
-        </div>
-        <?php unset($_SESSION['mensagem_sucesso']); ?>
-    <?php endif; ?>
-    <?php if (isset($_SESSION['mensagem_erro'])): ?>
-        <div class="crm-alert crm-alert-error">
-            <i class="fas fa-exclamation-triangle mr-2"></i> <?= htmlspecialchars($_SESSION['mensagem_erro']); ?>
-        </div>
-        <?php unset($_SESSION['mensagem_erro']); ?>
-    <?php endif; ?>
 
     <!-- Conteúdo Principal -->
     <div class="p-6 md:p-8">

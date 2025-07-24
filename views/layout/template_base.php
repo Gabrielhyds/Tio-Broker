@@ -63,6 +63,10 @@ require_once __DIR__ . '/../../config/rotas.php';
         <div class="flex-1 flex flex-col overflow-hidden">
             <?php include 'header.php'; ?>
             <main id="main-content" class="flex-1 overflow-x-hidden overflow-y-auto bg-slate-50 p-6">
+                
+                <!-- ✅ CORREÇÃO: A linha de inclusão dos alertas foi movida para o topo do conteúdo principal. -->
+                <?php include '_alertas.php'; ?>
+
                 <?php
                 if (isset($conteudo) && file_exists($conteudo)) {
                     include $conteudo;

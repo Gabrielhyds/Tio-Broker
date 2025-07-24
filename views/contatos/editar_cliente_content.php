@@ -38,15 +38,6 @@ unset($_SESSION['form_data']);
         <i class="fas fa-pencil-alt text-blue-600"></i> Editar Cliente
     </h2>
 
-    <?php // Exibe uma mensagem de erro geral do formulário, se houver uma na sessão. ?>
-    <?php if (isset($_SESSION['mensagem_erro_form'])): ?>
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <strong class="font-bold">Erro:</strong>
-            <span class="block sm:inline"><?= htmlspecialchars($_SESSION['mensagem_erro_form']); ?></span>
-        </div>
-        <?php unset($_SESSION['mensagem_erro_form']); ?>
-    <?php endif; ?>
-
     <!-- O formulário aponta para a action 'editar' e passa o ID do cliente como parâmetro na URL. -->
     <form method="POST" action="<?= BASE_URL ?>views/contatos/index.php?controller=cliente&action=editar&id_cliente=<?= htmlspecialchars($cliente['id_cliente']) ?>" class="space-y-6" id="edit-cliente-form" enctype="multipart/form-data">
         

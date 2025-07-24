@@ -1,31 +1,6 @@
 <!-- Contêiner principal com padding e alinhamento. -->
 <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
 
-    <!-- Alertas de Sucesso/Erro -->
-    <?php if (isset($_SESSION['sucesso'])): ?>
-        <div class="bg-green-100 border-l-4 border-green-500 text-green-800 p-4 rounded-lg mb-6 shadow-sm" role="alert">
-            <div class="flex items-center">
-                <i class="fas fa-check-circle text-green-600 mr-3 text-xl"></i>
-                <div>
-                    <p class="font-bold">Sucesso!</p>
-                    <p><?= htmlspecialchars($_SESSION['sucesso']); ?></p>
-                </div>
-            </div>
-        </div>
-        <?php unset($_SESSION['sucesso']); ?>
-    <?php endif; ?>
-    <?php if (isset($_SESSION['erro'])): ?>
-        <div class="bg-red-100 border-l-4 border-red-500 text-red-800 p-4 rounded-lg mb-6 shadow-sm" role="alert">
-            <div class="flex items-center">
-                <i class="fas fa-exclamation-triangle text-red-600 mr-3 text-xl"></i>
-                <div>
-                    <p class="font-bold">Erro!</p>
-                    <p><?= htmlspecialchars($_SESSION['erro']); ?></p>
-                </div>
-            </div>
-        </div>
-        <?php unset($_SESSION['erro']); ?>
-    <?php endif; ?>
 
     <!-- Card do Formulário -->
     <div class="bg-white p-8 rounded-xl shadow-lg">

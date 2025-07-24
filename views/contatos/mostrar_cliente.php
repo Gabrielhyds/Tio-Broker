@@ -62,20 +62,6 @@ function formatarMoeda($valor) {
             </div>
         </div>
 
-        <!-- Alertas de Mensagens -->
-        <?php if (isset($_SESSION['mensagem_sucesso'])): ?>
-            <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg mb-6" role="alert">
-                <p><?= htmlspecialchars($_SESSION['mensagem_sucesso']); ?></p>
-            </div>
-            <?php unset($_SESSION['mensagem_sucesso']); ?>
-        <?php endif; ?>
-        <?php if (isset($_SESSION['mensagem_erro'])): ?>
-             <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-6" role="alert">
-                <p><?= htmlspecialchars($_SESSION['mensagem_erro']); ?></p>
-            </div>
-            <?php unset($_SESSION['mensagem_erro']); ?>
-        <?php endif; ?>
-
         <!-- Grid de Informações -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
             <!-- Colunas de Informações -->
