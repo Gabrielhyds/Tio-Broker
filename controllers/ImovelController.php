@@ -28,16 +28,11 @@ switch ($action) {
         $id = $_GET['id'] ?? null;
         $idImobiliariaQuery = isset($_GET['id_imobiliaria']) ? '&id_imobiliaria=' . $_GET['id_imobiliaria'] : '';
 
-        try {
-            if ($id && $imovelModel->excluir($id)) {
-                $_SESSION['sucesso'] = "Imóvel excluído com sucesso.";
-            } else {
-                $_SESSION['erro'] = "Erro ao excluir imóvel.";
-            }
-        } catch (Exception $e) {
-             $_SESSION['erro'] = "Erro ao excluir imóvel: " . $e->getMessage();
+        if ($id && $imovelModel->excluir($id)) {
+            $_SESSION['sucesso'] = "Imóvel excluído com sucesso.";
+        } else {
+            $_SESSION['erro'] = "Erro ao excluir imóvel.";
         }
-        
         header('Location: ../views/imoveis/listar.php?' . ltrim($idImobiliariaQuery, '&'));
         exit;
 
@@ -46,16 +41,11 @@ switch ($action) {
         $idArquivo = $_POST['id_arquivo'] ?? null;
         $idImovel = $_POST['id_imovel'] ?? null;
 
-        try {
-            if ($tipo && $idArquivo && $imovelModel->excluirArquivo($tipo, $idArquivo)) {
-                $_SESSION['sucesso'] = ucfirst($tipo) . " excluído com sucesso.";
-            } else {
-                $_SESSION['erro'] = "Erro ao excluir o arquivo.";
-            }
-        } catch (Exception $e) {
-            $_SESSION['erro'] = "Erro ao excluir o arquivo: " . $e->getMessage();
+        if ($tipo && $idArquivo && $imovelModel->excluirArquivo($tipo, $idArquivo)) {
+            $_SESSION['sucesso'] = ucfirst($tipo) . " excluído com sucesso.";
+        } else {
+            $_SESSION['erro'] = "Erro ao excluir o arquivo.";
         }
-        
         header("Location: ../views/imoveis/editar.php?id=" . $idImovel);
         exit;
 
@@ -76,7 +66,6 @@ function cadastrarImovel($model)
         exit;
     }
 
-    // Inicia a transação
     $model->connection->begin_transaction();
 
     try {
@@ -86,13 +75,10 @@ function cadastrarImovel($model)
 
         $model->cadastrar($dados, $imagens, $videos, $documentos);
 
-        // Se tudo deu certo, confirma a transação
         $model->connection->commit();
         $_SESSION['sucesso'] = "Imóvel cadastrado com sucesso.";
     } catch (Exception $e) {
-        // Se algo deu errado, desfaz a transação
         $model->connection->rollback();
-        // Salva a mensagem de erro real para depuração
         $_SESSION['erro'] = "Erro ao cadastrar imóvel: " . $e->getMessage();
     }
 
@@ -115,7 +101,6 @@ function editarImovel($model)
     $dados = coletarDados();
     $dados['id_imovel'] = $id;
 
-    // Inicia a transação
     $model->connection->begin_transaction();
 
     try {
@@ -125,11 +110,9 @@ function editarImovel($model)
 
         $model->editar($dados, $imagens, $videos, $documentos);
 
-        // Se tudo deu certo, confirma a transação
         $model->connection->commit();
         $_SESSION['sucesso'] = "Imóvel atualizado com sucesso.";
     } catch (Exception $e) {
-        // Se algo deu errado, desfaz a transação
         $model->connection->rollback();
         $_SESSION['erro'] = "Erro ao atualizar imóvel: " . $e->getMessage();
     }
@@ -139,7 +122,7 @@ function editarImovel($model)
 }
 
 /**
- * Coleta os dados do formulário e define o id_imobiliaria corretamente.
+ * Coleta os dados do formulário com a nova estrutura de endereço.
  */
 function coletarDados()
 {
@@ -152,15 +135,19 @@ function coletarDados()
         'tipo' => $_POST['tipo'] ?? '',
         'status' => $_POST['status'] ?? '',
         'preco' => (float) ($_POST['preco'] ?? 0),
-        'endereco' => $_POST['endereco'] ?? '',
-        'latitude' => !empty($_POST['latitude']) ? $_POST['latitude'] : null,
-        'longitude' => !empty($_POST['longitude']) ? $_POST['longitude'] : null,
+        'endereco' => $_POST['endereco'] ?? '', // Logradouro
+        // ✅ CAMPOS REFATORADOS: Latitude e Longitude foram substituídos.
+        'cep' => $_POST['cep'] ?? '',
+        'bairro' => $_POST['bairro'] ?? '',
+        'cidade' => $_POST['cidade'] ?? '',
+        'estado' => $_POST['estado'] ?? '',
+        'numero' => $_POST['numero'] ?? '',
+        'complemento' => $_POST['complemento'] ?? '',
     ];
 }
 
 /**
  * Processa o upload de múltiplos arquivos.
- * Lança uma exceção se o upload falhar.
  */
 function salvarUploads($campo, $subpasta)
 {

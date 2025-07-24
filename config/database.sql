@@ -200,30 +200,28 @@ CREATE TABLE password_resets (
     FOREIGN KEY (user_id) REFERENCES usuario (id_usuario) ON DELETE CASCADE
 );
 
--- Tabela de Imóveis (com id_imobiliaria)
 CREATE TABLE imovel (
-    id_imovel INT AUTO_INCREMENT PRIMARY KEY,
-    id_imobiliaria INT NULL, -- Coluna para associar o imóvel à imobiliária
-    titulo VARCHAR(255) NOT NULL,
-    descricao TEXT,
-    tipo ENUM(
-        'venda',
-        'locacao',
-        'temporada',
-        'lancamento'
-    ) NOT NULL,
-    status ENUM(
-        'disponivel',
-        'reservado',
-        'vendido',
-        'indisponivel'
-    ) DEFAULT 'disponivel',
-    preco DECIMAL(15, 2) NOT NULL,
-    endereco VARCHAR(255),
-    latitude DECIMAL(10, 8),
-    longitude DECIMAL(11, 8),
-    data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_imobiliaria) REFERENCES imobiliaria (id_imobiliaria) ON DELETE SET NULL
+  id_imovel INT AUTO_INCREMENT PRIMARY KEY,
+  id_imobiliaria INT NULL,
+  titulo VARCHAR(255) NOT NULL,
+  descricao TEXT,
+  tipo ENUM('venda', 'locacao', 'temporada', 'lancamento') NOT NULL,
+  status ENUM('disponivel', 'reservado', 'vendido', 'indisponivel') DEFAULT 'disponivel',
+  preco DECIMAL(15, 2) NOT NULL,
+
+-- Campos de Endereço Refatorados
+
+endereco VARCHAR(255) NULL, -- Logradouro (Rua, Avenida, etc.)
+  cep VARCHAR(10) NULL,
+  numero VARCHAR(20) NULL,
+  complemento VARCHAR(100) NULL,
+  bairro VARCHAR(100) NULL,
+  cidade VARCHAR(100) NULL,
+  estado VARCHAR(2) NULL, -- Armazena a sigla (UF)
+  
+  data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  
+  FOREIGN KEY (id_imobiliaria) REFERENCES imobiliaria (id_imobiliaria) ON DELETE SET NULL
 );
 
 CREATE TABLE imovel_imagem (

@@ -47,23 +47,53 @@ if (session_status() === PHP_SESSION_NONE) {
         <input type="text" name="preco" id="preco" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="R$ 0,00">
     </div>
 
-    <div>
-        <label for="endereco" class="block text-sm font-medium text-gray-700">Endereço</label>
-        <input type="text" name="endereco" id="endereco" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-    </div>
+    <!-- ✅ INÍCIO DA SEÇÃO DE ENDEREÇO REFATORADA -->
+    <fieldset class="border-t pt-6">
+        <legend class="text-lg font-medium text-gray-900 mb-4">Localização</legend>
+        <div class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="md:col-span-1">
+                    <label for="cep" class="block text-sm font-medium text-gray-700">CEP</label>
+                    <input type="text" name="cep" id="cep" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" placeholder="00000-000">
+                </div>
+            </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-            <label for="latitude" class="block text-sm font-medium text-gray-700">Latitude</label>
-            <input type="text" name="latitude" id="latitude" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-        </div>
-        <div>
-            <label for="longitude" class="block text-sm font-medium text-gray-700">Longitude</label>
-            <input type="text" name="longitude" id="longitude" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-        </div>
-    </div>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="md:col-span-3">
+                    <label for="endereco" class="block text-sm font-medium text-gray-700">Logradouro (Rua, Av.)</label>
+                    <input type="text" name="endereco" id="endereco" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-50">
+                </div>
+                <div>
+                    <label for="numero" class="block text-sm font-medium text-gray-700">Número</label>
+                    <input type="text" name="numero" id="numero" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                </div>
+            </div>
 
-    <div class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="bairro" class="block text-sm font-medium text-gray-700">Bairro</label>
+                    <input type="text" name="bairro" id="bairro" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-50">
+                </div>
+                <div>
+                    <label for="cidade" class="block text-sm font-medium text-gray-700">Cidade</label>
+                    <input type="text" name="cidade" id="cidade" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-50">
+                </div>
+                <div>
+                    <label for="estado" class="block text-sm font-medium text-gray-700">Estado (UF)</label>
+                    <input type="text" name="estado" id="estado" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-50">
+                </div>
+            </div>
+
+            <div>
+                <label for="complemento" class="block text-sm font-medium text-gray-700">Complemento</label>
+                <input type="text" name="complemento" id="complemento" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" placeholder="Ex: Apto 101, Bloco B">
+            </div>
+        </div>
+    </fieldset>
+    <!-- ✅ FIM DA SEÇÃO DE ENDEREÇO REFATORADA -->
+
+
+    <div class="space-y-4 border-t pt-6">
         <div>
             <label class="block text-sm font-medium text-gray-700">Imagens</label>
             <input type="file" name="imagens[]" multiple class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
@@ -86,31 +116,18 @@ if (session_status() === PHP_SESSION_NONE) {
         </button>
     </div>
 </form>
-<!-- A </div> extra que estava aqui foi removida -->
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const precoInput = document.getElementById('preco');
     const form = document.querySelector('form');
 
-    /**
-     * Formata um valor numérico para o padrão de moeda brasileiro (BRL).
-     * Utiliza a API Intl.NumberFormat para uma formatação mais robusta e correta.
-     * @param {string} value - O valor a ser formatado.
-     * @returns {string} - O valor formatado como 'R$ 1.234,56' ou string vazia.
-     */
+    // --- LÓGICA DE FORMATAÇÃO DE PREÇO ---
     const formatCurrency = (value) => {
         if (!value) return '';
-
-        // Remove todos os caracteres que não são dígitos.
         const cleanValue = String(value).replace(/\D/g, '');
-
         if (cleanValue === '') return '';
-
-        // Converte o valor limpo (em centavos) para um número.
         const numberValue = parseInt(cleanValue, 10) / 100;
-
-        // Formata o número para o padrão BRL.
         return new Intl.NumberFormat('pt-BR', {
             style: 'currency',
             currency: 'BRL'
@@ -118,20 +135,41 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     if (precoInput) {
-        // Formata o valor do input enquanto o usuário digita.
         precoInput.addEventListener('input', (e) => {
             e.target.value = formatCurrency(e.target.value);
         });
     }
 
     if (form) {
-        // Antes de submeter o formulário, limpa a formatação do preço.
         form.addEventListener('submit', () => {
             if (precoInput) {
-                // Remove a formatação (R$, pontos, espaços) e troca a vírgula por ponto
-                // para enviar um valor numérico puro para o backend (ex: '1234.56').
                 const numericValue = precoInput.value.replace(/[R$\s.]/g, '').replace(',', '.');
                 precoInput.value = numericValue;
+            }
+        });
+    }
+    
+    // --- ✅ NOVA LÓGICA PARA BUSCA DE ENDEREÇO VIA CEP ---
+    const cepInput = document.getElementById('cep');
+    if (cepInput) {
+        cepInput.addEventListener('blur', function() {
+            const cep = this.value.replace(/\D/g, ''); // Remove caracteres não numéricos
+            if (cep.length === 8) {
+                fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.erro) {
+                            document.getElementById('endereco').value = data.logradouro;
+                            document.getElementById('bairro').value = data.bairro;
+                            document.getElementById('cidade').value = data.localidade;
+                            document.getElementById('estado').value = data.uf;
+                            // Foca no campo de número para o usuário preencher
+                            document.getElementById('numero').focus(); 
+                        } else {
+                            alert('CEP não encontrado.');
+                        }
+                    })
+                    .catch(error => console.error('Erro ao buscar CEP:', error));
             }
         });
     }
