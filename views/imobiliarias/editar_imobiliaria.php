@@ -4,9 +4,9 @@ session_start();
 
 // Verifica se o usuário não está logado OU se não tem a permissão de 'SuperAdmin'.
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']['permissao'] !== 'SuperAdmin') {
-  // Se não tiver permissão, redireciona para a página de login.
-  header('Location: ../auth/login.php');
-  exit;
+    // Se não tiver permissão, redireciona para a página de login.
+    header('Location: ../auth/login.php');
+    exit;
 }
 
 // Inclui os arquivos de configuração e os modelos de dados necessários.
@@ -24,18 +24,20 @@ $idImobiliaria = intval($_GET['id'] ?? 0);
 $dadosImob     = $imobiliariaModel->buscarPorId($idImobiliaria);
 // Se a imobiliária não for encontrada, redireciona para a página de listagem.
 if (!$dadosImob) {
-  header('Location: listar.php');
-  exit;
+    header('Location: listar.php');
+    exit;
 }
 
 // Busca a lista de usuários que já estão vinculados a esta imobiliária.
+// Presume-se que o método `listarPorImobiliaria` retorne também o campo `is_deleted`.
 $usuarios = $usuarioModel->listarPorImobiliaria($idImobiliaria);
 
-// Prepara uma consulta para buscar todos os usuários que NÃO estão vinculados a esta imobiliária.
+// Prepara uma consulta para buscar todos os usuários NÃO-DELETADOS (ativos) que não estão vinculados a esta imobiliária.
+// ATUALIZAÇÃO: A condição foi alterada de "status = 'ativo'" para "is_deleted = 0".
 $stmt = $connection->prepare("
     SELECT id_usuario, nome
     FROM usuario
-    WHERE id_imobiliaria IS NULL OR id_imobiliaria <> ?
+    WHERE (id_imobiliaria IS NULL OR id_imobiliaria <> ?) AND is_deleted = 0
     ORDER BY nome ASC
 ");
 // Associa o ID da imobiliária atual à consulta.
@@ -59,3 +61,4 @@ $activeMenu = 'imobiliaria_listar';
 $conteudo = 'editar_imobiliaria_content.php';
 // Inclui o template base da página, que montará o layout com o conteúdo de edição.
 include '../layout/template_base.php';
+?>
