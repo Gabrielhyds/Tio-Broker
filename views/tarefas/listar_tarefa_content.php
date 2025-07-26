@@ -9,15 +9,6 @@
  * -------------------------------------------------------------------------
  */
 
-// Mock de dados para o código funcionar visualmente (remover em produção)
-if (!isset($usuarios)) $usuarios = [['id_usuario' => 1, 'nome' => 'Bruno'], ['id_usuario' => 2, 'nome' => 'Ana']];
-if (!isset($clientes)) $clientes = [['id_cliente' => 1, 'nome' => 'Projeto A'], ['id_cliente' => 2, 'nome' => 'Projeto B']];
-// ✅ DADOS ATUALIZADOS com o campo 'prioridade'
-if (!isset($tarefas)) $tarefas = [
-    ['id_tarefa' => 1, 'descricao' => 'Desenvolver a tela de login', 'nome_usuario' => 'Bruno', 'nome_cliente' => 'Projeto A', 'status' => 'em andamento', 'prioridade' => 'alta', 'data_criacao' => '2023-10-27 10:00:00'],
-    ['id_tarefa' => 2, 'descricao' => 'Corrigir bug no relatório', 'nome_usuario' => 'Ana', 'nome_cliente' => 'Projeto B', 'status' => 'pendente', 'prioridade' => 'media', 'data_criacao' => '2023-10-27 09:00:00'],
-    ['id_tarefa' => 3, 'descricao' => 'Publicar nova versão', 'nome_usuario' => 'Bruno', 'nome_cliente' => 'Projeto A', 'status' => 'concluida', 'prioridade' => 'baixa', 'data_criacao' => '2023-10-26 15:00:00'],
-];
 if (!isset($filtroUsuario)) $filtroUsuario = $_GET['usuario'] ?? '';
 if (!isset($filtroCliente)) $filtroCliente = $_GET['cliente'] ?? '';
 // ✅ NOVO FILTRO: Captura o filtro de prioridade da URL
@@ -145,8 +136,9 @@ foreach ($tarefas as $tarefa) {
                                         $prioridadeClass = 'bg-slate-100 text-slate-800'; // Default
                                         switch ($t['prioridade']) {
                                             case 'alta': $prioridadeClass = 'bg-red-100 text-red-800'; break;
-                                            case 'media': $prioridadeClass = 'bg-orange-100 text-orange-800'; break;
-                                            case 'baixa': $prioridadeClass = 'bg-gray-100 text-gray-800'; break;
+                                            // ✅ COR ATUALIZADA para 'media'
+                                            case 'media': $prioridadeClass = 'bg-yellow-100 text-yellow-800'; break;
+                                            case 'baixa': $prioridadeClass = 'bg-sky-100 text-sky-800'; break;
                                         }
                                         ?>
                                         <span class="px-2 py-1 text-xs font-semibold rounded-full <?= $prioridadeClass ?>">
@@ -201,8 +193,9 @@ foreach ($tarefas as $tarefa) {
                                     $prioridadeBorder = 'border-slate-200'; // Default
                                     switch ($t['prioridade']) {
                                         case 'alta': $prioridadeBorder = 'border-red-500'; break;
-                                        case 'media': $prioridadeBorder = 'border-orange-500'; break;
-                                        case 'baixa': $prioridadeBorder = 'border-gray-300'; break;
+                                        // ✅ COR DA BORDA ATUALIZADA para 'media'
+                                        case 'media': $prioridadeBorder = 'border-yellow-500'; break;
+                                        case 'baixa': $prioridadeBorder = 'border-sky-500'; break;
                                     }
                                     ?>
                                     <li class="bg-white rounded-lg p-4 shadow-sm cursor-grab border-l-4 <?= $prioridadeBorder ?> hover:shadow-md transition-all duration-200"
@@ -250,11 +243,11 @@ foreach ($tarefas as $tarefa) {
     <!-- ✅ Bloco de classes para garantir a compilação do Tailwind JIT -->
     <div class="hidden">
         <span class="bg-red-100 text-red-800"></span>
-        <span class="bg-orange-100 text-orange-800"></span>
-        <span class="bg-gray-100 text-gray-800"></span>
+        <span class="bg-yellow-100 text-yellow-800"></span>
+        <span class="bg-sky-100 text-sky-800"></span>
         <div class="border-red-500"></div>
-        <div class="border-orange-500"></div>
-        <div class="border-gray-300"></div>
+        <div class="border-yellow-500"></div>
+        <div class="border-sky-500"></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -292,12 +285,13 @@ foreach ($tarefas as $tarefa) {
                 updateView();
             });
             
+            // ✅ FUNÇÃO ATUALIZADA com a nova cor para 'media'
             const getPriorityBadge = (priority) => {
                 let className = 'bg-slate-100 text-slate-800'; // Default
                 switch (priority) {
                     case 'alta': className = 'bg-red-100 text-red-800'; break;
-                    case 'media': className = 'bg-orange-100 text-orange-800'; break;
-                    case 'baixa': className = 'bg-gray-100 text-gray-800'; break;
+                    case 'media': className = 'bg-yellow-100 text-yellow-800'; break;
+                    case 'baixa': className = 'bg-sky-100 text-sky-800'; break;
                 }
                 const priorityText = priority ? priority.charAt(0).toUpperCase() + priority.slice(1) : 'N/A';
                 return `<span class="px-2 py-1 text-xs font-semibold rounded-full ${className}">${priorityText}</span>`;
