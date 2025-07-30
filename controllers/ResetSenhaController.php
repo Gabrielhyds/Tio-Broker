@@ -81,113 +81,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Redefinição de Senha</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #f3f4f6;
-            font-family: 'Inter', Arial, sans-serif;
-        }
-        table {
-            border-collapse: collapse;
-        }
-        .main-table {
-            width: 100%;
-            max-width: 600px;
-            margin: 20px auto;
-            background-color: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        }
-        .header {
-            background-color: #1d4ed8;
-            padding: 30px 20px;
-            text-align: center;
-        }
-        .content {
-            padding: 40px 35px;
-        }
-        .footer {
-            background-color: #f9fafb;
-            padding: 30px;
-            text-align: center;
-            font-size: 12px;
-            color: #6b7280;
-            border-top: 1px solid #e5e7eb;
-        }
-        h1 {
-            color: #111827;
-            font-size: 24px;
-            font-weight: 700;
-            margin: 0 0 15px 0;
-        }
-        p {
-            color: #374151;
-            font-size: 16px;
-            line-height: 1.6;
-            margin: 0 0 25px 0;
-        }
-        .button-container {
-            padding: 10px 0 25px 0;
-        }
-        .button {
-            background-color: #2563eb;
-            color: #ffffff;
-            padding: 15px 30px;
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 16px;
-            display: inline-block;
-        }
-        .link {
-            color: #2563eb;
-            text-decoration: none;
-        }
-        .link-container {
-            font-size: 14px;
-            color: #4b5563;
-            word-break: break-all;
-            padding-top: 20px;
-        }
+        body { margin: 0; padding: 0; background-color: #f3f4f6; font-family: 'Inter', Arial, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        table { border-collapse: collapse; }
+        .wrapper { width: 100%; table-layout: fixed; background-color: #f3f4f6; padding: 40px 0; }
+        .main-table { width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-spacing: 0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; }
+        .header { background-color: #1d4ed8; padding: 32px 20px; text-align: center; }
+        .content { padding: 48px 40px; }
+        .footer { background-color: #f9fafb; padding: 32px; text-align: center; font-size: 12px; color: #6b7280; border-top: 1px solid #e5e7eb; }
+        h1 { color: #111827; font-size: 24px; font-weight: 700; margin: 0 0 16px 0; }
+        p { color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0; }
+        .button-container { margin: 16px 0 32px 0; }
+        .button { background-color: #2563eb; color: #ffffff !important; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block; }
+        .link-container { font-size: 14px; color: #4b5563; padding-top: 24px; border-top: 1px solid #e5e7eb; }
+        .link { color: #2563eb; text-decoration: underline; word-break: break-all; }
     </style>
 </head>
 <body>
-    <table class="main-table" align="center" cellpadding="0" cellspacing="0">
-        <!-- Header -->
-        <tr>
-            <td class="header">
-                <h3>TIO BROKER</h3>
-            </td>
-        </tr>
-        <!-- Content -->
-        <tr>
-            <td class="content">
-                <h1>Olá, {$usuario['nome']}!</h1>
-                <p>Parabéns!!!😍 Recebemos uma solicitação para redefinir a senha da sua conta. Se foi taok, clique no botão abaixo para escolher uma nova senha.</p>
-                <table class="button-container" align="center" cellpadding="0" cellspacing="0">
-                    <tr>
-                        <td align="center">
-                            <a href="{$link}" target="_blank" class="button">Redefinir Minha Senha</a>
-                        </td>
-                    </tr>
-                </table>
-                <p class="link-container">Se o botão não funcionar, copie e cole o seguinte link no seu navegador:<br><a href="{$link}" target="_blank" class="link">{$link}</a></p>
-                <p style="font-size: 14px; color: #6b7280; margin-top: 30px; margin-bottom: 0;">Este link é válido por 1 hora. Se você não solicitou esta alteração, por favor se preocupe, você foi hackeado.</p>
-            </td>
-        </tr>
-        <!-- Footer -->
-        <tr>
-            <td class="footer">
-                &copy; Tio Broker. Todos os direitos reservados.<br>
-                <span style="color: #9ca3af;">Você está a receber este e-mail porque uma redefinição de senha foi solicitada para a sua conta.</span>
-            </td>
-        </tr>
-    </table>
+    <div class="wrapper">
+        <table class="main-table" align="center">
+            <!-- Header com Logo -->
+            <tr>
+                <td class="header">
+                    <a href="{BASE_URL}" target="_blank">
+                        <img src="{$logoUrl}" alt="Tio Broker Logo" width="180" style="display: block; margin: 0 auto; border: 0; color: #ffffff; font-size: 28px; font-weight: 700;">
+                    </a>
+                </td>
+            </tr>
+            <!-- Conteúdo Principal -->
+            <tr>
+                <td class="content">
+                    <h1>Olá, {$usuario['nome']}!</h1>
+                    <p>Recebemos uma solicitação para redefinir a senha da sua conta. Para criar uma nova senha, clique no botão abaixo.</p>
+                    <table class="button-container" align="center" cellpadding="0" cellspacing="0" role="presentation">
+                        <tr>
+                            <td align="center">
+                                <a href="{$link}" target="_blank" class="button">Redefinir Senha</a>
+                            </td>
+                        </tr>
+                    </table>
+                    <p style="font-size: 14px; color: #6b7280;">Este link de redefinição é válido por <strong>1 hora</strong>. Se você não solicitou esta alteração, pode ignorar este e-mail com segurança.</p>
+                    <div class="link-container">
+                        <p style="margin: 0;">Se o botão não funcionar, copie e cole o link abaixo no seu navegador:</p>
+                        <a href="{$link}" target="_blank" class="link">{$link}</a>
+                    </div>
+                </td>
+            </tr>
+            <!-- Rodapé -->
+            <tr>
+                <td class="footer">
+                    <p style="margin: 0 0 10px 0;">&copy; 2024 Tio Broker. Todos os direitos reservados.</p>
+                    <p style="margin: 0; color: #9ca3af;">Você recebeu este e-mail porque uma redefinição de senha foi solicitada para sua conta.</p>
+                </td>
+            </tr>
+        </table>
+    </div>
 </body>
 </html>
 HTML;
