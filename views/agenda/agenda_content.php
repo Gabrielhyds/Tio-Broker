@@ -5,10 +5,10 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 ?>
 <!-- Importação das bibliotecas e estilos -->
-<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
-<!-- O script de locale do FullCalendar será carregado dinamicamente -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
 <script src="https://cdn.tailwindcss.com"></script>
+
 <style>
     :root {
         --fc-border-color: #e2e8f0;
@@ -16,24 +16,20 @@ if (session_status() === PHP_SESSION_NONE) {
         --fc-event-border-color: #3b82f6;
         --fc-event-text-color: #fff;
     }
-
     .view-btn.active {
         background-color: white;
         color: #3b82f6;
         box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
     }
-
     .fc-event-past {
         opacity: 0.6;
     }
-
-    /* Esconde o texto que está aguardando tradução para evitar o "pisca-pisca" */
     .translating {
         visibility: hidden;
     }
 </style>
 
-<!-- Layout da página (com a classe 'translating') -->
+<!-- Layout da página -->
 <div class="w-full max-w-7xl mx-auto p-4 font-sans">
     <div class="flex flex-col md:flex-row items-center justify-between mb-4 gap-4">
         <div class="flex items-center gap-2">
@@ -56,7 +52,7 @@ if (session_status() === PHP_SESSION_NONE) {
     </div>
 </div>
 
-<!-- Modal de Adicionar/Editar Evento (com a classe 'translating') -->
+<!-- Modal de Adicionar/Editar Evento -->
 <div id="eventoModal" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden items-center justify-center p-4">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
         <div class="flex items-center justify-between p-5 border-b">
@@ -126,11 +122,11 @@ if (session_status() === PHP_SESSION_NONE) {
     </div>
 </div>
 
-<!-- Modal de Confirmação (com a classe 'translating') -->
+<!-- Modal de Confirmação -->
 <div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-60 z-50 hidden items-center justify-center p-4">
     <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm">
-        <h3 class="text-lg font-bold text-gray-900 mb-4 translating" data-i18n="confirmDelete.title"></h3>
-        <p class="text-sm text-gray-600 mb-6 translating" data-i18n="confirmDelete.message"></p>
+        <h3 class="text-lg font-bold text-gray-900 mb-4 translating" data-i18n="confirmDelete.title">Confirmar Exclusão</h3>
+        <p class="text-sm text-gray-600 mb-6 translating" data-i18n="confirmDelete.message">Tem certeza de que deseja excluir este evento?</p>
         <div class="flex justify-end space-x-4">
             <button id="cancelDelete" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 translating" data-i18n="buttons.cancel">Cancelar</button>
             <button id="confirmDelete" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 translating" data-i18n="buttons.confirm">Confirmar</button>
@@ -139,368 +135,376 @@ if (session_status() === PHP_SESSION_NONE) {
 </div>
 
 
-<!-- SCRIPT ATUALIZADO -->
+<!-- SCRIPT CORRIGIDO E COMPLETO -->
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // --- 1. REFERÊNCIAS DE DOM E ESTADO GLOBAL ---
-        const calendarEl = document.getElementById('calendar');
-        const modal = document.getElementById('eventoModal');
-        const eventoForm = document.getElementById('eventoForm');
-        const modalError = document.getElementById('modalError');
-        const modalTitle = document.getElementById('modalTitle');
-        const actionInput = document.getElementById('action');
-        const idEventoInput = document.getElementById('id_evento');
-        const deleteButton = document.getElementById('deleteButton');
-        const selectCliente = document.getElementById('id_cliente');
-        const confirmModal = document.getElementById('confirmModal');
-        const confirmDeleteBtn = document.getElementById('confirmDelete');
-        const calendarTitleEl = document.getElementById('calendar-title');
-        const prevBtn = document.getElementById('prev-btn');
-        const nextBtn = document.getElementById('next-btn');
-        const todayBtn = document.getElementById('today-btn');
-        const monthViewBtn = document.getElementById('month-view-btn');
-        const weekViewBtn = document.getElementById('week-view-btn');
-        const dayViewBtn = document.getElementById('day-view-btn');
-        const listViewBtn = document.getElementById('list-view-btn');
-        const viewButtons = [monthViewBtn, weekViewBtn, dayViewBtn, listViewBtn];
-        const tipoEventoSelect = document.getElementById('tipo_evento');
-        const imovelContainer = document.getElementById('imovel-container');
-        const imovelSelect = document.getElementById('id_imovel');
-        const feedbackContainer = document.getElementById('feedback-container');
-        const feedbackTextarea = document.getElementById('feedback');
+document.addEventListener('DOMContentLoaded', function() {
+    // --- 1. REFERÊNCIAS DE DOM E ESTADO GLOBAL ---
+    const calendarEl = document.getElementById('calendar');
+    const modal = document.getElementById('eventoModal');
+    const eventoForm = document.getElementById('eventoForm');
+    const modalError = document.getElementById('modalError');
+    const modalTitle = document.getElementById('modalTitle');
+    const actionInput = document.getElementById('action');
+    const idEventoInput = document.getElementById('id_evento');
+    const deleteButton = document.getElementById('deleteButton');
+    const selectCliente = document.getElementById('id_cliente');
+    const confirmModal = document.getElementById('confirmModal');
+    const confirmDeleteBtn = document.getElementById('confirmDelete');
+    const calendarTitleEl = document.getElementById('calendar-title');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const todayBtn = document.getElementById('today-btn');
+    const monthViewBtn = document.getElementById('month-view-btn');
+    const weekViewBtn = document.getElementById('week-view-btn');
+    const dayViewBtn = document.getElementById('day-view-btn');
+    const listViewBtn = document.getElementById('list-view-btn');
+    const viewButtons = [monthViewBtn, weekViewBtn, dayViewBtn, listViewBtn];
+    const tipoEventoSelect = document.getElementById('tipo_evento');
+    const imovelContainer = document.getElementById('imovel-container');
+    const imovelSelect = document.getElementById('id_imovel');
+    const feedbackContainer = document.getElementById('feedback-container');
+    const feedbackTextarea = document.getElementById('feedback');
 
-        let calendar;
-        let translations = {};
-        let eventoIdParaExcluir = null;
+    let calendar;
+    let translations = {};
+    let eventoIdParaExcluir = null;
 
-        // --- 2. FUNÇÕES PRINCIPAIS DE I18N ---
-        async function loadTranslations(module, lang) {
-            try {
-                const response = await fetch(`../../controllers/TraducaoController.php?modulo=${module}&lang=${lang}`);
-                const result = await response.json();
-                if (result.success) {
-                    translations = result.data;
+    // --- 2. FUNÇÕES DE TRADUÇÃO E UTILITÁRIOS ---
+    async function loadTranslations(module, lang) {
+        try {
+            const response = await fetch(`../../controllers/TraducaoController.php?modulo=${module}&lang=${lang}`);
+            const result = await response.json();
+            if (result.success) {
+                translations = result.data;
+            }
+        } catch (error) {
+            console.error(`Could not load translation for module "${module}":`, error);
+        }
+    }
+
+    function t(key) {
+        return key.split('.').reduce((obj, i) => obj && obj[i], translations) || key;
+    }
+
+    function applyTranslationsToDOM() {
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.dataset.i18n;
+            const translation = t(key);
+            if (translation !== key) {
+                if (el.hasAttribute('data-i18n-placeholder')) {
+                    el.placeholder = translation;
+                } else {
+                    el.innerText = translation;
                 }
-            } catch (error) {
-                console.error(`Could not load translation for module "${module}":`, error);
             }
-        }
+            el.classList.remove('translating');
+        });
+    }
 
-        function t(key) {
-            return key.split('.').reduce((obj, i) => obj && obj[i], translations) || key;
-        }
+    function loadCalendarLocaleScript(lang) {
+        return new Promise((resolve, reject) => {
+            const existingScript = document.getElementById('fc-locale-script');
+            if (existingScript) existingScript.remove();
+            if (lang === 'en') return resolve();
 
-        function applyTranslationsToDOM() {
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.dataset.i18n;
-                const translation = t(key);
-                if (translation !== key) {
-                    if (el.hasAttribute('placeholder')) {
-                        el.placeholder = translation;
-                    } else {
-                        el.innerText = translation;
-                    }
+            const script = document.createElement('script');
+            script.id = 'fc-locale-script';
+            script.src = `https://cdn.jsdelivr.net/npm/@fullcalendar/core/locales/${lang}.global.min.js`;
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error(`Failed to load locale: ${lang}`));
+            document.head.appendChild(script);
+        });
+    }
+
+    function toLocalISOString(date) {
+        if (!date) return '';
+        const d = new Date(date);
+        d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+        return d.toISOString().slice(0, 16);
+    }
+
+    // --- 3. FUNÇÕES DA APLICAÇÃO (MODAIS, EVENTOS, DADOS) ---
+    function populateImoveis(selectedImovelId = null) {
+        fetch('../../controllers/api_imoveis.php')
+            .then(res => {
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                return res.json();
+            })
+            .then(data => {
+                imovelSelect.innerHTML = `<option value="">${t('form.selects.chooseProperty') || 'Escolha um imóvel'}</option>`;
+                if (data.success && data.imoveis) {
+                    data.imoveis.forEach(imovel => {
+                        const opt = document.createElement('option');
+                        opt.value = imovel.id_imovel;
+                        // CORREÇÃO: A API retorna 'titulo', não 'titulo_imovel'
+                        opt.textContent = imovel.titulo;
+                        if (imovel.id_imovel == selectedImovelId) {
+                            opt.selected = true;
+                        }
+                        imovelSelect.appendChild(opt);
+                    });
+                } else {
+                     console.error("API de imóveis não retornou sucesso:", data.message);
                 }
-                el.classList.remove('translating');
+            })
+            .catch(error => {
+                console.error('Erro grave ao buscar imóveis:', error);
+                imovelSelect.innerHTML = `<option value="">Erro ao carregar imóveis</option>`;
             });
-        }
+    }
 
-        function loadCalendarLocaleScript(lang) {
-            return new Promise((resolve, reject) => {
-                const existingScript = document.getElementById('fc-locale-script');
-                if (existingScript) existingScript.remove();
-                if (lang === 'en') return resolve();
-
-                const script = document.createElement('script');
-                script.id = 'fc-locale-script';
-                script.src = `https://cdn.jsdelivr.net/npm/@fullcalendar/core/locales/${lang}.global.min.js`;
-                script.onload = () => resolve();
-                script.onerror = () => reject(new Error(`Failed to load locale: ${lang}`));
-                document.head.appendChild(script);
+    function populateClientes(selectedClientId = null) {
+        fetch('../../controllers/api_clientes.php')
+            .then(res => res.json())
+            .then(data => {
+                selectCliente.innerHTML = `<option value="">${t('form.selects.chooseClient') || 'Escolha um cliente'}</option>`;
+                if (data.success && data.clientes) {
+                    data.clientes.forEach(cliente => {
+                        const opt = document.createElement('option');
+                        opt.value = cliente.id_cliente;
+                        opt.textContent = cliente.nome;
+                        if (cliente.id_cliente == selectedClientId) opt.selected = true;
+                        selectCliente.appendChild(opt);
+                    });
+                }
             });
-        }
+    }
 
-        // --- 3. FUNÇÕES DA APLICAÇÃO (MODAIS, EVENTOS, ETC.) ---
-
-        function toLocalISOString(date) {
-            if (!date) return '';
-            const d = new Date(date);
-            d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-            return d.toISOString().slice(0, 16);
-        }
-
-        function populateImoveis(selectedImovelId = null) {
-            fetch('../../controllers/api_imoveis.php')
-                .then(res => res.json())
-                .then(data => {
-                    imovelSelect.innerHTML = `<option value="">${t('form.selects.chooseProperty')}</option>`;
-                    if (data.success) {
-                        data.imoveis.forEach(imovel => {
-                            const opt = document.createElement('option');
-                            opt.value = imovel.id_imovel;
-                            opt.textContent = imovel.titulo_imovel;
-                            if (imovel.id_imovel == selectedImovelId) opt.selected = true;
-                            imovelSelect.appendChild(opt);
-                        });
-                    }
-                });
-        }
-
-        function populateClientes(selectedClientId = null) {
-            fetch('../../controllers/api_clientes.php')
-                .then(res => res.json())
-                .then(data => {
-                    selectCliente.innerHTML = `<option value="">${t('form.selects.chooseClient')}</option>`;
-                    if (data.success) {
-                        data.clientes.forEach(cliente => {
-                            const opt = document.createElement('option');
-                            opt.value = cliente.id_cliente;
-                            opt.textContent = cliente.nome;
-                            if (cliente.id_cliente == selectedClientId) opt.selected = true;
-                            selectCliente.appendChild(opt);
-                        });
-                    }
-                });
-        }
-
-        function toggleCustomFields(tipo, dataFim) {
-            if (tipo === 'visita') {
-                imovelContainer.classList.remove('hidden');
-            } else {
-                imovelContainer.classList.add('hidden');
-                imovelSelect.value = '';
-            }
-            const agora = new Date();
-            const fimEvento = new Date(dataFim);
-            if (tipo === 'visita' && fimEvento < agora) {
-                feedbackContainer.classList.remove('hidden');
-            } else {
-                feedbackContainer.classList.add('hidden');
-            }
-        }
-
-        function openModalForCreate(info) {
-            eventoForm.reset();
-            modalError.classList.add('hidden');
-            modalTitle.textContent = t('calendar.addEventTitle');
-            actionInput.value = 'agendar';
-            idEventoInput.value = '';
-            deleteButton.classList.add('hidden');
-            const startDate = info.allDay ? new Date(info.startStr + 'T09:00:00') : new Date(info.start);
-            const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
-            document.getElementById('data_inicio').value = toLocalISOString(startDate);
-            document.getElementById('data_fim').value = toLocalISOString(endDate);
+    function toggleCustomFields(tipo, dataFim) {
+        if (tipo === 'visita') {
+            imovelContainer.classList.remove('hidden');
+        } else {
             imovelContainer.classList.add('hidden');
+            imovelSelect.value = '';
+        }
+
+        const agora = new Date();
+        const fimEvento = dataFim ? new Date(dataFim) : null;
+
+        if (tipo === 'visita' && fimEvento && fimEvento < agora) {
+            feedbackContainer.classList.remove('hidden');
+        } else {
             feedbackContainer.classList.add('hidden');
-            populateClientes();
-            populateImoveis();
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            feedbackTextarea.value = '';
         }
+    }
 
-        function openModalForEdit(event) {
-            eventoForm.reset();
-            modalError.classList.add('hidden');
-            modalTitle.textContent = t('calendar.editEventTitle');
-            actionInput.value = 'atualizar';
-            idEventoInput.value = event.id;
-            deleteButton.classList.remove('hidden');
-            fetch(`../../controllers/AgendaController.php?action=buscar_evento&id=${event.id}`)
-                .then(response => response.json())
-                .then(res => {
-                    if (res.success) {
-                        const evento = res.data;
-                        document.getElementById('titulo').value = evento.titulo;
-                        tipoEventoSelect.value = evento.tipo_evento;
-                        document.getElementById('data_inicio').value = toLocalISOString(evento.data_inicio);
-                        document.getElementById('data_fim').value = toLocalISOString(evento.data_fim);
-                        document.getElementById('descricao').value = evento.descricao;
-                        feedbackTextarea.value = evento.feedback;
-                        document.getElementById('lembrete').checked = evento.lembrete == 1;
-                        populateClientes(evento.id_cliente);
-                        populateImoveis(evento.id_imovel);
-                        toggleCustomFields(evento.tipo_evento, evento.data_fim);
-                        modal.classList.remove('hidden');
-                        modal.classList.add('flex');
-                    } else {
-                        alert(t('calendar.fetchError') + res.message);
-                    }
-                });
-        }
+    function openModalForCreate(info) {
+        eventoForm.reset();
+        modalError.classList.add('hidden');
+        modalTitle.textContent = t('calendar.addEventTitle');
+        actionInput.value = 'agendar';
+        idEventoInput.value = '';
+        deleteButton.classList.add('hidden');
+        
+        const startDate = info.allDay ? new Date(info.startStr + 'T09:00:00') : new Date(info.start);
+        const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+        document.getElementById('data_inicio').value = toLocalISOString(startDate);
+        document.getElementById('data_fim').value = toLocalISOString(endDate);
 
-        function closeModal() {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
+        toggleCustomFields(tipoEventoSelect.value, endDate);
+        populateClientes();
+        populateImoveis();
 
-        function closeConfirmModal() {
-            confirmModal.classList.add('hidden');
-            confirmModal.classList.remove('flex');
-        }
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
 
-        function updateEventDate(info) {
-            const {
-                event
-            } = info;
-            const formData = new FormData();
-            formData.append('action', 'atualizar_data');
-            formData.append('id', event.id);
-            formData.append('start', event.start.toISOString().slice(0, 19).replace('T', ' '));
-            const endDate = event.end ? event.end.toISOString().slice(0, 19).replace('T', ' ') : formData.get('start');
-            formData.append('end', endDate);
-            fetch('../../controllers/AgendaController.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (!data.success) {
-                        alert("Erro: " + data.message);
-                        info.revert();
-                    }
-                });
-        }
+    function openModalForEdit(eventOrEventId) {
+        const eventId = typeof eventOrEventId === 'object' ? eventOrEventId.id : eventOrEventId;
+        if (!eventId) return;
 
-        // --- 4. INICIALIZAÇÃO DA APLICAÇÃO ---
-        async function initializeAgenda(lang) {
-            if (calendar) calendar.destroy();
-
-            await Promise.all([
-                loadTranslations('agenda', lang),
-                loadCalendarLocaleScript(lang)
-            ]);
-
-            applyTranslationsToDOM();
-
-            calendar = new FullCalendar.Calendar(calendarEl, {
-                locale: lang,
-                initialView: 'dayGridMonth',
-                headerToolbar: false,
-                events: '../../controllers/api_eventos.php',
-                editable: true,
-                selectable: true,
-                select: openModalForCreate,
-                eventClick: (info) => openModalForEdit(info.event),
-                eventDrop: (info) => updateEventDate(info),
-                eventResize: (info) => updateEventDate(info),
-                datesSet: (info) => {
-                    calendarTitleEl.textContent = info.view.title;
-                },
-                eventDidMount: (info) => {
-                    if (info.event.end && new Date(info.event.end) < new Date()) {
-                        info.el.classList.add('fc-event-past');
-                    }
+        eventoForm.reset();
+        modalError.classList.add('hidden');
+        modalTitle.textContent = t('calendar.editEventTitle');
+        actionInput.value = 'atualizar';
+        idEventoInput.value = eventId;
+        deleteButton.classList.remove('hidden');
+        
+        fetch(`../../controllers/AgendaController.php?action=buscar_evento&id=${eventId}`)
+            .then(response => response.json())
+            .then(res => {
+                if (res.success) {
+                    const evento = res.data;
+                    document.getElementById('titulo').value = evento.titulo;
+                    tipoEventoSelect.value = evento.tipo_evento;
+                    document.getElementById('data_inicio').value = toLocalISOString(evento.data_inicio);
+                    document.getElementById('data_fim').value = toLocalISOString(evento.data_fim);
+                    document.getElementById('descricao').value = evento.descricao;
+                    feedbackTextarea.value = evento.feedback || '';
+                    document.getElementById('lembrete').checked = evento.lembrete == 1;
+                    
+                    populateClientes(evento.id_cliente);
+                    populateImoveis(evento.id_imovel);
+                    
+                    toggleCustomFields(evento.tipo_evento, evento.data_fim);
+                    
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                } else {
+                    alert(t('calendar.fetchError') + res.message);
                 }
             });
+    }
 
-            calendar.render();
-            calendarTitleEl.textContent = calendar.view.title;
-            updateActiveButton(monthViewBtn);
-        }
+    function closeModal() {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
 
-        // --- 5. LISTENERS DE EVENTOS ---
-        function updateActiveButton(activeButton) {
-            viewButtons.forEach(button => button.classList.remove('active'));
-            activeButton.classList.add('active');
-        }
-        prevBtn.addEventListener('click', () => calendar.prev());
-        nextBtn.addEventListener('click', () => calendar.next());
-        todayBtn.addEventListener('click', () => calendar.today());
-        monthViewBtn.addEventListener('click', () => {
-            calendar.changeView('dayGridMonth');
-            updateActiveButton(monthViewBtn);
-        });
-        weekViewBtn.addEventListener('click', () => {
-            calendar.changeView('timeGridWeek');
-            updateActiveButton(weekViewBtn);
-        });
-        dayViewBtn.addEventListener('click', () => {
-            calendar.changeView('timeGridDay');
-            updateActiveButton(dayViewBtn);
-        });
-        listViewBtn.addEventListener('click', () => {
-            calendar.changeView('listWeek');
-            updateActiveButton(listViewBtn);
-        });
+    function closeConfirmModal() {
+        confirmModal.classList.add('hidden');
+        confirmModal.classList.remove('flex');
+    }
 
-        eventoForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const formData = new FormData(eventoForm);
-            fetch('../../controllers/AgendaController.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        closeModal();
-                        calendar.refetchEvents();
-                    } else {
-                        modalError.textContent = data.message || t('calendar.defaultError');
-                        modalError.classList.remove('hidden');
-                    }
-                });
-        });
+    function updateEventDate(info) {
+        const { event } = info;
+        const formData = new FormData();
+        formData.append('action', 'atualizar_data');
+        formData.append('id', event.id);
+        formData.append('start', event.start.toISOString().slice(0, 19).replace('T', ' '));
+        const endDate = event.end ? event.end.toISOString().slice(0, 19).replace('T', ' ') : formData.get('start');
+        formData.append('end', endDate);
 
-        deleteButton.addEventListener('click', () => {
-            eventoIdParaExcluir = idEventoInput.value;
-            confirmModal.classList.remove('hidden');
-            confirmModal.classList.add('flex');
-        });
-
-        confirmDeleteBtn.addEventListener('click', () => {
-            if (!eventoIdParaExcluir) return;
-            const formData = new FormData();
-            formData.append('action', 'excluir');
-            formData.append('id_evento', eventoIdParaExcluir);
-            fetch('../../controllers/AgendaController.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        closeConfirmModal();
-                        closeModal();
-                        calendar.refetchEvents();
-                    } else {
-                        alert(t('calendar.deleteError') + data.message);
-                        closeConfirmModal();
-                    }
-                    eventoIdParaExcluir = null;
-                });
-        });
-
-        tipoEventoSelect.addEventListener('change', function() {
-            const dataFim = document.getElementById('data_fim').value;
-            toggleCustomFields(this.value, dataFim);
-        });
-
-        document.addEventListener('click', function(e) {
-            if (e.target.closest('#closeModal') || e.target.closest('#cancelModal')) closeModal();
-            if (e.target.closest('#cancelDelete')) closeConfirmModal();
-        });
-
-        // --- 6. INÍCIO DA EXECUÇÃO ---
-        function getInitialLang() {
-            const langFromSession = "<?= $_SESSION['usuario']['configuracoes']['language'] ?? '' ?>";
-            const langFromStorage = localStorage.getItem('calendarLang');
-
-            if (langFromSession) {
-                if (langFromStorage !== langFromSession) {
-                    localStorage.setItem('calendarLang', langFromSession);
+        fetch('../../controllers/AgendaController.php', { method: 'POST', body: formData })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    alert("Erro: " + data.message);
+                    info.revert();
                 }
-                return langFromSession;
+            });
+    }
+
+    // --- 4. INICIALIZAÇÃO DO CALENDÁRIO ---
+    async function initializeAgenda(lang) {
+        if (calendar) calendar.destroy();
+
+        await Promise.all([
+            loadTranslations('agenda', lang),
+            loadCalendarLocaleScript(lang)
+        ]);
+
+        applyTranslationsToDOM();
+
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            locale: lang,
+            initialView: 'dayGridMonth',
+            headerToolbar: false,
+            events: '../../controllers/api_eventos.php',
+            editable: true,
+            selectable: true,
+            select: openModalForCreate,
+            eventClick: (info) => openModalForEdit(info.event),
+            eventDrop: updateEventDate,
+            eventResize: updateEventDate,
+            datesSet: (info) => {
+                calendarTitleEl.textContent = info.view.title;
+            },
+            eventDidMount: (info) => {
+                if (info.event.end && new Date(info.event.end) < new Date()) {
+                    info.el.classList.add('fc-event-past');
+                }
             }
-            if (langFromStorage) return langFromStorage;
+        });
 
-            const browserLang = navigator.language.toLowerCase();
-            if (browserLang.startsWith('es')) return 'es';
-            if (browserLang.startsWith('en')) return 'en';
-            return 'pt-br';
-        }
+        calendar.render();
+        calendarTitleEl.textContent = calendar.view.title;
+        updateActiveButton(monthViewBtn);
+    }
 
-        const initialLang = getInitialLang();
-        initializeAgenda(initialLang);
+    // --- 5. LISTENERS DE EVENTOS ---
+    function updateActiveButton(activeButton) {
+        viewButtons.forEach(button => button.classList.remove('active'));
+        activeButton.classList.add('active');
+    }
+
+    prevBtn.addEventListener('click', () => calendar.prev());
+    nextBtn.addEventListener('click', () => calendar.next());
+    todayBtn.addEventListener('click', () => calendar.today());
+    monthViewBtn.addEventListener('click', () => { calendar.changeView('dayGridMonth'); updateActiveButton(monthViewBtn); });
+    weekViewBtn.addEventListener('click', () => { calendar.changeView('timeGridWeek'); updateActiveButton(weekViewBtn); });
+    dayViewBtn.addEventListener('click', () => { calendar.changeView('timeGridDay'); updateActiveButton(dayViewBtn); });
+    listViewBtn.addEventListener('click', () => { calendar.changeView('listWeek'); updateActiveButton(listViewBtn); });
+
+    eventoForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const formData = new FormData(eventoForm);
+        fetch('../../controllers/AgendaController.php', { method: 'POST', body: formData })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeModal();
+                    calendar.refetchEvents();
+                } else {
+                    modalError.textContent = data.message || t('calendar.defaultError');
+                    modalError.classList.remove('hidden');
+                }
+            });
     });
+
+    deleteButton.addEventListener('click', () => {
+        eventoIdParaExcluir = idEventoInput.value;
+        confirmModal.classList.remove('hidden');
+        confirmModal.classList.add('flex');
+    });
+
+    confirmDeleteBtn.addEventListener('click', () => {
+        if (!eventoIdParaExcluir) return;
+        const formData = new FormData();
+        formData.append('action', 'excluir');
+        formData.append('id_evento', eventoIdParaExcluir);
+        fetch('../../controllers/AgendaController.php', { method: 'POST', body: formData })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeConfirmModal();
+                    closeModal();
+                    calendar.refetchEvents();
+                } else {
+                    alert(t('calendar.deleteError') + data.message);
+                    closeConfirmModal();
+                }
+                eventoIdParaExcluir = null;
+            });
+    });
+
+    tipoEventoSelect.addEventListener('change', function() {
+        const dataFim = document.getElementById('data_fim').value;
+        toggleCustomFields(this.value, dataFim);
+    });
+
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('#closeModal') || e.target.closest('#cancelModal')) closeModal();
+        if (e.target.closest('#cancelDelete')) closeConfirmModal();
+    });
+
+    // --- 6. INÍCIO DA EXECUÇÃO ---
+    function getInitialLang() {
+        const langFromSession = "<?= $_SESSION['usuario']['configuracoes']['language'] ?? 'pt-br' ?>";
+        const langFromStorage = localStorage.getItem('calendarLang');
+        if (langFromSession && langFromStorage !== langFromSession) {
+            localStorage.setItem('calendarLang', langFromSession);
+            return langFromSession;
+        }
+        return langFromStorage || langFromSession;
+    }
+
+    function handleUrlParameters() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const action = urlParams.get('action');
+        const eventId = urlParams.get('id_evento');
+        if (action === 'editar_feedback' && eventId) {
+            setTimeout(() => openModalForEdit(eventId), 500);
+        }
+    }
+
+    async function init() {
+        const lang = getInitialLang();
+        await initializeAgenda(lang);
+        handleUrlParameters();
+    }
+
+    init();
+});
 </script>

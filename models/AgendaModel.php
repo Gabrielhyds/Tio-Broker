@@ -145,5 +145,33 @@ if (!class_exists('AgendaModel')) {
             $stmt->close();
             return $success;
         }
+         /**
+         * Busca todas as visitas passadas de um imóvel específico para um usuário.
+         * Retorna apenas visitas do tipo 'visita' que já terminaram.
+         */
+        public function buscarVisitasPorImovel($id_imovel, $id_usuario)
+        {
+            $sql = "SELECT 
+                        e.id_evento, e.data_fim, e.feedback,
+                        c.nome as nome_cliente, c.id_cliente
+                    FROM agenda_eventos e
+                    JOIN cliente c ON e.id_cliente = c.id_cliente
+                    WHERE e.id_imovel = ? 
+                      AND e.id_usuario = ?
+                      AND e.tipo_evento = 'visita'
+                      AND e.data_fim < NOW() -- Apenas visitas que já ocorreram
+                    ORDER BY e.data_fim DESC";
+            
+            $stmt = $this->connection->prepare($sql);
+            if ($stmt === false) return [];
+
+            $stmt->bind_param("ii", $id_imovel, $id_usuario);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $stmt->close();
+            return $result->fetch_all(MYSQLI_ASSOC);
+        }
+        
     }
+
 }

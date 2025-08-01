@@ -24,7 +24,7 @@ $ehNovo = (strtotime($imovel['data_cadastro']) >= strtotime('-7 days'));
 <!-- Link para a biblioteca de ícones Bootstrap Icons (se não estiver no template base) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-<div class="max-w-7xl mx-auto">
+<div class="max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
     <!-- Botão Voltar -->
     <a href="listar.php" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors mb-6 text-sm font-semibold">
         <i class="bi bi-arrow-left-circle"></i>
@@ -117,8 +117,21 @@ $ehNovo = (strtotime($imovel['data_cadastro']) >= strtotime('-7 days'));
                     </div>
                 <?php endif; ?>
             </div>
-        </div>
 
+            <!-- SEÇÃO CORRIGIDA: FEEDBACK DE VISITAS -->
+            <div id="visitas-feedback-section">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-3">Histórico de Visitas e Feedbacks</h2>
+                <div id="visitas-list" class="space-y-4">
+                    <!-- O conteúdo será carregado via JavaScript -->
+                    <div class="text-center p-4 text-gray-500">
+                        <i class="bi bi-arrow-clockwise animate-spin text-2xl"></i>
+                        <p>Carregando histórico de visitas...</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        
         <!-- Coluna Lateral de Resumo (Direita) -->
         <div class="lg:col-span-1">
             <div class="lg:sticky top-8 space-y-6">
@@ -146,3 +159,69 @@ $ehNovo = (strtotime($imovel['data_cadastro']) >= strtotime('-7 days'));
         </div>
     </div>
 </div>
+
+<!-- SCRIPT PARA CARREGAR O HISTÓRICO DE VISITAS -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Pega o ID do imóvel diretamente do PHP. json_encode garante que o valor seja seguro.
+    const imovelId = <?= json_encode($imovel['id_imovel']) ?>;
+    const visitasListContainer = document.getElementById('visitas-list');
+
+    if (imovelId && visitasListContainer) {
+        // Faz a chamada para o controller que busca as visitas
+        fetch(`../../controllers/VisitasController.php?action=buscar_por_imovel&id_imovel=${imovelId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Erro na rede: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Limpa a mensagem "Carregando..."
+                visitasListContainer.innerHTML = ''; 
+                
+                if (data.success && data.visitas.length > 0) {
+                    data.visitas.forEach(visita => {
+                        const dataFim = new Date(visita.data_fim);
+                        const dataFormatada = dataFim.toLocaleDateString('pt-BR', {
+                            day: '2-digit', month: '2-digit', year: 'numeric',
+                            hour: '2-digit', minute: '2-digit'
+                        });
+
+                        // Monta o HTML do feedback, se existir
+                        const feedbackHtml = visita.feedback 
+                            ? `<p class="text-sm text-gray-600 mt-2 pl-5 border-l-2 border-gray-200"><strong>Feedback:</strong> ${visita.feedback}</p>`
+                            : '<p class="text-sm text-gray-500 mt-2 pl-5">Nenhum feedback registrado.</p>';
+
+                        // Cria o card para cada visita
+                        const card = `
+                            <div class="bg-gray-50 p-4 rounded-lg border hover:shadow-sm transition-shadow">
+                                <div class="flex flex-wrap justify-between items-center gap-2">
+                                    <div>
+                                        <p class="font-semibold text-gray-800">Cliente: ${visita.nome_cliente}</p>
+                                        <p class="text-sm text-gray-500">Visitou em: ${dataFormatada}</p>
+                                    </div>
+                                    <a href="../agenda/index.php?action=editar_feedback&id_evento=${visita.id_evento}" class="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-2 rounded-lg hover:bg-blue-200 transition-colors">
+                                        <i class="bi bi-pencil-square mr-1"></i>
+                                        ${visita.feedback ? 'Editar Feedback' : 'Adicionar Feedback'}
+                                    </a>
+                                </div>
+                                ${feedbackHtml}
+                            </div>
+                        `;
+                        // Adiciona o card ao container
+                        visitasListContainer.innerHTML += card;
+                    });
+                } else {
+                    // Mensagem para quando não há visitas
+                    visitasListContainer.innerHTML = '<div class="text-center p-4 text-gray-500"><p>Nenhuma visita anterior encontrada para este imóvel.</p></div>';
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao buscar histórico de visitas:', error);
+                // Mensagem em caso de erro na comunicação com a API
+                visitasListContainer.innerHTML = '<div class="text-center p-4 text-red-500"><p>Ocorreu um erro ao carregar o histórico de visitas.</p></div>';
+            });
+    }
+});
+</script>

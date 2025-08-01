@@ -87,23 +87,24 @@ CREATE TABLE notificacoes (
     FOREIGN KEY (id_usuario) REFERENCES usuario (id_usuario) ON DELETE CASCADE
 );
 
--- Tabela de Agenda de Eventos
 CREATE TABLE agenda_eventos (
     id_evento INT AUTO_INCREMENT PRIMARY KEY,
     id_usuario INT NOT NULL,
     id_cliente INT NOT NULL,
-    id_imovel INT NULL DEFAULT NULL AFTER id_cliente,
-    feedback TEXT NULL DEFAULT NULL AFTER lembrete titulo VARCHAR(255) NOT NULL,
+    id_imovel INT NULL DEFAULT NULL,
+    titulo VARCHAR(255) NOT NULL,
     descricao TEXT,
     data_inicio DATETIME NOT NULL,
     data_fim DATETIME NOT NULL,
     tipo_evento ENUM('reuniao', 'visita', 'outro') NOT NULL,
     lembrete BOOLEAN DEFAULT FALSE,
+    feedback TEXT NULL DEFAULT NULL,
     data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (id_usuario) REFERENCES usuario (id_usuario) ON DELETE CASCADE,
-    FOREIGN KEY (id_cliente) REFERENCES cliente (id_cliente) ON DELETE CASCADE
+    FOREIGN KEY (id_cliente) REFERENCES cliente (id_cliente) ON DELETE CASCADE,
+    -- A linha abaixo é a que adicionamos com o comando ALTER TABLE
+    FOREIGN KEY (id_imovel) REFERENCES imovel (id_imovel) ON DELETE SET NULL
 );
-
 -- Tabela de Documentos
 CREATE TABLE documentos (
     id_documento INT AUTO_INCREMENT PRIMARY KEY,
@@ -210,6 +211,7 @@ CREATE TABLE imovel (
   preco DECIMAL(15, 2) NOT NULL,
 
 -- Campos de Endereço Refatorados
+
 
 endereco VARCHAR(255) NULL, -- Logradouro (Rua, Avenida, etc.)
   cep VARCHAR(10) NULL,
