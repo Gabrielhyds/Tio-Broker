@@ -171,6 +171,23 @@ if (!class_exists('AgendaModel')) {
             $stmt->close();
             return $result->fetch_all(MYSQLI_ASSOC);
         }
+         public function atualizarFeedback($id_evento, $feedback, $id_usuario)
+        {
+            $sql = "UPDATE agenda_eventos SET feedback = ? WHERE id_evento = ? AND id_usuario = ?";
+            $stmt = $this->connection->prepare($sql);
+            if ($stmt === false) {
+                error_log('Prepare failed: ' . $this->connection->error);
+                return false;
+            }
+            
+            $stmt->bind_param("sii", $feedback, $id_evento, $id_usuario);
+            $success = $stmt->execute();
+            if (!$success) {
+                error_log('Execute failed: ' . $stmt->error);
+            }
+            $stmt->close();
+            return $success;
+        }
         
     }
 

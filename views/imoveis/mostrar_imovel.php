@@ -119,14 +119,10 @@ $ehNovo = (strtotime($imovel['data_cadastro']) >= strtotime('-7 days'));
             </div>
 
             <!-- SEÇÃO CORRIGIDA: FEEDBACK DE VISITAS -->
-            <div id="visitas-feedback-section">
+           <div id="visitas-feedback-section">
                 <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-3">Histórico de Visitas e Feedbacks</h2>
                 <div id="visitas-list" class="space-y-4">
-                    <!-- O conteúdo será carregado via JavaScript -->
-                    <div class="text-center p-4 text-gray-500">
-                        <i class="bi bi-arrow-clockwise animate-spin text-2xl"></i>
-                        <p>Carregando histórico de visitas...</p>
-                    </div>
+                    <div class="text-center p-4 text-gray-500"><i class="bi bi-arrow-clockwise animate-spin text-2xl"></i><p>Carregando histórico...</p></div>
                 </div>
             </div>
 
@@ -160,68 +156,124 @@ $ehNovo = (strtotime($imovel['data_cadastro']) >= strtotime('-7 days'));
     </div>
 </div>
 
-<!-- SCRIPT PARA CARREGAR O HISTÓRICO DE VISITAS -->
+<!-- SCRIPT ATUALIZADO PARA SWEETALERT2 E HISTÓRICO -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Pega o ID do imóvel diretamente do PHP. json_encode garante que o valor seja seguro.
     const imovelId = <?= json_encode($imovel['id_imovel']) ?>;
     const visitasListContainer = document.getElementById('visitas-list');
 
-    if (imovelId && visitasListContainer) {
-        // Faz a chamada para o controller que busca as visitas
-        fetch(`../../controllers/VisitasController.php?action=buscar_por_imovel&id_imovel=${imovelId}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Erro na rede: ${response.statusText}`);
+    // Função para abrir o modal de feedback usando SweetAlert2
+    function openFeedbackModal(eventId, currentFeedback) {
+        Swal.fire({
+            title: 'Editar Feedback da Visita',
+            input: 'textarea',
+            inputValue: currentFeedback,
+            inputLabel: 'Feedback do Cliente:',
+            inputPlaceholder: 'Digite o feedback aqui...',
+            showCancelButton: true,
+            confirmButtonText: 'Salvar Feedback',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#3b82f6', // Azul
+            showLoaderOnConfirm: true,
+            preConfirm: (feedback) => {
+                // Prepara os dados para enviar ao servidor
+                const formData = new FormData();
+                formData.append('action', 'atualizar_feedback');
+                formData.append('id_evento', eventId);
+                formData.append('feedback', feedback);
+
+                // Faz a chamada fetch para o controller
+                return fetch('../../controllers/VisitasController.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(response.statusText);
+                    }
+                    return response.json();
+                })
+                .catch(error => {
+                    Swal.showValidationMessage(`A requisição falhou: ${error}`);
+                });
+            },
+            allowOutsideClick: () => !Swal.isLoading()
+        }).then((result) => {
+            // Processa o resultado após o usuário clicar em "Salvar"
+            if (result.isConfirmed) {
+                if (result.value.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Sucesso!',
+                        text: 'Feedback atualizado com sucesso.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    loadVisitas(); // Recarrega a lista para mostrar o feedback atualizado
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro!',
+                        text: result.value.message || 'Ocorreu um erro ao salvar o feedback.',
+                    });
                 }
-                return response.json();
-            })
+            }
+        });
+    }
+    
+    // Função para carregar e recarregar o histórico de visitas
+    function loadVisitas() {
+        if (!imovelId || !visitasListContainer) return;
+
+        visitasListContainer.innerHTML = `<div class="text-center p-4 text-gray-500"><i class="bi bi-arrow-clockwise animate-spin text-2xl"></i><p>Carregando histórico...</p></div>`;
+
+        fetch(`../../controllers/VisitasController.php?action=buscar_por_imovel&id_imovel=${imovelId}`)
+            .then(response => response.json())
             .then(data => {
-                // Limpa a mensagem "Carregando..."
-                visitasListContainer.innerHTML = ''; 
-                
+                visitasListContainer.innerHTML = '';
                 if (data.success && data.visitas.length > 0) {
                     data.visitas.forEach(visita => {
-                        const dataFim = new Date(visita.data_fim);
-                        const dataFormatada = dataFim.toLocaleDateString('pt-BR', {
-                            day: '2-digit', month: '2-digit', year: 'numeric',
-                            hour: '2-digit', minute: '2-digit'
-                        });
-
-                        // Monta o HTML do feedback, se existir
-                        const feedbackHtml = visita.feedback 
+                        const feedbackHtml = visita.feedback
                             ? `<p class="text-sm text-gray-600 mt-2 pl-5 border-l-2 border-gray-200"><strong>Feedback:</strong> ${visita.feedback}</p>`
                             : '<p class="text-sm text-gray-500 mt-2 pl-5">Nenhum feedback registrado.</p>';
 
-                        // Cria o card para cada visita
                         const card = `
-                            <div class="bg-gray-50 p-4 rounded-lg border hover:shadow-sm transition-shadow">
+                            <div class="bg-gray-50 p-4 rounded-lg border">
                                 <div class="flex flex-wrap justify-between items-center gap-2">
                                     <div>
                                         <p class="font-semibold text-gray-800">Cliente: ${visita.nome_cliente}</p>
-                                        <p class="text-sm text-gray-500">Visitou em: ${dataFormatada}</p>
+                                        <p class="text-sm text-gray-500">Visitou em: ${new Date(visita.data_fim).toLocaleString('pt-BR')}</p>
                                     </div>
-                                    <a href="../agenda/index.php?action=editar_feedback&id_evento=${visita.id_evento}" class="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-2 rounded-lg hover:bg-blue-200 transition-colors">
+                                    <button data-event-id="${visita.id_evento}" data-feedback="${visita.feedback || ''}" class="edit-feedback-btn bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-2 rounded-lg hover:bg-blue-200">
                                         <i class="bi bi-pencil-square mr-1"></i>
-                                        ${visita.feedback ? 'Editar Feedback' : 'Adicionar Feedback'}
-                                    </a>
+                                        ${visita.feedback ? 'Editar' : 'Adicionar'} Feedback
+                                    </button>
                                 </div>
                                 ${feedbackHtml}
-                            </div>
-                        `;
-                        // Adiciona o card ao container
+                            </div>`;
                         visitasListContainer.innerHTML += card;
                     });
                 } else {
-                    // Mensagem para quando não há visitas
-                    visitasListContainer.innerHTML = '<div class="text-center p-4 text-gray-500"><p>Nenhuma visita anterior encontrada para este imóvel.</p></div>';
+                    visitasListContainer.innerHTML = '<div class="text-center p-4 text-gray-500"><p>Nenhuma visita anterior encontrada.</p></div>';
                 }
             })
             .catch(error => {
-                console.error('Erro ao buscar histórico de visitas:', error);
-                // Mensagem em caso de erro na comunicação com a API
-                visitasListContainer.innerHTML = '<div class="text-center p-4 text-red-500"><p>Ocorreu um erro ao carregar o histórico de visitas.</p></div>';
+                console.error('Erro ao buscar visitas:', error);
+                visitasListContainer.innerHTML = '<div class="text-center p-4 text-red-500"><p>Erro ao carregar histórico.</p></div>';
             });
     }
+
+    // Listener para abrir o modal de edição
+    visitasListContainer.addEventListener('click', function(e) {
+        const button = e.target.closest('.edit-feedback-btn');
+        if (button) {
+            const eventId = button.dataset.eventId;
+            const feedback = button.dataset.feedback;
+            openFeedbackModal(eventId, feedback);
+        }
+    });
+
+    // Carrega as visitas na primeira vez que a página é aberta
+    loadVisitas();
 });
 </script>
