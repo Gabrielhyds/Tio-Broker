@@ -1,0 +1,9 @@
+# Ignorar apenas imagens na pasta uploads e subpastas
+uploads/**/*.png
+uploads/**/*.jpg
+uploads/**/*.jpeg
+uploads/**/*.gif
+uploads/**/*.svg
+uploads/**/*.webp
+uploads/**/*.bmp
+uploads/**/*.tiff
