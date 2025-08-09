@@ -4,10 +4,10 @@
 function conectarBanco()
 {
     // Nome do host onde o banco está rodando (geralmente localhost)
-    $host = "localhost";
+    $host = "db";
 
     // Nome do banco de dados a ser acessado
-    $databasename = "tio_Broker";
+    $databasename = "tio_broker";
 
     // Nome do usuário do MySQL
     $username = "root";
