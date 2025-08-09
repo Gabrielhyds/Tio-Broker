@@ -1,0 +1,129 @@
+/*
+ * ARQUIVO: assets/css/chat_moderno.css
+ * DESCRIÇÃO: Estilos completos para a nova interface do chat.
+*/
+
+/* --- ESTRUTURA GERAL --- */
+.chat-container {
+    display: flex;
+    height: calc(100vh - 4rem);
+    /* Altura ajustável */
+    border-radius: 1rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    background-color: white;
+    overflow: hidden;
+}
+
+/* --- COLUNA DE USUÁRIOS (ASIDE) --- */
+.lista-usuarios-col {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #e5e7eb;
+    /* border-gray-200 */
+}
+
+/* --- COLUNA PRINCIPAL DA CONVERSA (MAIN) --- */
+.conversa-col {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+/* CABEÇALHO DA CONVERSA */
+.chat-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    flex-shrink: 0;
+    background-color: #f9fafb;
+    /* bg-gray-50 */
+}
+
+/* ÁREA DE MENSAGENS */
+#mensagens {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+    background-color: #f1f5f9;
+    /* bg-slate-100 */
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23e2e8f0' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* ÁREA DE DIGITAÇÃO */
+.chat-input-area {
+    padding: 1rem;
+    background-color: #ffffff;
+    border-top: 1px solid #e5e7eb;
+    flex-shrink: 0;
+}
+
+/* --- ESTILOS DAS MENSAGENS --- */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.mensagem-wrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    max-width: 80%;
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
+.mensagem-wrapper.enviada {
+    flex-direction: row-reverse;
+    margin-left: auto;
+}
+
+.mensagem-wrapper.recebida {
+    margin-right: auto;
+}
+
+.mensagem-bolha {
+    padding: 0.75rem 1rem;
+    border-radius: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.bolha-enviada {
+    background-color: #6d28d9;
+    /* bg-violet-700 */
+    color: white;
+    border-bottom-right-radius: 0.5rem;
+}
+
+.bolha-recebida {
+    background-color: white;
+    color: #1f2937;
+    /* text-gray-800 */
+    border: 1px solid #e5e7eb;
+    border-bottom-left-radius: 0.5rem;
+}
+
+/* --- SCROLLBAR --- */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}

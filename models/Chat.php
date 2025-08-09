@@ -1,4 +1,7 @@
 <?php
+// **CORREÇÃO**: Adicione esta linha no topo do seu arquivo models/Chat.php
+namespace App\Models;
+
 class Chat
 {
     // Propriedade privada para armazenar a conexão com o banco de dados.
@@ -123,18 +126,30 @@ class Chat
         return $mensagens;
     }
 
-    // Envia uma nova mensagem para uma conversa específica.
+    /**
+     * Envia uma nova mensagem para uma conversa específica.
+     * **MÉTODO ATUALIZADO** com tratamento de erros.
+     */
     public function enviarMensagem($id_conversa, $id_usuario, $mensagem)
     {
-        // Prepara a instrução para inserir a nova mensagem.
-        $stmt = $this->conn->prepare("
-            INSERT INTO mensagens (id_conversa, id_usuario, mensagem)
-            VALUES (?, ?, ?)
-        ");
-        // Associa os parâmetros: dois inteiros ('i') e uma string ('s').
+        $sql = "INSERT INTO mensagens (id_conversa, id_usuario, mensagem) VALUES (?, ?, ?)";
+        
+        $stmt = $this->conn->prepare($sql);
+        
+        // Verifica se a preparação da query falhou
+        if ($stmt === false) {
+            // Lança uma exceção para ser capturada pelo ChatServer
+            throw new \Exception("Erro ao preparar a query para salvar a mensagem: " . $this->conn->error);
+        }
+        
         $stmt->bind_param("iis", $id_conversa, $id_usuario, $mensagem);
-        // Executa e retorna true em caso de sucesso, ou false em caso de falha.
-        return $stmt->execute();
+        
+        if (!$stmt->execute()) {
+            // Lança uma exceção para ser capturada pelo ChatServer
+            throw new \Exception("Erro ao executar a query para salvar a mensagem: " . $stmt->error);
+        }
+        
+        return true;
     }
 
     // Em uma conversa privada, retorna o ID do outro participante (o destinatário).
