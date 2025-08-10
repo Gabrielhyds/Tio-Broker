@@ -49,6 +49,8 @@
                     <a href="chat.php?id_destino=<?= $u['id_usuario'] ?>&id_imobiliaria=<?= $id_imobiliaria_filtro ?>" class="flex items-center gap-3 px-4 py-3 transition-colors duration-200 border-r-4 <?= $is_active ? 'bg-violet-50 border-violet-500' : 'border-transparent hover:bg-gray-100' ?>">
                         <div class="relative w-11 h-11 flex-shrink-0">
                             <img src="<?= !empty($u['foto']) ? '../../uploads/' . htmlspecialchars($u['foto']) : 'https://placehold.co/100x100/c4b5fd/4c1d95?text=' . mb_strtoupper(mb_substr($u['nome'], 0, 1)) ?>" class="w-full h-full rounded-full object-cover">
+                            <span id="status-dot-<?= $u['id_usuario'] ?>" class="absolute bottom-0 right-0 block h-3 w-3 bg-gray-400 rounded-full border-2 border-white"></span>
+
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex justify-between items-center">
@@ -66,22 +68,22 @@
         </ul>
     </aside>
 
-    <!-- Coluna da Conversa (MAIN) -->
+     <!-- Coluna da Conversa (MAIN) -->
     <main class="w-full flex flex-col bg-gray-50">
         <?php if ($id_conversa_ativa && $usuarioDestino): ?>
             <header class="flex items-center gap-4 p-4 border-b border-gray-200/80 flex-shrink-0 bg-white">
                 <img src="<?= !empty($usuarioDestino['foto']) ? '../../uploads/' . htmlspecialchars($usuarioDestino['foto']) : 'https://placehold.co/100x100/c4b5fd/4c1d95?text=' . mb_strtoupper(mb_substr($usuarioDestino['nome'], 0, 1)) ?>" class="w-11 h-11 rounded-full object-cover">
-                <h2 class="text-base font-semibold text-gray-900"><?= htmlspecialchars($usuarioDestino['nome']) ?></h2>
+                <div>
+                    <h2 class="text-base font-semibold text-gray-900"><?= htmlspecialchars($usuarioDestino['nome']) ?></h2>
+                    <!-- **NOVO**: Indicador de Status no Cabeçalho -->
+                    <p id="header-status-text" class="text-sm text-gray-500">Offline</p>
+                </div>
             </header>
-
-            <div id="mensagens" class="flex-grow p-6 overflow-y-auto custom-scrollbar bg-slate-50">
-                <!-- As mensagens do histórico serão carregadas aqui -->
-            </div>
-            
+            <!-- ... (resto do main continua igual) ... -->
+            <div id="mensagens" class="flex-grow p-6 overflow-y-auto custom-scrollbar bg-slate-50"></div>
             <div id="typing-indicator" class="h-6 px-6 pb-2 text-sm text-gray-500 italic hidden">
                 <span id="typing-user-name"></span> está a digitar...
             </div>
-
             <footer class="p-4 bg-white/80 backdrop-blur-sm border-t border-gray-200/80 flex-shrink-0">
                 <form id="form-mensagem" class="flex items-center gap-3">
                     <input type="text" id="mensagem-input" class="flex-1 bg-gray-100 border-gray-300 rounded-full px-5 py-3 text-sm focus:ring-1 focus:ring-violet-400 focus:border-violet-400 transition" placeholder="Digite sua mensagem..." autocomplete="off">
@@ -97,7 +99,15 @@
         <?php endif; ?>
     </main>
 </div>
-
+<!-- **NOVO**: HTML para o seletor de emojis -->
+<div id="seletor-reacao" class="fixed bg-white rounded-lg shadow-lg p-2 flex gap-2 hidden z-50">
+    <span class="emoji-reacao text-xl cursor-pointer" data-reacao="👍">👍</span>
+    <span class="emoji-reacao text-xl cursor-pointer" data-reacao="❤️">❤️</span>
+    <span class="emoji-reacao text-xl cursor-pointer" data-reacao="😂">😂</span>
+    <span class="emoji-reacao text-xl cursor-pointer" data-reacao="😮">😮</span>
+    <span class="emoji-reacao text-xl cursor-pointer" data-reacao="😢">😢</span>
+    <span class="emoji-reacao text-xl cursor-pointer" data-reacao="🙏">🙏</span>
+</div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     // --- VARIÁVEIS DO PHP PARA O JS ---
@@ -215,6 +225,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // --- FUNÇÕES AUXILIARES ---
+     // **NOVO**: Funções para atualizar o status na UI
+    function updateUserStatus(userId, isOnline) {
+        const statusDot = document.getElementById(`status-dot-${userId}`);
+        if (statusDot) {
+            statusDot.classList.toggle('bg-green-500', isOnline);
+            statusDot.classList.toggle('bg-gray-400', !isOnline);
+        }
+        // Atualiza o cabeçalho se for o utilizador da conversa ativa
+        if (userId == idDestino && headerStatusText) {
+            headerStatusText.textContent = isOnline ? 'Online' : 'Offline';
+            headerStatusText.classList.toggle('text-green-600', isOnline);
+            headerStatusText.classList.toggle('text-gray-500', !isOnline);
+        }
+    }
+
+    function updateAllUserStatus(onlineUserIds) {
+        document.querySelectorAll('.user-item').forEach(item => {
+            const userId = item.dataset.userId;
+            const isOnline = onlineUserIds.includes(parseInt(userId, 10));
+            updateUserStatus(userId, isOnline);
+        });
+    }
     
     function atualizarItemDaLista(userId, messageText) {
         const userItem = document.querySelector(`.user-item[data-user-id="${userId}"]`);
@@ -287,5 +319,42 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
+    // **NOVO**: Event listener para o corpo do documento para lidar com reações
+    document.body.addEventListener('click', function(e) {
+        const seletorReacao = document.getElementById('seletor-reacao');
+
+        // Mostra o seletor de reações
+        if (e.target.classList.contains('btn-reagir')) {
+            e.stopPropagation(); // Impede que o clique feche o seletor imediatamente
+            const idMensagem = e.target.dataset.idMensagem;
+            seletorReacao.dataset.idMensagem = idMensagem;
+            
+            const rect = e.target.getBoundingClientRect();
+            seletorReacao.style.top = `${window.scrollY + rect.top - seletorReacao.offsetHeight - 5}px`;
+            seletorReacao.style.left = `${window.scrollX + rect.left}px`;
+            seletorReacao.classList.remove('hidden');
+            return;
+        }
+        
+        // Envia a reação selecionada
+        if (e.target.classList.contains('emoji-reacao')) {
+            const idMensagem = seletorReacao.dataset.idMensagem;
+            const reacao = e.target.dataset.reacao;
+
+            conn.send(JSON.stringify({
+                action: 'reaction',
+                id_conversa: idConversaAtiva,
+                id_mensagem: idMensagem,
+                reacao: reacao
+            }));
+            seletorReacao.classList.add('hidden');
+            return;
+        }
+
+        // Esconde o seletor se clicar fora
+        if (seletorReacao && !seletorReacao.contains(e.target)) {
+            seletorReacao.classList.add('hidden');
+        }
+    });
 });
 </script>

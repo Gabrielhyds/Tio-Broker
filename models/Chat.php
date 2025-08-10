@@ -248,19 +248,33 @@ class Chat
 
     // --- NOVOS MÉTODOS PARA REAÇÕES ---
 
-    /**
-     * Adiciona ou atualiza uma reação de um usuário a uma mensagem.
-     * Usa "ON DUPLICATE KEY UPDATE" para trocar a reação se o usuário já tiver reagido.
+   /**
+     * Adiciona ou atualiza uma reação de um utilizador a uma mensagem.
+     * Usa "ON DUPLICATE KEY UPDATE" para trocar a reação se o utilizador já tiver reagido.
      */
     public function adicionarOuAtualizarReacao($id_mensagem, $id_usuario, $reacao)
     {
-        // Tenta inserir uma nova reação. Se a chave primária (id_mensagem, id_usuario) já existir, atualiza a coluna 'reacao'.
+        // A query SQL insere uma nova reação. Se a chave única (id_mensagem, id_usuario) já existir,
+        // ele simplesmente atualiza a coluna 'reacao' com o novo valor.
         $sql = "INSERT INTO reacoes (id_mensagem, id_usuario, reacao) VALUES (?, ?, ?)
                 ON DUPLICATE KEY UPDATE reacao = ?";
+        
         $stmt = $this->conn->prepare($sql);
+        
+        // Verifica se a preparação da query falhou
+        if ($stmt === false) {
+            throw new \Exception("Erro ao preparar a query de reação: " . $this->conn->error);
+        }
+
         // Binda os parâmetros: id_mensagem, id_usuario, reacao (para o INSERT) e reacao (para o UPDATE).
         $stmt->bind_param("iiss", $id_mensagem, $id_usuario, $reacao, $reacao);
-        return $stmt->execute();
+        
+        // Executa a query e verifica se foi bem-sucedida
+        if (!$stmt->execute()) {
+            throw new \Exception("Erro ao executar a query de reação: " . $stmt->error);
+        }
+
+        return true;
     }
 
     /**
