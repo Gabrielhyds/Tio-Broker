@@ -1,15 +1,8 @@
 <?php
-/*
-|--------------------------------------------------------------------------
-| ARQUIVO: views/chat/get_mensagens.php (VERSÃO COM FOTOS)
-|--------------------------------------------------------------------------
-| - Adicionada lógica para exibir a foto real do usuário.
-| - Se não houver foto, exibe um avatar com a inicial do nome como fallback.
-| - Adicionada a classe 'object-cover' para evitar distorção da imagem.
-*/
+// Caminho: views/chat/get_mensagens.php
 
 require_once '../../config/config.php';
-require_once '../../models/Chat.php';
+require_once '../../models/Chat.php'; 
 session_start();
 
 if (!isset($_SESSION['usuario']['id_usuario']) || !isset($_GET['id_conversa'])) {
@@ -17,134 +10,59 @@ if (!isset($_SESSION['usuario']['id_usuario']) || !isset($_GET['id_conversa'])) 
     exit;
 }
 
-$lang = $_GET['lang'] ?? 'pt-br';
-$translations = [];
-$translationFile = __DIR__ . "/../../lang/chat/{$lang}.json";
-if (file_exists($translationFile)) {
-    $translations = json_decode(file_get_contents($translationFile), true);
-}
-
-$t = function ($key, $default = '') use ($translations) {
-    $keys = explode('.', $key);
-    $value = $translations;
-    foreach ($keys as $k) {
-        if (isset($value[$k])) {
-            $value = $value[$k];
-        } else {
-            return $default;
-        }
-    }
-    return is_string($value) ? $value : $default;
-};
-
 $id_usuario_logado = $_SESSION['usuario']['id_usuario'];
 $id_conversa_ativa = $_GET['id_conversa'];
 
-$chat = new Chat($connection);
+$chat = new \App\Models\Chat($connection); 
 $mensagens = $chat->listarMensagensDaConversa($id_conversa_ativa);
 
+
 if (empty($mensagens)) {
-    echo '<p class="text-center text-gray-400 self-center h-full flex items-center justify-center">' . $t('messages.noMessages', 'Nenhuma mensagem ainda.') . '</p>';
+    echo '<p class="text-center text-gray-500">Nenhuma mensagem ainda. Envie a primeira!</p>';
     exit;
 }
 
-$formatarDataSeparador = function ($dateString, $lang) use ($t) {
-    $date = new DateTime($dateString);
-    $hoje = new DateTime('today');
-    $ontem = new DateTime('yesterday');
+$remetenteAnterior = null;
 
-    if ($date->format('Y-m-d') === $hoje->format('Y-m-d')) {
-        return $t('dates.today', 'Hoje');
-    }
-    if ($date->format('Y-m-d') === $ontem->format('Y-m-d')) {
-        return $t('dates.yesterday', 'Ontem');
-    }
-
-    $locale = ($lang === 'en') ? 'en_US' : 'pt_BR';
-    $pattern = $t('dates.dateFormat', 'd \'de\' MMMM');
-    $formatter = new IntlDateFormatter($locale, IntlDateFormatter::LONG, IntlDateFormatter::NONE, null, null, $pattern);
-    return $formatter->format($date);
-};
-
-$dataAnterior = null;
-
-foreach ($mensagens as $key => $m) {
-    $dataAtual = date('Y-m-d', strtotime($m['data_envio']));
-    if ($dataAtual !== $dataAnterior) {
-        echo '<div class="flex justify-center my-4">
-                    <span class="bg-gray-200 text-gray-600 text-xs font-semibold px-3 py-1 rounded-full">' . $formatarDataSeparador($dataAtual, $lang) . '</span>
-                  </div>';
-        $dataAnterior = $dataAtual;
-    }
-
-    $mensagemAnterior = $mensagens[$key - 1] ?? null;
-    $remetenteAnterior = $mensagemAnterior ? (date('Y-m-d', strtotime($mensagemAnterior['data_envio'])) === $dataAtual ? $mensagemAnterior['id_usuario'] : null) : null;
+foreach ($mensagens as $m) {
     $isMinha = ($m['id_usuario'] == $id_usuario_logado);
-    $isAgrupada = ($m['id_usuario'] === $remetenteAnterior);
-    $comAssinatura = !empty($m['com_assinatura']);
-    $containerClasses = $isAgrupada ? 'mt-1' : 'mt-4';
-    $bolhaClasses = $isMinha ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white text-gray-800 rounded-bl-none border';
-    if ($isAgrupada) {
-        $bolhaClasses .= $isMinha ? ' rounded-tr-lg' : ' rounded-tl-lg';
-    }
-
-    // **MELHORIA**: Lógica para definir a URL do avatar.
-    $avatar_url = '';
-    if (!empty($m['foto'])) {
-        // Assume que as fotos estão na pasta 'public/uploads/profile_photos/'
-        // Altere este caminho se suas fotos estiverem em outro lugar.
-        $avatar_url = '../../uploads/' . htmlspecialchars($m['foto']);
-    } else {
-        // Fallback: se não houver foto, gera o avatar com a inicial.
-        $avatar_inicial = mb_strtoupper(mb_substr($m['nome_usuario'], 0, 1));
-        $avatar_url = "https://placehold.co/100x100/7c3aed/ffffff?text={$avatar_inicial}";
-    }
-
-    $statusLida = $isMinha ? '<span class="text-xs ml-2 ' . ($m['lida'] ? 'text-blue-400' : 'text-gray-300') . '">✓✓</span>' : '';
+    $isAgrupada = ($remetenteAnterior === $m['id_usuario']);
+    $avatar_url = !empty($m['foto']) ? '../../uploads/' . htmlspecialchars($m['foto']) : 'https://placehold.co/100x100/c4b5fd/4c1d95?text=' . mb_strtoupper(mb_substr($m['nome_usuario'], 0, 1));
+    
     $reacoesHtml = '';
+    // Verificamos se a chave 'reacoes' existe e não está vazia.
     if (!empty($m['reacoes'])) {
-        $reacoesHtml .= '<div class="flex gap-1 mt-1.5 ' . ($isMinha ? 'justify-end' : 'justify-start') . '">';
+        $reacoesHtml .= '<div class="flex gap-1 mt-1.5 ' . ($isMinha ? 'justify-end' : '') . '">';
         foreach ($m['reacoes'] as $reacao) {
-            $reacoesHtml .= '<div class="text-sm bg-white border rounded-full px-2 py-0.5 shadow-sm cursor-pointer" title="' . htmlspecialchars($reacao['nomes_usuarios']) . '">' . htmlspecialchars($reacao['reacao']) . ' ' . $reacao['total'] . '</div>';
+            $reacoesHtml .= '<div class="text-xs bg-white/70 backdrop-blur-sm border rounded-full px-2 py-0.5 shadow-sm cursor-pointer" title="' . htmlspecialchars($reacao['nomes_usuarios']) . '">';
+            $reacoesHtml .= htmlspecialchars($reacao['reacao']) . ' ' . $reacao['total'];
+            $reacoesHtml .= '</div>';
         }
         $reacoesHtml .= '</div>';
     }
 ?>
-    <div class="flex items-start gap-3 max-w-xl <?= $isMinha ? 'flex-row-reverse ml-auto' : 'mr-auto' ?> <?= $containerClasses ?>">
-        <div class="w-10 h-10 flex-shrink-0">
-            <?php if (!$isAgrupada): ?>
-                <!-- **MELHORIA**: A classe 'object-cover' garante que a foto preencha o círculo sem distorcer. -->
-                <img src="<?= $avatar_url ?>" class="w-full h-full rounded-full object-cover" alt="Avatar de <?= htmlspecialchars($m['nome_usuario']) ?>">
-            <?php endif; ?>
-        </div>
-        <div class="flex flex-col <?= $isMinha ? 'items-end' : 'items-start' ?>">
-            <div class="mensagem-bolha group relative rounded-2xl p-3 shadow-sm <?= $bolhaClasses ?>">
-                <?php if (!$isAgrupada && !$isMinha && $comAssinatura): ?>
-                    <p class="font-bold text-sm mb-1 text-violet-600"><?= htmlspecialchars($m['nome_usuario']) ?></p>
+    <div class="w-full flex <?= $isMinha ? 'justify-end' : 'justify-start' ?> <?= $isAgrupada ? 'mt-1' : 'mt-4' ?>">
+        <div class="flex <?= $isMinha ? 'flex-row-reverse' : 'flex-row' ?> items-start gap-3 max-w-[80%] group">
+            <div class="w-10 h-10 flex-shrink-0">
+                <?php if (!$isAgrupada): ?>
+                    <img src="<?= $avatar_url ?>" class="w-full h-full rounded-full object-cover">
                 <?php endif; ?>
-                <div class="flex items-end">
-                    <p class="text-sm pr-2"><?= nl2br(htmlspecialchars($m['mensagem'])) ?></p>
-                    <span class="text-xs <?= $isMinha ? 'text-blue-200' : 'text-gray-500' ?> whitespace-nowrap"><?= date('H:i', strtotime($m['data_envio'])) ?></span>
-                    <?= $statusLida ?>
-                </div>
-                <div class="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button class="btn-opcoes bg-white rounded-full p-1 shadow border text-gray-500 hover:text-gray-800" data-id-mensagem="<?= $m['id_mensagem'] ?>">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z" />
-                        </svg>
-                    </button>
-                    <div class="dropdown-opcoes absolute z-40 right-0 mt-1 w-36 bg-white border rounded-lg shadow-xl hidden">
-                        <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 btn-reagir" data-id-mensagem="<?= $m['id_mensagem'] ?>"><?= $t('options.react', 'Reagir') ?></button>
-                        <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><?= $t('options.edit', 'Editar') ?></button>
-                        <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><?= $t('options.reply', 'Responder') ?></button>
-                        <div class="border-t my-1"></div>
-                        <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"><?= $t('options.delete', 'Excluir') ?></button>
-                    </div>
-                </div>
             </div>
-            <?= $reacoesHtml ?>
+            <div class="flex flex-col gap-1 <?= $isMinha ? 'items-end' : 'items-start' ?>">
+                <div class="relative p-3 rounded-2xl shadow-sm <?= $isMinha ? 'bg-violet-600 text-white rounded-br-lg' : 'bg-white text-gray-800 border border-gray-200 rounded-bl-lg' ?>">
+                    <p class="text-sm"><?= nl2br(htmlspecialchars($m['mensagem'])) ?></p>
+                    <button class="btn-reagir absolute -top-3 right-0 bg-white rounded-full p-1 shadow border opacity-0 group-hover:opacity-100 transition-opacity" data-id-mensagem="<?= $m['id_mensagem'] ?>">
+                        😊
+                    </button>
+                </div>
+                <span class="text-xs text-gray-500 px-2">
+                    <?= date('H:i', strtotime($m['data_envio'])) ?>
+                </span>
+                <?= $reacoesHtml ?>
+            </div>
         </div>
     </div>
 <?php
-} // Fim do loop
+    $remetenteAnterior = $m['id_usuario'];
+}
 ?>

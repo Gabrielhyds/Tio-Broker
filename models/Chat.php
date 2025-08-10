@@ -1,4 +1,7 @@
 <?php
+// **CORREÇÃO**: Adicione esta linha no topo do seu arquivo models/Chat.php
+namespace App\Models;
+
 class Chat
 {
     // Propriedade privada para armazenar a conexão com o banco de dados.
@@ -123,18 +126,30 @@ class Chat
         return $mensagens;
     }
 
-    // Envia uma nova mensagem para uma conversa específica.
+    /**
+     * Envia uma nova mensagem para uma conversa específica.
+     * **MÉTODO ATUALIZADO** com tratamento de erros.
+     */
     public function enviarMensagem($id_conversa, $id_usuario, $mensagem)
     {
-        // Prepara a instrução para inserir a nova mensagem.
-        $stmt = $this->conn->prepare("
-            INSERT INTO mensagens (id_conversa, id_usuario, mensagem)
-            VALUES (?, ?, ?)
-        ");
-        // Associa os parâmetros: dois inteiros ('i') e uma string ('s').
+        $sql = "INSERT INTO mensagens (id_conversa, id_usuario, mensagem) VALUES (?, ?, ?)";
+        
+        $stmt = $this->conn->prepare($sql);
+        
+        // Verifica se a preparação da query falhou
+        if ($stmt === false) {
+            // Lança uma exceção para ser capturada pelo ChatServer
+            throw new \Exception("Erro ao preparar a query para salvar a mensagem: " . $this->conn->error);
+        }
+        
         $stmt->bind_param("iis", $id_conversa, $id_usuario, $mensagem);
-        // Executa e retorna true em caso de sucesso, ou false em caso de falha.
-        return $stmt->execute();
+        
+        if (!$stmt->execute()) {
+            // Lança uma exceção para ser capturada pelo ChatServer
+            throw new \Exception("Erro ao executar a query para salvar a mensagem: " . $stmt->error);
+        }
+        
+        return true;
     }
 
     // Em uma conversa privada, retorna o ID do outro participante (o destinatário).
@@ -233,19 +248,33 @@ class Chat
 
     // --- NOVOS MÉTODOS PARA REAÇÕES ---
 
-    /**
-     * Adiciona ou atualiza uma reação de um usuário a uma mensagem.
-     * Usa "ON DUPLICATE KEY UPDATE" para trocar a reação se o usuário já tiver reagido.
+   /**
+     * Adiciona ou atualiza uma reação de um utilizador a uma mensagem.
+     * Usa "ON DUPLICATE KEY UPDATE" para trocar a reação se o utilizador já tiver reagido.
      */
     public function adicionarOuAtualizarReacao($id_mensagem, $id_usuario, $reacao)
     {
-        // Tenta inserir uma nova reação. Se a chave primária (id_mensagem, id_usuario) já existir, atualiza a coluna 'reacao'.
+        // A query SQL insere uma nova reação. Se a chave única (id_mensagem, id_usuario) já existir,
+        // ele simplesmente atualiza a coluna 'reacao' com o novo valor.
         $sql = "INSERT INTO reacoes (id_mensagem, id_usuario, reacao) VALUES (?, ?, ?)
                 ON DUPLICATE KEY UPDATE reacao = ?";
+        
         $stmt = $this->conn->prepare($sql);
+        
+        // Verifica se a preparação da query falhou
+        if ($stmt === false) {
+            throw new \Exception("Erro ao preparar a query de reação: " . $this->conn->error);
+        }
+
         // Binda os parâmetros: id_mensagem, id_usuario, reacao (para o INSERT) e reacao (para o UPDATE).
         $stmt->bind_param("iiss", $id_mensagem, $id_usuario, $reacao, $reacao);
-        return $stmt->execute();
+        
+        // Executa a query e verifica se foi bem-sucedida
+        if (!$stmt->execute()) {
+            throw new \Exception("Erro ao executar a query de reação: " . $stmt->error);
+        }
+
+        return true;
     }
 
     /**
