@@ -1,195 +1,231 @@
 <?php
-// **CORREÇÃO**: Adicione esta linha no topo do seu arquivo models/Chat.php
+// Caminho: models/Chat.php
 namespace App\Models;
 
 class Chat
 {
-    // Propriedade privada para armazenar a conexão com o banco de dados.
+    /** @var \mysqli */
     private $conn;
 
-    // O construtor da classe recebe o objeto de conexão como parâmetro.
-    public function __construct($conexao)
+    public function __construct(\mysqli $conexao)
     {
-        // Atribui a conexão recebida à propriedade da classe.
         $this->conn = $conexao;
     }
 
-    // Cria uma nova conversa do tipo 'privada' entre dois usuários.
-    public function criarConversaPrivada($id_origem, $id_destino)
-    {
-        // Prepara e executa uma instrução SQL para inserir uma nova conversa na tabela 'conversas'.
-        $stmt = $this->conn->prepare("INSERT INTO conversas (tipo_conversa) VALUES ('privada')");
-        $stmt->execute();
-        // Obtém o ID da conversa que acabou de ser criada.
-        $id_conversa = $this->conn->insert_id;
+    /* ------------------------- Utils MySQLi (sem mysqlnd) ------------------------- */
 
-        // Adiciona os dois usuários (origem e destino) à conversa recém-criada.
+    /** Retorna true se get_result estiver disponível (mysqlnd). */
+    private function hasGetResult(): bool
+    {
+        return method_exists('mysqli_stmt', 'get_result');
+    }
+
+    /** fetch all assoc sem mysqlnd */
+    private function fetchAllAssocNoNd(\mysqli_stmt $stmt): array
+    {
+        $result = [];
+        if (!$meta = $stmt->result_metadata()) {
+            return $result;
+        }
+        $row = [];
+        $bind = [];
+        while ($field = $meta->fetch_field()) {
+            $row[$field->name] = null;
+            $bind[] = &$row[$field->name];
+        }
+        call_user_func_array([$stmt, 'bind_result'], $bind);
+        while ($stmt->fetch()) {
+            // copia o array para não manter referências
+            $result[] = array_map(fn($v) => $v, $row);
+        }
+        $meta->free_result();
+        return $result;
+    }
+
+    /** fetch uma linha assoc sem mysqlnd */
+    private function fetchOneAssocNoNd(\mysqli_stmt $stmt): ?array
+    {
+        $rows = $this->fetchAllAssocNoNd($stmt);
+        return $rows[0] ?? null;
+    }
+
+    /* ------------------------------ Conversas ------------------------------ */
+
+    public function criarConversaPrivada(int $id_origem, int $id_destino): int
+    {
+        // evita duplicar conversa privada da mesma dupla
+        if ($existente = $this->buscarConversaPrivadaEntre($id_origem, $id_destino)) {
+            return (int)$existente;
+        }
+
+        $stmt = $this->conn->prepare("INSERT INTO conversas (tipo_conversa) VALUES ('privada')");
+        if (!$stmt) { throw new \Exception("Prepare falhou: ".$this->conn->error); }
+        $stmt->execute();
+        $id_conversa = (int)$this->conn->insert_id;
+        $stmt->close();
+
         $this->adicionarUsuarioNaConversa($id_conversa, $id_origem);
         $this->adicionarUsuarioNaConversa($id_conversa, $id_destino);
 
-        // Retorna o ID da nova conversa.
         return $id_conversa;
     }
 
-    // Adiciona um usuário a uma conversa específica na tabela de associação 'usuarios_conversa'.
-    public function adicionarUsuarioNaConversa($id_conversa, $id_usuario)
+    public function adicionarUsuarioNaConversa(int $id_conversa, int $id_usuario): void
     {
-        // Prepara a instrução SQL para inserir o par (id_conversa, id_usuario).
-        $stmt = $this->conn->prepare("INSERT INTO usuarios_conversa (id_conversa, id_usuario) VALUES (?, ?)");
-        // Associa os parâmetros (bind) aos placeholders. 'i' indica que são inteiros.
+        $stmt = $this->conn->prepare("INSERT IGNORE INTO usuarios_conversa (id_conversa, id_usuario) VALUES (?, ?)");
+        if (!$stmt) { throw new \Exception("Prepare falhou: ".$this->conn->error); }
         $stmt->bind_param("ii", $id_conversa, $id_usuario);
-        // Executa a instrução.
         $stmt->execute();
+        $stmt->close();
     }
 
-    // Verifica se já existe uma conversa privada entre dois usuários específicos.
-    public function buscarConversaPrivadaEntre($id1, $id2)
+    public function buscarConversaPrivadaEntre(int $id1, int $id2): ?int
     {
-        // Query complexa que junta a tabela de conversas com a de usuários duas vezes
-        // para encontrar uma conversa que contenha ambos os IDs de usuário.
-        $query = "
+        // garante exatamente os 2 participantes
+        $sql = "
             SELECT c.id_conversa
             FROM conversas c
-            JOIN usuarios_conversa uc1 ON c.id_conversa = uc1.id_conversa
-            JOIN usuarios_conversa uc2 ON c.id_conversa = uc2.id_conversa
+            JOIN usuarios_conversa uc ON c.id_conversa = uc.id_conversa
             WHERE c.tipo_conversa = 'privada'
-              AND uc1.id_usuario = ?
-              AND uc2.id_usuario = ?
+              AND uc.id_usuario IN (?, ?)
             GROUP BY c.id_conversa
+            HAVING COUNT(DISTINCT uc.id_usuario) = 2
             LIMIT 1
         ";
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->conn->prepare($sql);
+        if (!$stmt) { throw new \Exception("Prepare falhou: ".$this->conn->error); }
         $stmt->bind_param("ii", $id1, $id2);
         $stmt->execute();
-        // Obtém o resultado e o retorna como um array associativo.
-        $result = $stmt->get_result()->fetch_assoc();
 
-        // Retorna o ID da conversa se encontrada, caso contrário, retorna null.
-        return $result['id_conversa'] ?? null;
+        if ($this->hasGetResult()) {
+            $res = $stmt->get_result()->fetch_assoc();
+        } else {
+            $res = $this->fetchOneAssocNoNd($stmt);
+        }
+        $stmt->close();
+
+        return isset($res['id_conversa']) ? (int)$res['id_conversa'] : null;
     }
 
-    // Lista todas as conversas (privadas ou em grupo) das quais um usuário participa.
-    public function listarConversasPorUsuario($id_usuario)
+    public function listarConversasPorUsuario(int $id_usuario): array
     {
-        // Query para selecionar conversas com base no ID do usuário.
-        $query = "
-            SELECT c.id_conversa, c.nome_conversa
+        $sql = "
+            SELECT c.id_conversa, c.nome_conversa, c.tipo_conversa, c.data_criacao
             FROM conversas c
             JOIN usuarios_conversa uc ON c.id_conversa = uc.id_conversa
             WHERE uc.id_usuario = ?
             ORDER BY c.data_criacao DESC
         ";
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->conn->prepare($sql);
+        if (!$stmt) { throw new \Exception("Prepare falhou: ".$this->conn->error); }
         $stmt->bind_param("i", $id_usuario);
         $stmt->execute();
 
-        // Obtém o conjunto de resultados.
-        $result = $stmt->get_result();
-        // Retorna todos os resultados como um array de arrays associativos, ou um array vazio se não houver resultados.
-        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        $rows = $this->hasGetResult()
+            ? ($stmt->get_result()->fetch_all(MYSQLI_ASSOC) ?: [])
+            : $this->fetchAllAssocNoNd($stmt);
+
+        $stmt->close();
+        return $rows;
     }
 
-    // MÉTODO ATUALIZADO: Lista todas as mensagens de uma conversa, incluindo suas reações.
-    public function listarMensagensDaConversa($id_conversa)
+    public function obterDestinatarioDaConversa(int $id_conversa, int $id_usuario_atual): ?int
     {
-        // 1. Busca todas as mensagens, juntando com a tabela de usuários para obter o nome e a foto do perfil.
-        $query_mensagens = "
+        $sql = "
+            SELECT id_usuario 
+            FROM usuarios_conversa 
+            WHERE id_conversa = ? AND id_usuario != ?
+            LIMIT 1
+        ";
+        $stmt = $this->conn->prepare($sql);
+        if (!$stmt) { throw new \Exception("Prepare falhou: ".$this->conn->error); }
+        $stmt->bind_param("ii", $id_conversa, $id_usuario_atual);
+        $stmt->execute();
+
+        if ($this->hasGetResult()) {
+            $res = $stmt->get_result()->fetch_assoc();
+        } else {
+            $res = $this->fetchOneAssocNoNd($stmt);
+        }
+        $stmt->close();
+
+        return isset($res['id_usuario']) ? (int)$res['id_usuario'] : null;
+    }
+
+    /* ------------------------------ Mensagens ------------------------------ */
+
+    public function listarMensagensDaConversa(int $id_conversa): array
+    {
+        $sql = "
             SELECT 
-                m.id_mensagem, m.id_conversa, m.id_usuario, m.mensagem, m.data_envio, m.lida, 
+                m.id_mensagem, m.id_conversa, m.id_usuario, m.mensagem, m.data_envio, 
+                m.editada_em, CAST(m.apagada AS UNSIGNED) AS apagada,
                 u.nome AS nome_usuario, u.foto
             FROM mensagens m
             JOIN usuario u ON m.id_usuario = u.id_usuario
             WHERE m.id_conversa = ?
             ORDER BY m.data_envio ASC
         ";
-        $stmt_mensagens = $this->conn->prepare($query_mensagens);
-        $stmt_mensagens->bind_param("i", $id_conversa);
-        $stmt_mensagens->execute();
-        $result_mensagens = $stmt_mensagens->get_result();
-        $mensagens = $result_mensagens ? $result_mensagens->fetch_all(MYSQLI_ASSOC) : [];
+        $stmt = $this->conn->prepare($sql);
+        if (!$stmt) { throw new \Exception("Prepare falhou: ".$this->conn->error); }
+        $stmt->bind_param("i", $id_conversa);
+        $stmt->execute();
 
-        if (empty($mensagens)) {
-            return [];
+        $mensagens = $this->hasGetResult()
+            ? ($stmt->get_result()->fetch_all(MYSQLI_ASSOC) ?: [])
+            : $this->fetchAllAssocNoNd($stmt);
+
+        $stmt->close();
+
+        if (empty($mensagens)) return [];
+
+        $ids = array_column($mensagens, 'id_mensagem');
+        $reacoes = $this->buscarReacoesParaMensagens($ids);
+
+        foreach ($mensagens as &$m) {
+            $id = (int)$m['id_mensagem'];
+            $m['reacoes'] = $reacoes[$id] ?? [];
         }
-
-        // 2. Extrai os IDs das mensagens para buscar as reações.
-        $ids_mensagens = array_column($mensagens, 'id_mensagem');
-
-        // 3. Busca todas as reações para as mensagens em uma única consulta.
-        $reacoes = $this->buscarReacoesParaMensagens($ids_mensagens);
-
-        // 4. Anexa as reações a cada mensagem correspondente.
-        foreach ($mensagens as $key => $mensagem) {
-            $mensagens[$key]['reacoes'] = $reacoes[$mensagem['id_mensagem']] ?? [];
-        }
+        unset($m);
 
         return $mensagens;
     }
 
-    /**
-     * Envia uma nova mensagem para uma conversa específica.
-     * **MÉTODO ATUALIZADO** com tratamento de erros.
-     */
-    public function enviarMensagem($id_conversa, $id_usuario, $mensagem)
+    public function enviarMensagem(int $id_conversa, int $id_usuario, string $mensagem): int
     {
         $sql = "INSERT INTO mensagens (id_conversa, id_usuario, mensagem) VALUES (?, ?, ?)";
-        
         $stmt = $this->conn->prepare($sql);
-        
-        // Verifica se a preparação da query falhou
-        if ($stmt === false) {
-            // Lança uma exceção para ser capturada pelo ChatServer
-            throw new \Exception("Erro ao preparar a query para salvar a mensagem: " . $this->conn->error);
-        }
-        
+        if (!$stmt) { throw new \Exception("Prepare falhou: ".$this->conn->error); }
         $stmt->bind_param("iis", $id_conversa, $id_usuario, $mensagem);
-        
         if (!$stmt->execute()) {
-            // Lança uma exceção para ser capturada pelo ChatServer
-            throw new \Exception("Erro ao executar a query para salvar a mensagem: " . $stmt->error);
+            $err = $stmt->error;
+            $stmt->close();
+            throw new \Exception("Erro ao executar INSERT mensagem: ".$err);
         }
-        
-        return true;
+        $id = (int)$this->conn->insert_id;
+        $stmt->close();
+        return $id;
     }
 
-    // Em uma conversa privada, retorna o ID do outro participante (o destinatário).
-    public function obterDestinatarioDaConversa($id_conversa, $id_usuario_atual)
+    public function marcarComoLidas(int $id_conversa, int $id_usuario_logado): void
     {
-        // Busca na tabela de associação o usuário que está na mesma conversa mas não é o usuário atual.
-        $stmt = $this->conn->prepare("
-            SELECT id_usuario 
-            FROM usuarios_conversa 
-            WHERE id_conversa = ? AND id_usuario != ?
-            LIMIT 1
-        ");
-        $stmt->bind_param("ii", $id_conversa, $id_usuario_atual);
-        $stmt->execute();
-        $result = $stmt->get_result()->fetch_assoc();
-        // Retorna o ID do destinatário ou null se não for encontrado.
-        return $result['id_usuario'] ?? null;
-    }
-
-    // Marca como lidas (lida = 1) todas as mensagens de uma conversa que não foram enviadas pelo usuário logado.
-    public function marcarComoLidas($id_conversa, $id_usuario_logado)
-    {
-        // Prepara a instrução de atualização.
-        $stmt = $this->conn->prepare("
+        $sql = "
             UPDATE mensagens 
             SET lida = 1 
             WHERE id_conversa = ? 
-            AND id_usuario != ? 
-            AND lida = 0
-        ");
+              AND id_usuario != ? 
+              AND lida = 0
+        ";
+        $stmt = $this->conn->prepare($sql);
+        if (!$stmt) { throw new \Exception("Prepare falhou: ".$this->conn->error); }
         $stmt->bind_param("ii", $id_conversa, $id_usuario_logado);
-        // Executa a atualização.
         $stmt->execute();
+        $stmt->close();
     }
 
-    // Conta o número de mensagens não lidas, agrupadas por quem as enviou.
-    public function contarNaoLidasPorRemetente($id_usuario_logado)
+    public function contarNaoLidasPorRemetente(int $id_usuario_logado): array
     {
-        // Query para contar mensagens não lidas recebidas pelo usuário logado.
-        $query = "
+        $sql = "
             SELECT m.id_usuario AS remetente, COUNT(*) AS total
             FROM mensagens m
             JOIN conversas c ON m.id_conversa = c.id_conversa
@@ -199,24 +235,27 @@ class Chat
               AND m.lida = 0
             GROUP BY m.id_usuario
         ";
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->conn->prepare($sql);
+        if (!$stmt) { throw new \Exception("Prepare falhou: ".$this->conn->error); }
         $stmt->bind_param("ii", $id_usuario_logado, $id_usuario_logado);
         $stmt->execute();
-        $result = $stmt->get_result();
 
-        // Cria um array onde a chave é o ID do remetente e o valor é o total de mensagens não lidas.
-        $notificacoes = [];
-        while ($row = $result->fetch_assoc()) {
-            $notificacoes[$row['remetente']] = $row['total'];
+        $rows = $this->hasGetResult()
+            ? ($stmt->get_result()->fetch_all(MYSQLI_ASSOC) ?: [])
+            : $this->fetchAllAssocNoNd($stmt);
+
+        $stmt->close();
+
+        $out = [];
+        foreach ($rows as $r) {
+            $out[(int)$r['remetente']] = (int)$r['total'];
         }
-        return $notificacoes;
+        return $out;
     }
 
-    // Busca a última mensagem trocada em cada conversa privada do usuário logado.
-    public function buscarUltimaMensagemCom($id_logado)
+    public function buscarUltimaMensagemCom(int $id_logado): array
     {
-        // Query complexa para identificar o "outro usuário" em cada conversa e pegar a última mensagem.
-        $query = "
+        $sql = "
             SELECT 
                 CASE 
                     WHEN m.id_usuario = ? THEN uc2.id_usuario
@@ -231,94 +270,99 @@ class Chat
             WHERE c.tipo_conversa = 'privada'
             ORDER BY m.data_envio DESC
         ";
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->conn->prepare($sql);
+        if (!$stmt) { throw new \Exception("Prepare falhou: ".$this->conn->error); }
         $stmt->bind_param("ii", $id_logado, $id_logado);
         $stmt->execute();
-        $result = $stmt->get_result();
 
-        // Itera sobre os resultados (ordenados por data) e guarda apenas a primeira (a mais recente) para cada "outro_usuario".
+        $rows = $this->hasGetResult()
+            ? ($stmt->get_result()->fetch_all(MYSQLI_ASSOC) ?: [])
+            : $this->fetchAllAssocNoNd($stmt);
+
+        $stmt->close();
+
         $ultimas = [];
-        while ($row = $result->fetch_assoc()) {
-            if (!isset($ultimas[$row['outro_usuario']])) {
-                $ultimas[$row['outro_usuario']] = $row;
+        foreach ($rows as $r) {
+            $k = (int)$r['outro_usuario'];
+            if (!isset($ultimas[$k])) {
+                $ultimas[$k] = $r;
             }
         }
         return $ultimas;
     }
 
-    // --- NOVOS MÉTODOS PARA REAÇÕES ---
+    /* ------------------------------- Reações ------------------------------- */
 
-   /**
-     * Adiciona ou atualiza uma reação de um utilizador a uma mensagem.
-     * Usa "ON DUPLICATE KEY UPDATE" para trocar a reação se o utilizador já tiver reagido.
-     */
-    public function adicionarOuAtualizarReacao($id_mensagem, $id_usuario, $reacao)
+    public function adicionarOuAtualizarReacao(int $id_mensagem, int $id_usuario, string $reacao): bool
     {
-        // A query SQL insere uma nova reação. Se a chave única (id_mensagem, id_usuario) já existir,
-        // ele simplesmente atualiza a coluna 'reacao' com o novo valor.
         $sql = "INSERT INTO reacoes (id_mensagem, id_usuario, reacao) VALUES (?, ?, ?)
-                ON DUPLICATE KEY UPDATE reacao = ?";
-        
+                ON DUPLICATE KEY UPDATE reacao = VALUES(reacao)";
         $stmt = $this->conn->prepare($sql);
-        
-        // Verifica se a preparação da query falhou
-        if ($stmt === false) {
-            throw new \Exception("Erro ao preparar a query de reação: " . $this->conn->error);
-        }
-
-        // Binda os parâmetros: id_mensagem, id_usuario, reacao (para o INSERT) e reacao (para o UPDATE).
-        $stmt->bind_param("iiss", $id_mensagem, $id_usuario, $reacao, $reacao);
-        
-        // Executa a query e verifica se foi bem-sucedida
-        if (!$stmt->execute()) {
-            throw new \Exception("Erro ao executar a query de reação: " . $stmt->error);
-        }
-
-        return true;
+        if (!$stmt) { throw new \Exception("Prepare falhou: ".$this->conn->error); }
+        $stmt->bind_param("iis", $id_mensagem, $id_usuario, $reacao);
+        $ok = $stmt->execute();
+        $stmt->close();
+        return $ok;
     }
 
-    /**
-     * Busca todas as reações para uma lista de IDs de mensagens.
-     * Agrupa as reações por emoji para contagem e lista os nomes dos usuários.
-     */
-    public function buscarReacoesParaMensagens(array $ids_mensagens)
+    public function buscarReacoesParaMensagens(array $ids_mensagens): array
     {
-        // Se a lista de IDs estiver vazia, retorna um array vazio para evitar erros de SQL.
-        if (empty($ids_mensagens)) {
-            return [];
-        }
-        // Cria uma string de placeholders (?) correspondente ao número de IDs de mensagens.
+        if (empty($ids_mensagens)) return [];
+        // monta placeholders
         $placeholders = implode(',', array_fill(0, count($ids_mensagens), '?'));
-
-        // Query que busca reações, conta o total por tipo de emoji e concatena os nomes dos usuários que reagiram.
         $sql = "
             SELECT 
                 r.id_mensagem, 
                 r.reacao, 
-                COUNT(r.id_reacao) as total,
-                GROUP_CONCAT(u.nome SEPARATOR ', ') as nomes_usuarios
+                COUNT(r.id_reacao) AS total,
+                GROUP_CONCAT(u.nome SEPARATOR ', ') AS nomes_usuarios
             FROM reacoes r
             JOIN usuario u ON r.id_usuario = u.id_usuario
             WHERE r.id_mensagem IN ($placeholders)
             GROUP BY r.id_mensagem, r.reacao
             ORDER BY r.id_mensagem, total DESC
         ";
-
         $stmt = $this->conn->prepare($sql);
-
-        // Cria a string de tipos ('i' para cada ID de mensagem) e binda os parâmetros dinamicamente.
+        if (!$stmt) { throw new \Exception("Prepare falhou: ".$this->conn->error); }
+        // tipos dinâmicos
         $types = str_repeat('i', count($ids_mensagens));
         $stmt->bind_param($types, ...$ids_mensagens);
-
         $stmt->execute();
-        $result = $stmt->get_result();
 
-        // Organiza os resultados em um array onde a chave principal é o ID da mensagem.
-        $reacoes_agrupadas = [];
-        while ($row = $result->fetch_assoc()) {
-            $reacoes_agrupadas[$row['id_mensagem']][] = $row;
+        $rows = $this->hasGetResult()
+            ? ($stmt->get_result()->fetch_all(MYSQLI_ASSOC) ?: [])
+            : $this->fetchAllAssocNoNd($stmt);
+
+        $stmt->close();
+
+        $out = [];
+        foreach ($rows as $r) {
+            $out[(int)$r['id_mensagem']][] = $r;
         }
-        return $reacoes_agrupadas;
+        return $out;
     }
-    
+
+    public function editarMensagem(int $id_mensagem, int $id_usuario, string $nova_mensagem): bool
+    {
+        $sql = "UPDATE mensagens SET mensagem = ?, editada_em = NOW() WHERE id_mensagem = ? AND id_usuario = ?";
+        $stmt = $this->conn->prepare($sql);
+        if (!$stmt) { throw new \Exception("Prepare falhou: ".$this->conn->error); }
+        $stmt->bind_param("sii", $nova_mensagem, $id_mensagem, $id_usuario);
+        $stmt->execute();
+        $ok = $stmt->affected_rows > 0;
+        $stmt->close();
+        return $ok;
+    }
+
+    public function apagarMensagem(int $id_mensagem, int $id_usuario): bool
+    {
+        $sql = "UPDATE mensagens SET mensagem = 'Esta mensagem foi apagada.', apagada = TRUE WHERE id_mensagem = ? AND id_usuario = ?";
+        $stmt = $this->conn->prepare($sql);
+        if (!$stmt) { throw new \Exception("Prepare falhou: ".$this->conn->error); }
+        $stmt->bind_param("ii", $id_mensagem, $id_usuario);
+        $stmt->execute();
+        $ok = $stmt->affected_rows > 0;
+        $stmt->close();
+        return $ok;
+    }
 }
