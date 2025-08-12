@@ -13,11 +13,39 @@
 | - Correção: ordenação por timestamp como número.
 | - Correção: checagens nulas em seletores e includes.
 | - UX: reticências só quando necessário; debounce do "digitando".
+| - Sidebar sincronizada: polling leve + gatilhos de atualização via WebSocket.
 */
 
+/* -------- Helpers de avatar (foto real, URL absoluta ou placeholder por inicial) -------- */
+function avatar_placeholder(string $nome = 'U'): string {
+    $ini = mb_strtoupper(mb_substr($nome ?: 'U', 0, 1));
+    return 'https://placehold.co/100x100/c4b5fd/4c1d95?text=' . urlencode($ini);
+}
+function avatar_url(?string $foto, string $nome = 'U'): string {
+    if (empty($foto)) {
+        $ini = mb_strtoupper(mb_substr($nome ?: 'U', 0, 1));
+        return 'https://placehold.co/100x100/c4b5fd/4c1d95?text=' . urlencode($ini);
+    }
 
-$nomeLogado = $_SESSION['usuario']['nome'] ?? 'Eu';
-$primeiraLetra = mb_strtoupper(mb_substr($nomeLogado, 0, 1));
+    $f = ltrim($foto, '/');
+
+    // URL absoluta ou data URI: usa do jeito que veio
+    if (preg_match('~^(https?://|data:image/)~i', $f)) {
+        return $f;
+    }
+
+    // Se já começa com "uploads/", só prefixa "../../"
+    if (strpos($f, 'uploads/') === 0) {
+        return '../../' . $f; // -> "../../uploads/arquivo.jpg"
+    }
+
+    // Caso comum: só o nome do arquivo no BD
+    return '../../uploads/' . $f;
+}
+
+
+$nomeLogado     = $_SESSION['usuario']['nome'] ?? 'Eu';
+$fotoLogadoFull = avatar_url($_SESSION['usuario']['foto'] ?? null, $nomeLogado);
 ?>
 <!-- Inclusão do Tailwind CSS e Fontes -->
 <script src="https://cdn.tailwindcss.com"></script>
@@ -55,31 +83,50 @@ $primeiraLetra = mb_strtoupper(mb_substr($nomeLogado, 0, 1));
 
         <ul id="lista-usuarios" class="flex-grow overflow-y-auto custom-scrollbar">
             <?php foreach ($usuariosDisponiveis as $u): ?>
-                <?php if ($u['id_usuario'] == $id_usuario_logado) continue; ?>
-                <?php $is_active = (isset($id_destino) && $id_destino == $u['id_usuario']); ?>
-                <li class="user-item"
-                    data-user-id="<?= $u['id_usuario'] ?>"
-                    data-user-name="<?= htmlspecialchars(mb_strtolower($u['nome'])) ?>"
-                    data-timestamp="<?= isset($ultimasMensagens[$u['id_usuario']]) ? strtotime($ultimasMensagens[$u['id_usuario']]['data_envio']) : 0 ?>">
-                    <a href="chat.php?id_destino=<?= $u['id_usuario'] ?>&id_imobiliaria=<?= $id_imobiliaria_filtro ?>"
-                       class="flex items-center gap-3 px-4 py-3 transition-colors duration-200 border-r-4 <?= $is_active ? 'bg-violet-50 border-violet-500' : 'border-transparent hover:bg-gray-100' ?>">
-                        <div class="relative w-11 h-11 flex-shrink-0">
-                            <img src="<?= !empty($u['foto']) ? '../../uploads/' . htmlspecialchars($u['foto']) : 'https://placehold.co/100x100/c4b5fd/4c1d95?text=' . mb_strtoupper(mb_substr($u['nome'], 0, 1)) ?>" class="w-full h-full rounded-full object-cover" alt="">
-                            <span id="status-dot-<?= $u['id_usuario'] ?>" class="absolute bottom-0 right-0 block h-3 w-3 bg-gray-400 rounded-full border-2 border-white"></span>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex justify-between items-center">
-                                <p class="font-semibold text-gray-800 truncate text-sm"><?= htmlspecialchars($u['nome']) ?></p>
-                                <span class="text-xs text-gray-400" data-last-message-time-for="<?= $u['id_usuario'] ?>"><?= isset($ultimasMensagens[$u['id_usuario']]) ? date('H:i', strtotime($ultimasMensagens[$u['id_usuario']]['data_envio'])) : '' ?></span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <p class="text-sm text-gray-500 truncate" data-last-message-text-for="<?= $u['id_usuario'] ?>"><?= isset($ultimasMensagens[$u['id_usuario']]) ? htmlspecialchars($ultimasMensagens[$u['id_usuario']]['mensagem']) : 'Nenhuma conversa.' ?></p>
-                                <span class="bg-violet-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center <?= (!isset($notificacoes[$u['id_usuario']]) || $notificacoes[$u['id_usuario']] == 0) ? 'hidden' : '' ?>" data-unread-count-for="<?= $u['id_usuario'] ?>"><?= $notificacoes[$u['id_usuario']] ?? '' ?></span>
-                            </div>
-                        </div>
-                    </a>
-                </li>
-            <?php endforeach; ?>
+            <?php if ($u['id_usuario'] == $id_usuario_logado) continue; ?>
+            <?php
+                $is_active   = (isset($id_destino) && $id_destino == $u['id_usuario']);
+                // >>> DEFINE A URL DO AVATAR AQUI <<<
+                $fotoSidebar = avatar_url($u['foto'] ?? null, $u['nome'] ?? 'U');
+                $altSidebar  = htmlspecialchars($u['nome'] ?? 'Usuário', ENT_QUOTES);
+            ?>
+    <li class="user-item"
+        data-user-id="<?= $u['id_usuario'] ?>"
+        data-user-name="<?= htmlspecialchars(mb_strtolower($u['nome'])) ?>"
+        data-timestamp="<?= isset($ultimasMensagens[$u['id_usuario']]) ? strtotime($ultimasMensagens[$u['id_usuario']]['data_envio']) : 0 ?>">
+        <a href="chat.php?id_destino=<?= $u['id_usuario'] ?>&id_imobiliaria=<?= $id_imobiliaria_filtro ?>"
+           class="flex items-center gap-3 px-4 py-3 transition-colors duration-200 border-r-4 <?= $is_active ? 'bg-violet-50 border-violet-500' : 'border-transparent hover:bg-gray-100' ?>">
+            <div class="relative w-11 h-11 flex-shrink-0">
+  <img
+    src="<?= htmlspecialchars(avatar_url($u['foto'] ?? null, $u['nome'] ?? 'U'), ENT_QUOTES) ?>"
+    alt="<?= htmlspecialchars($u['nome'] ?? 'Usuário', ENT_QUOTES) ?>"
+    class="w-full h-full rounded-full object-cover"
+    loading="lazy"
+    onerror="this.onerror=null;this.src='<?= htmlspecialchars(avatar_placeholder($u['nome'] ?? 'U'), ENT_QUOTES) ?>';"
+    title="<?= htmlspecialchars(avatar_url($u['foto'] ?? null, $u['nome'] ?? 'U'), ENT_QUOTES) ?>"
+  >
+  <span id="status-dot-<?= (int)$u['id_usuario'] ?>"
+        class="absolute bottom-0 right-0 block h-3 w-3 bg-gray-400 rounded-full border-2 border-white"></span>
+</div>
+
+            <div class="flex-1 min-w-0">
+                <div class="flex justify-between items-center">
+                    <p class="font-semibold text-gray-800 truncate text-sm"><?= htmlspecialchars($u['nome']) ?></p>
+                    <span class="text-xs text-gray-400" data-last-message-time-for="<?= $u['id_usuario'] ?>">
+                        <?= isset($ultimasMensagens[$u['id_usuario']]) ? date('H:i', strtotime($ultimasMensagens[$u['id_usuario']]['data_envio'])) : '' ?>
+                    </span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <p class="text-sm text-gray-500 truncate" data-last-message-text-for="<?= $u['id_usuario'] ?>">
+                        <?= isset($ultimasMensagens[$u['id_usuario']]) ? htmlspecialchars($ultimasMensagens[$u['id_usuario']]['mensagem']) : 'Nenhuma conversa.' ?>
+                    </p>
+                    <span class="bg-violet-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center <?= (!isset($notificacoes[$u['id_usuario']]) || $notificacoes[$u['id_usuario']] == 0) ? 'hidden' : '' ?>"
+                          data-unread-count-for="<?= $u['id_usuario'] ?>"><?= $notificacoes[$u['id_usuario']] ?? '' ?></span>
+                </div>
+            </div>
+        </a>
+    </li>
+<?php endforeach; ?>
         </ul>
     </aside>
 
@@ -87,13 +134,22 @@ $primeiraLetra = mb_strtoupper(mb_substr($nomeLogado, 0, 1));
     <main class="w-full flex flex-col bg-gray-50">
         <?php if ($id_conversa_ativa && $usuarioDestino): ?>
             <header class="flex items-center gap-4 p-4 border-b border-gray-200/80 flex-shrink-0 bg-white">
-                <img src="<?= !empty($usuarioDestino['foto']) ? '../../uploads/' . htmlspecialchars($usuarioDestino['foto']) : 'https://placehold.co/100x100/c4b5fd/4c1d95?text=' . mb_strtoupper(mb_substr($usuarioDestino['nome'], 0, 1)) ?>" class="w-11 h-11 rounded-full object-cover" alt="">
+                <?php
+                    $fotoHeader = avatar_url($usuarioDestino['foto'] ?? null, $usuarioDestino['nome'] ?? 'U');
+                    $altHeader  = htmlspecialchars($usuarioDestino['nome'] ?? 'Usuário', ENT_QUOTES);
+                ?>
+                <img
+                    src="<?= $fotoHeader ?>"
+                    alt="<?= $altHeader ?>"
+                    class="w-11 h-11 rounded-full object-cover"
+                    onerror="this.onerror=null;this.src='<?= avatar_placeholder($usuarioDestino['nome'] ?? 'U') ?>';"
+                >
                 <div>
                     <h2 class="text-base font-semibold text-gray-900"><?= htmlspecialchars($usuarioDestino['nome']) ?></h2>
-                    <!-- Indicador de Status no Cabeçalho -->
                     <p id="header-status-text" class="text-sm text-gray-500">Offline</p>
                 </div>
             </header>
+
 
             <div id="mensagens" class="flex-grow p-6 overflow-y-auto custom-scrollbar bg-slate-50"></div>
 
@@ -134,15 +190,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const idUsuarioLogado = <?= json_encode($id_usuario_logado ?? null) ?>;
     const idDestino       = <?= json_encode($id_destino ?? null) ?>;
     const infoUsuarioLogado = {
-    nome: '<?= htmlspecialchars($nomeLogado, ENT_QUOTES) ?>',
-    foto: '<?= !empty($_SESSION['usuario']['foto']) 
-        ? "../../uploads/" . htmlspecialchars($_SESSION['usuario']['foto'], ENT_QUOTES) 
-        : "https://placehold.co/100x100/c4b5fd/4c1d95?text=" . $primeiraLetra ?>'
+        nome: '<?= htmlspecialchars($nomeLogado, ENT_QUOTES) ?>',
+        foto: '<?= htmlspecialchars($fotoLogadoFull, ENT_QUOTES) ?>'
     };
 
     // --- ELEMENTOS DO DOM ---
     const mensagensContainer = document.getElementById('mensagens');
     const mensagemForm       = document.getElementById('form-mensagem');
+    theMensagemInput      = document.getElementById('mensagem-input'); // typo guard below
     const mensagemInput      = document.getElementById('mensagem-input');
     const listaUsuariosEl    = document.getElementById('lista-usuarios');
     const typingIndicator    = document.getElementById('typing-indicator');
@@ -168,15 +223,73 @@ document.addEventListener('DOMContentLoaded', () => {
         return false;
     }
 
+    // ---- Atualização periódica/instantânea da lista (última msg + não lidas) ----
+    const ENDPOINT_UPDATES = 'get_lista_updates.php'; // ajuste o caminho se necessário
+
+    function formatHoraTS(ts) {
+      try { return new Date(ts * 1000).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }); }
+      catch { return ''; }
+    }
+
+    function aplicarUpdatesNaUI(updates) {
+      if (!updates || typeof updates !== 'object') return;
+
+      Object.entries(updates).forEach(([userId, info]) => {
+        const li    = document.querySelector(`.user-item[data-user-id="${userId}"]`);
+        if (!li) return;
+
+        const txtEl  = li.querySelector(`[data-last-message-text-for="${userId}"]`);
+        const timeEl = li.querySelector(`[data-last-message-time-for="${userId}"]`);
+        const badge  = li.querySelector(`[data-unread-count-for="${userId}"]`);
+
+        if (txtEl)  txtEl.textContent = String(info.ultima_mensagem || '').trim();
+        if (timeEl && info.data_envio_ts) timeEl.textContent = formatHoraTS(Number(info.data_envio_ts));
+
+        const qnt = Number(info.nao_lidas || 0);
+        if (badge) {
+          if (qnt > 0) { badge.textContent = qnt; badge.classList.remove('hidden'); }
+          else { badge.textContent = '0'; badge.classList.add('hidden'); }
+        }
+
+        li.dataset.timestamp = String(info.data_envio_ts || Math.floor(Date.now()/1000));
+      });
+
+      // Reordena por timestamp desc
+      const items = Array.from(document.querySelectorAll('.user-item'));
+      items.sort((a,b)=> Number(b.dataset.timestamp||0)-Number(a.dataset.timestamp||0))
+           .forEach(el => listaUsuariosEl && listaUsuariosEl.appendChild(el));
+    }
+
+    async function fetchUpdatesLista() {
+      try {
+        const url = `${ENDPOINT_UPDATES}?t=${Date.now()}`; // cache bust
+        const res = await fetch(url, { credentials: 'same-origin' });
+        if (!res.ok) return;
+        const json = await res.json();
+        if (json && json.success && json.data) aplicarUpdatesNaUI(json.data);
+      } catch (_) { /* silencia */ }
+    }
+
+    // Chama ao abrir e a cada 10s (fallback)
+    fetchUpdatesLista();
+    const updatesInterval = setInterval(fetchUpdatesLista, 10000);
+    window.addEventListener('beforeunload', () => clearInterval(updatesInterval));
+
+    // Throttle para evitar spam quando chegam muitos eventos
+    let updatesPending = false;
+    function scheduleUpdatesLista() {
+      if (updatesPending) return;
+      updatesPending = true;
+      setTimeout(() => { updatesPending = false; fetchUpdatesLista(); }, 300);
+    }
+
     // --- LÓGICA DO WEBSOCKET ---
     const wsProto = location.protocol === 'https:' ? 'wss' : 'ws';
-    // ajuste a porta/rota conforme sua infra. Ex.: servidor WS na porta 8080
     const wsPort  = (location.port && location.port !== '80' && location.port !== '443') ? `:${location.port}` : ':8080';
     const wsUrl   = `${wsProto}://${location.hostname}${wsPort}/`;
     const conn    = new WebSocket(wsUrl);
 
     conn.onopen = () => {
-        console.log("Conexão WebSocket estabelecida!", wsUrl);
         if (idUsuarioLogado) {
             conn.send(JSON.stringify({ action: 'register', id_usuario: idUsuarioLogado }));
         }
@@ -188,23 +301,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     conn.onmessage = (e) => {
         let data;
-        try { data = JSON.parse(e.data); } catch (err) { return; }
+        try { data = JSON.parse(e.data); } catch { return; }
 
         switch (data.action) {
             case 'message':
                 if (data.id_conversa === idConversaAtiva) {
-                    // evita duplicar minha própria mensagem (eco do servidor)
-                    if (String(data.id_usuario) === String(idUsuarioLogado)) break;
+                    if (String(data.id_usuario) === String(idUsuarioLogado)) break; // evita eco
                     if (typingIndicator) typingIndicator.classList.add('hidden');
                     renderizarMensagem(data, false);
-                    atualizarItemDaLista(data.id_usuario, data.mensagem);
                 }
+                // Sempre agenda atualização da lista (preview/hora/não-lidas/ordem)
+                scheduleUpdatesLista();
                 break;
 
             case 'notification':
-                // Se a conversa com o remetente está aberta, não somar badge
+                // Se a conversa com o remetente está aberta, não somar badge aqui
                 if (data.from_user_id === idDestino && data.id_conversa === idConversaAtiva) break;
                 atualizarListaComNotificacao(data.from_user_id, data.message_text);
+                scheduleUpdatesLista();
                 break;
 
             case 'typing_start':
@@ -220,7 +334,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 break;
 
-            // Opcional: se seu servidor enviar lista de usuários online
             case 'online_list':
                 updateAllUserStatus(Array.isArray(data.user_ids) ? data.user_ids : []);
                 break;
@@ -256,12 +369,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 foto: infoUsuarioLogado.foto
             };
 
-            // Renderiza local imediatamente
+            // Pinta local
             renderizarMensagem(data, true);
-            atualizarItemDaLista(idDestino, textoMensagem);
 
             // Envia ao servidor
             conn.send(JSON.stringify(data));
+
+            // Sincroniza a sidebar já na minha ação (preview/hora/ordem + não-lidas do backend)
+            scheduleUpdatesLista();
 
             if (mensagemInput) mensagemInput.value = '';
         });
@@ -296,7 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (contadorEl && !contadorEl.classList.contains('hidden')) {
                 contadorEl.classList.add('hidden');
                 contadorEl.textContent = '0';
-                // TODO (opcional): marcar como lida no backend
+                // (Opcional) marcar como lida no backend
                 // fetch(`marcar_lido.php?user_id=${encodeURIComponent(userId)}`, { method: 'POST' });
             }
         });
@@ -354,6 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
             contadorEl.textContent = current + 1;
             contadorEl.classList.remove('hidden');
         }
+        // efeito imediato visual
         atualizarItemDaLista(fromUserId, messageText);
     }
 
