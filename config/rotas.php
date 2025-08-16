@@ -1,7 +1,7 @@
 <?php
 
 // Caminho base da URL para uso em links e assets
-$basePath = '/tio-broker/';
+$basePath = '/';
 
 // Caminho abs oluto até a raiz do projeto
 $projectRoot = realpath(__DIR__ . '/../');
