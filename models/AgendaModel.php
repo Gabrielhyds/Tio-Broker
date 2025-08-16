@@ -2,7 +2,6 @@
 /**
  * Model da Agenda
  * Responsável por toda a comunicação com a tabela 'agenda_eventos' no banco de dados.
- * cr7
  */
 
 if (!class_exists('AgendaModel')) {
