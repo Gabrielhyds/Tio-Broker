@@ -1,6 +1,6 @@
 <?php
 // Este código deve estar no início do seu ficheiro `mostrar.php`
-// As variáveis $imovel, $imagens, $videos, $documentos já devem ter sido carregadas.
+// As variáveis $imovel, $imagens, $videos, $documentos, $plantas, $caracteristicas já devem ter sido carregadas.
 
 // Lógica para formatar o endereço completo para exibição e para a query do mapa.
 $enderecoArray = array_filter([
@@ -21,8 +21,24 @@ $imagemPrincipal = !empty($imagens) ? BASE_URL . ltrim($imagens[0]['caminho'], '
 $ehNovo = (strtotime($imovel['data_cadastro']) >= strtotime('-7 days'));
 ?>
 
-<!-- Link para a biblioteca de ícones Bootstrap Icons (se não estiver no template base) -->
+<!-- === NOVOS ARQUIVOS CSS PARA O CARROSSEL E LIGHTBOX === -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css" />
+<style>
+    /* Pequenos ajustes para os botões de navegação do Swiper */
+    .swiper-button-next, .swiper-button-prev {
+        color: #ffffff;
+        background-color: rgba(0, 0, 0, 0.5);
+        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+    }
+    .swiper-button-next:after, .swiper-button-prev:after {
+        font-size: 18px;
+        font-weight: bold;
+    }
+</style>
 
 <div class="max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
     <!-- Botão Voltar -->
@@ -61,6 +77,32 @@ $ehNovo = (strtotime($imovel['data_cadastro']) >= strtotime('-7 days'));
                 </div>
             </div>
 
+            <!-- === SEÇÃO DA GALERIA DE IMAGENS ATUALIZADA PARA CARROSSEL === -->
+            <?php if (!empty($imagens) && count($imagens) > 1): ?>
+            <div>
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-3">Galeria de Imagens</h2>
+                <!-- Swiper -->
+                <div class="swiper rounded-xl">
+                    <div class="swiper-wrapper">
+                        <!-- Slides -->
+                        <?php foreach ($imagens as $img): ?>
+                            <div class="swiper-slide">
+                                <a href="<?= BASE_URL . ltrim($img['caminho'], '/') ?>" data-fancybox="gallery" data-caption="Galeria: <?= htmlspecialchars($imovel['titulo']) ?>">
+                                    <img src="<?= BASE_URL . ltrim($img['caminho'], '/') ?>" alt="Galeria do imóvel" class="w-full h-64 object-cover cursor-pointer">
+                                </a>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <!-- Botões de Navegação -->
+                    <div class="swiper-button-next"></div>
+                    <div class="swiper-button-prev"></div>
+                    <!-- Paginação -->
+                    <div class="swiper-pagination"></div>
+                </div>
+            </div>
+            <?php endif; ?>
+            <!-- === FIM DA SEÇÃO ATUALIZADA === -->
+
             <!-- Seção "Localização e Mapa" -->
             <div>
                 <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-3">Localização</h2>
@@ -72,20 +114,6 @@ $ehNovo = (strtotime($imovel['data_cadastro']) >= strtotime('-7 days'));
                     allowfullscreen>
                 </iframe>
             </div>
-
-            <!-- Galeria de Imagens -->
-            <?php if (!empty($imagens)): ?>
-                <div>
-                    <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-3">Galeria de Imagens</h2>
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <?php foreach ($imagens as $img): ?>
-                            <a href="<?= BASE_URL . ltrim($img['caminho'], '/') ?>" target="_blank" class="block rounded-xl overflow-hidden shadow transition-transform duration-300 hover:scale-105">
-                                <img src="<?= BASE_URL . ltrim($img['caminho'], '/') ?>" alt="Galeria do imóvel" class="w-full h-48 object-cover">
-                            </a>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            <?php endif; ?>
 
             <!-- Vídeos e Documentos -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -118,7 +146,7 @@ $ehNovo = (strtotime($imovel['data_cadastro']) >= strtotime('-7 days'));
                 <?php endif; ?>
             </div>
 
-            <!-- SEÇÃO CORRIGIDA: FEEDBACK DE VISITAS -->
+            <!-- SEÇÃO DE FEEDBACK DE VISITAS (Inalterada) -->
            <div id="visitas-feedback-section">
                 <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-3">Histórico de Visitas e Feedbacks</h2>
                 <div id="visitas-list" class="space-y-4">
@@ -128,7 +156,7 @@ $ehNovo = (strtotime($imovel['data_cadastro']) >= strtotime('-7 days'));
 
         </div>
         
-        <!-- Coluna Lateral de Resumo (Direita) -->
+        <!-- Coluna Lateral de Resumo (Direita) (Inalterada) -->
         <div class="lg:col-span-1">
             <div class="lg:sticky top-8 space-y-6">
                 <div class="bg-white p-6 rounded-xl shadow-lg border">
@@ -156,13 +184,53 @@ $ehNovo = (strtotime($imovel['data_cadastro']) >= strtotime('-7 days'));
     </div>
 </div>
 
-<!-- SCRIPT ATUALIZADO PARA SWEETALERT2 E HISTÓRICO -->
+<!-- === NOVOS ARQUIVOS JS PARA O CARROSSEL E LIGHTBOX === -->
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
+
+<!-- SCRIPT ATUALIZADO -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // === INICIALIZAÇÃO DO CARROSSEL SWIPER ===
+    const swiper = new Swiper('.swiper', {
+        // Quantos slides mostrar por padrão
+        slidesPerView: 1.5,
+        spaceBetween: 15,
+        // Centraliza o slide ativo
+        centeredSlides: true,
+        // Loop infinito
+        loop: true,
+        // Paginação (as bolinhas abaixo)
+        pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+        },
+        // Botões de navegação (as setas)
+        navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+        },
+        // Adaptação para telas maiores
+        breakpoints: {
+            // A partir de 768px de largura
+            768: {
+                slidesPerView: 2.5,
+                spaceBetween: 20
+            },
+        }
+    });
+
+    // === INICIALIZAÇÃO DO FANCYBOX (LIGHTBOX) ===
+    // Ele se ativa automaticamente nos links com o atributo 'data-fancybox'
+    Fancybox.bind("[data-fancybox]", {
+      // Suas opções customizadas, se necessário
+    });
+
+
+    // --- SEU CÓDIGO EXISTENTE PARA FEEDBACKS (Inalterado) ---
     const imovelId = <?= json_encode($imovel['id_imovel']) ?>;
     const visitasListContainer = document.getElementById('visitas-list');
 
-    // Função para abrir o modal de feedback usando SweetAlert2
     function openFeedbackModal(eventId, currentFeedback) {
         Swal.fire({
             title: 'Editar Feedback da Visita',
@@ -173,16 +241,14 @@ document.addEventListener('DOMContentLoaded', function() {
             showCancelButton: true,
             confirmButtonText: 'Salvar Feedback',
             cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#3b82f6', // Azul
+            confirmButtonColor: '#3b82f6',
             showLoaderOnConfirm: true,
             preConfirm: (feedback) => {
-                // Prepara os dados para enviar ao servidor
                 const formData = new FormData();
                 formData.append('action', 'atualizar_feedback');
                 formData.append('id_evento', eventId);
                 formData.append('feedback', feedback);
 
-                // Faz a chamada fetch para o controller
                 return fetch('../../controllers/VisitasController.php', {
                     method: 'POST',
                     body: formData
@@ -199,7 +265,6 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             allowOutsideClick: () => !Swal.isLoading()
         }).then((result) => {
-            // Processa o resultado após o usuário clicar em "Salvar"
             if (result.isConfirmed) {
                 if (result.value.success) {
                     Swal.fire({
@@ -209,7 +274,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         timer: 2000,
                         showConfirmButton: false
                     });
-                    loadVisitas(); // Recarrega a lista para mostrar o feedback atualizado
+                    loadVisitas();
                 } else {
                     Swal.fire({
                         icon: 'error',
@@ -221,7 +286,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Função para carregar e recarregar o histórico de visitas
     function loadVisitas() {
         if (!imovelId || !visitasListContainer) return;
 
@@ -263,7 +327,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    // Listener para abrir o modal de edição
     visitasListContainer.addEventListener('click', function(e) {
         const button = e.target.closest('.edit-feedback-btn');
         if (button) {
@@ -273,7 +336,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Carrega as visitas na primeira vez que a página é aberta
     loadVisitas();
 });
 </script>
