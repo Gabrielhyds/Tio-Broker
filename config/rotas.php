@@ -1,7 +1,16 @@
 <?php
 
-// Caminho base da URL para uso em links e assets
-$basePath = '/tio-broker/';
+// Detecta se está rodando dentro de um contêiner Docker
+$runningInDocker = (
+    isset($_SERVER['HTTP_HOST']) &&
+    (
+        strpos($_SERVER['HTTP_HOST'], '8080') !== false ||
+        strpos($_SERVER['REQUEST_URI'], '/tio-broker/') === false
+    )
+);
+
+// Base path automático
+$basePath = $runningInDocker ? '/' : '/tio-broker/';
 
 // Caminho abs oluto até a raiz do projeto
 $projectRoot = realpath(__DIR__ . '/../');

@@ -3,8 +3,8 @@
 // Define uma função chamada conectarBanco, responsável por se conectar ao banco de dados
 function conectarBanco()
 {
-    // Nome do host onde o banco está rodando (geralmente localhost)
-    $host = "localhost";
+    // Nome do host onde o banco está rodando (geralmente localhost) ou docker
+     $host = getenv("DB_HOST") ?: "localhost";
 
     // Nome do banco de dados a ser acessado
     $databasename = "tio_broker";
