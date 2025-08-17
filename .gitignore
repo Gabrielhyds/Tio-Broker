@@ -1,4 +1,4 @@
-# Ignorar apenas imagens na pasta uploads e subpastas
+# Ignorar imagens
 uploads/**/*.png
 uploads/**/*.jpg
 uploads/**/*.jpeg
@@ -7,3 +7,47 @@ uploads/**/*.svg
 uploads/**/*.webp
 uploads/**/*.bmp
 uploads/**/*.tiff
+uploads/**/*.heic
+uploads/**/*.heif
+uploads/**/*.raw
+
+# Ignorar vídeos
+uploads/**/*.mp4
+uploads/**/*.mkv
+uploads/**/*.avi
+uploads/**/*.mov
+uploads/**/*.wmv
+uploads/**/*.flv
+uploads/**/*.webm
+uploads/**/*.mpeg
+uploads/**/*.mpg
+uploads/**/*.3gp
+uploads/**/*.m4v
+
+# Ignorar áudios
+uploads/**/*.mp3
+uploads/**/*.wav
+uploads/**/*.ogg
+uploads/**/*.flac
+uploads/**/*.aac
+uploads/**/*.m4a
+
+# Ignorar documentos do Office / PDF
+uploads/**/*.pdf
+uploads/**/*.doc
+uploads/**/*.docx
+uploads/**/*.odt
+uploads/**/*.xls
+uploads/**/*.xlsx
+uploads/**/*.ods
+uploads/**/*.ppt
+uploads/**/*.pptx
+uploads/**/*.odp
+
+# Ignorar compactados
+uploads/**/*.zip
+uploads/**/*.rar
+uploads/**/*.7z
+uploads/**/*.tar
+uploads/**/*.gz
+uploads/**/*.bz2
