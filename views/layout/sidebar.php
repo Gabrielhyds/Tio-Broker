@@ -28,7 +28,7 @@ require_once __DIR__ . '/../../config/rotas.php';
                 <i class="fas fa-home w-6 text-center"></i><span class="ml-2 translating" data-i18n="sidebar.home.summary">Resumo</span>
             </a>
         </div>
-        <div>
+        <div hidden>
             <h3 class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 translating" data-i18n="sidebar.lead.title">Leads</h3>
             
             <a href="<?= BASE_URL ?>views/leads/cadastrar.php" class="sidebar-link <?= $activeMenu === 'lead_cadastrar' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
