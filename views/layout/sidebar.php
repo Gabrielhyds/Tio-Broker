@@ -54,7 +54,7 @@ require_once __DIR__ . '/../../config/rotas.php';
             </div>
         <?php endif; ?>
 
-        <?php if (in_array($permissao, ['SuperAdmin', 'Admin'])): ?>
+        <?php if (in_array($permissao, ['SuperAdmin', 'Admin','Coordenador'])): ?>
             <div>
                 <h3 class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 translating" data-i18n="sidebar.user.title">Usuário</h3>
                 <a href="<?= BASE_URL ?>views/usuarios/cadastrar.php" class="sidebar-link <?= $activeMenu === 'usuario_cadastrar' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">

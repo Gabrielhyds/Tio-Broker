@@ -1,8 +1,26 @@
 <?php
-// Este código deve estar no início do seu ficheiro `listar.php`
-// As variáveis $lista, $filtro, $total_paginas, $pagina_atual já devem ter sido definidas.
-?>
+@session_start();
 
+// pega permissão do usuário logado
+$permissao_logado = $_SESSION['usuario']['permissao'] ?? '';
+
+// função de checagem
+function podeExcluir($permissaoLogado, $permissaoAlvo) {
+    if ($permissaoLogado === 'SuperAdmin') {
+        return true; // pode tudo
+    }
+
+    if ($permissaoLogado === 'Coordenador') {
+        return in_array($permissaoAlvo, ['Corretor', 'Coordenador']);
+    }
+
+    if ($permissaoLogado === 'Admin') { // <<< aqui estava 'Administrador'
+        return $permissaoAlvo !== 'SuperAdmin';
+    }
+
+    return false; // padrão: não pode
+}
+?>
 <!-- Link para a biblioteca de ícones Font Awesome e Bootstrap Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -117,14 +135,18 @@
                             <td class="px-6 py-4 text-gray-600"><?= htmlspecialchars($u['permissao']) ?></td>
                             <td class="px-6 py-4 text-gray-600"><?= htmlspecialchars($u['nome_imobiliaria'] ?? '---') ?></td>
                             <td class="px-6 py-4 text-center">
+                            <?php if (podeExcluir($permissao_logado, $u['permissao'])): ?>
                                 <div class="flex justify-center gap-4">
-                                    <a href="editar.php?id=<?= $u['id_usuario'] ?>" class="text-blue-600 hover:text-blue-800" title="Editar">
-                                        <i class="fas fa-pen"></i>
-                                    </a>
-                                    <!-- ✅ CORREÇÃO: O link de exclusão foi ajustado para enviar `?excluir=ID` -->
-                                    <a href="../../controllers/UsuarioController.php?excluir=<?= $u['id_usuario'] ?>" class="text-red-500 hover:text-red-700 btn-excluir" title="Excluir">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
+                                        <a href="editar.php?id=<?= $u['id_usuario'] ?>" class="text-blue-600 hover:text-blue-800" title="Editar">
+                                            <i class="fas fa-pen"></i>
+                                        </a>
+
+                                            <a href="../../controllers/UsuarioController.php?excluir=<?= $u['id_usuario'] ?>" 
+                                            class="text-red-500 hover:text-red-700 btn-excluir" 
+                                            title="Excluir">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        <?php endif; ?>
                                 </div>
                             </td>
                         </tr>
