@@ -45,7 +45,7 @@ class EmpreendimentoController {
         }
 
         // Redireciona de volta para a página de listagem
-        header('Location: ../views/empreendimento/listar_empreendimento.php');
+        header('Location: ../views/empreendimento/listar.php');
         exit;
     }
 

@@ -63,6 +63,41 @@ class Empreendimento
     }
 
     /**
+     * Busca um empreendimento pelo ID, incluindo todas as suas mídias.
+     */
+    public function buscarCompletoPorId($id)
+    {
+        $empreendimento = $this->buscarPorId($id);
+
+        if (!$empreendimento) {
+            return null;
+        }
+
+        // Buscar imagens
+        $stmt_img = $this->connection->prepare("SELECT id, caminho FROM empreendimento_imagem WHERE id_empreendimento = ? ORDER BY id");
+        $stmt_img->bind_param("i", $id);
+        $stmt_img->execute();
+        $result_img = $stmt_img->get_result();
+        $empreendimento['imagens'] = $result_img->fetch_all(MYSQLI_ASSOC);
+
+        // Buscar vídeos
+        $stmt_vid = $this->connection->prepare("SELECT id, caminho FROM empreendimento_video WHERE id_empreendimento = ? ORDER BY id");
+        $stmt_vid->bind_param("i", $id);
+        $stmt_vid->execute();
+        $result_vid = $stmt_vid->get_result();
+        $empreendimento['videos'] = $result_vid->fetch_all(MYSQLI_ASSOC);
+
+        // Buscar documentos
+        $stmt_doc = $this->connection->prepare("SELECT id, caminho FROM empreendimento_documento WHERE id_empreendimento = ? ORDER BY id");
+        $stmt_doc->bind_param("i", $id);
+        $stmt_doc->execute();
+        $result_doc = $stmt_doc->get_result();
+        $empreendimento['documentos'] = $result_doc->fetch_all(MYSQLI_ASSOC);
+
+        return $empreendimento;
+    }
+
+    /**
      * Cria um novo empreendimento e salva os caminhos das mídias.
      */
     public function criar($dados, $imagens = [], $videos = [], $documentos = [])

@@ -45,7 +45,7 @@ $empreendimentos = $empreendimentoModel->listarTodos();
                             </div>
 
                             <div class="mt-4 flex gap-2">
-                                <a href="ver_empreendimento.php?id=<?= $empreendimento['id_empreendimento'] ?>" 
+                                <a href="ver.php?id=<?= $empreendimento['id_empreendimento'] ?>" 
                                    class="flex-1 px-3 py-2 bg-gray-200 text-gray-800 rounded-xl hover:bg-gray-300 transition text-center text-sm font-semibold">
                                    Ver Detalhes
                                 </a>
