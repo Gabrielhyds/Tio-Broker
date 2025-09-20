@@ -1,31 +1,49 @@
 <?php
-class Empreendimento {
+// models/Empreendimento.php
+class Empreendimento
+{
     private $connection;
-    // Define o caminho absoluto para a pasta de uploads.
-    // __DIR__ é a pasta do arquivo atual (models)
-    // /../../ sobe dois níveis (para a raiz do projeto)
-    // /uploads/empreendimentos/ é a pasta de destino final
-    private $uploadDir = __DIR__ . '/../../uploads/empreendimentos/';
 
-
-    public function __construct($connection) {
-        $this->connection = $connection; // mysqli
-
-        // VERIFICAÇÃO E CRIAÇÃO DA PASTA
-        // Verifica se o diretório de uploads já não existe
-        if (!is_dir($this->uploadDir)) {
-            // Se não existir, tenta criar a pasta recursivamente (o 'true' permite criar subpastas como 'uploads' e 'empreendimentos')
-            // O @ suprime o warning padrão do PHP, pois vamos tratar o erro com uma mensagem mais clara.
-            if (!@mkdir($this->uploadDir, 0777, true)) {
-                // Se a criação da pasta falhar, o script é interrompido com uma mensagem de erro útil.
-                // A causa mais comum para esta falha é a falta de permissão de escrita para o servidor web (Apache).
-                die("Erro crítico: Não foi possível criar a pasta de uploads em '{$this->uploadDir}'. Verifique as permissões de escrita do servidor na pasta raiz do seu projeto.");
-            }
-        }
+    public function __construct($connection)
+    {
+        $this->connection = $connection;
     }
 
-    public function listarTodos() {
-        $result = $this->connection->query("SELECT * FROM empreendimento WHERE is_deleted = 0");
+    // Métodos para controle de transação
+    public function beginTransaction()
+    {
+        $this->connection->begin_transaction();
+    }
+
+    public function commit()
+    {
+        $this->connection->commit();
+    }
+
+    public function rollback()
+    {
+        $this->connection->rollback();
+    }
+
+    /**
+     * Lista todos os empreendimentos e busca a primeira imagem de cada um.
+     */
+    public function listarTodos()
+    {
+        // Query atualizada para buscar a imagem principal usando uma subquery
+        $sql = "
+            SELECT 
+                e.*, 
+                (SELECT caminho FROM empreendimento_imagem WHERE id_empreendimento = e.id_empreendimento ORDER BY id LIMIT 1) AS imagem_principal
+            FROM 
+                empreendimento e
+            WHERE 
+                e.is_deleted = 0
+            ORDER BY
+                e.criado_em DESC
+        ";
+
+        $result = $this->connection->query($sql);
         $empreendimentos = [];
         if ($result) {
             while ($row = $result->fetch_assoc()) {
@@ -35,7 +53,8 @@ class Empreendimento {
         return $empreendimentos;
     }
 
-    public function buscarPorId($id) {
+    public function buscarPorId($id)
+    {
         $stmt = $this->connection->prepare("SELECT * FROM empreendimento WHERE id_empreendimento = ? AND is_deleted = 0");
         $stmt->bind_param("i", $id);
         $stmt->execute();
@@ -43,13 +62,17 @@ class Empreendimento {
         return $result->fetch_assoc();
     }
 
-    public function criar($dados) {
+    /**
+     * Cria um novo empreendimento e salva os caminhos das mídias.
+     */
+    public function criar($dados, $imagens = [], $videos = [], $documentos = [])
+    {
         $sql = "
             INSERT INTO empreendimento
             (id_imobiliaria, nome, descricao, categoria, status, responsavel, endereco, cidade, estado, cep, preco_min, preco_max, data_inicio, data_entrega)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ";
-        
+
         $stmt = $this->connection->prepare($sql);
 
         $id_imobiliaria = !empty($dados['id_imobiliaria']) ? $dados['id_imobiliaria'] : null;
@@ -76,42 +99,39 @@ class Empreendimento {
             $data_inicio,
             $data_entrega
         );
+
+        if (!$stmt->execute()) {
+            throw new Exception("Erro ao salvar o empreendimento: " . $stmt->error);
+        }
         
-        if ($stmt->execute()) {
-            return $this->connection->insert_id;
-        }
-        return false;
-    }
-    
-    public function salvarMidias($empreendimentoId, $arquivos) {
-        if (isset($arquivos['imagens']) && is_array($arquivos['imagens']['name'])) {
-            $this->salvarArquivo($empreendimentoId, $arquivos['imagens'], 'imagem');
-        }
-        if (isset($arquivos['videos']) && is_array($arquivos['videos']['name'])) {
-            $this->salvarArquivo($empreendimentoId, $arquivos['videos'], 'video');
-        }
-        if (isset($arquivos['documentos']) && is_array($arquivos['documentos']['name'])) {
-            $this->salvarArquivo($empreendimentoId, $arquivos['documentos'], 'documento');
-        }
+        $empreendimentoId = $this->connection->insert_id;
+
+        // Salva os caminhos das mídias
+        $this->salvarCaminhosMidia($empreendimentoId, 'imagem', $imagens);
+        $this->salvarCaminhosMidia($empreendimentoId, 'video', $videos);
+        $this->salvarCaminhosMidia($empreendimentoId, 'documento', $documentos);
+
+        return $empreendimentoId;
     }
 
-    private function salvarArquivo($empreendimentoId, $arquivos, $tipo) {
+    /**
+     * Função auxiliar para inserir os caminhos das mídias no banco.
+     */
+    private function salvarCaminhosMidia($empreendimentoId, $tipo, $caminhos)
+    {
+        if (empty($caminhos)) {
+            return;
+        }
+
         $tabela = "empreendimento_{$tipo}";
         $sql = "INSERT INTO {$tabela} (id_empreendimento, caminho) VALUES (?, ?)";
-        
-        $total_files = count($arquivos['name']);
+        $stmt = $this->connection->prepare($sql);
 
-        for ($i = 0; $i < $total_files; $i++) {
-            if ($arquivos['error'][$i] === UPLOAD_ERR_OK) {
-                $nomeArquivo = uniqid() . '-' . basename($arquivos['name'][$i]);
-                $caminhoDestino = $this->uploadDir . $nomeArquivo;
-                $caminhoRelativo = 'uploads/empreendimentos/' . $nomeArquivo;
-
-                if (move_uploaded_file($arquivos['tmp_name'][$i], $caminhoDestino)) {
-                    $stmt = $this->connection->prepare($sql);
-                    $stmt->bind_param("is", $empreendimentoId, $caminhoRelativo);
-                    $stmt->execute();
-                }
+        foreach ($caminhos as $caminho) {
+            $stmt->bind_param("is", $empreendimentoId, $caminho);
+            if (!$stmt->execute()) {
+                // Se falhar, lança uma exceção para que o rollback seja acionado
+                throw new Exception("Erro ao salvar caminho da mídia ({$tipo}): " . $stmt->error);
             }
         }
     }
@@ -127,26 +147,16 @@ class Empreendimento {
         $stmt = $this->connection->prepare($sql);
 
         $responsavel = $dados['responsavel'] ?? null;
-        $preco_min = !empty($dados['preco_min']) ? $dados['preco_min'] : null;
-        $preco_max = !empty($dados['preco_max']) ? $dados['preco_max'] : null;
+        $preco_min = !empty($dados['preco_min']) ? (float)$dados['preco_min'] : null;
+        $preco_max = !empty($dados['preco_max']) ? (float)$dados['preco_max'] : null;
         $data_inicio = !empty($dados['data_inicio']) ? $dados['data_inicio'] : null;
         $data_entrega = !empty($dados['data_entrega']) ? $dados['data_entrega'] : null;
 
         $stmt->bind_param(
             "sssssssssddssi",
-            $dados['nome'],
-            $dados['descricao'],
-            $dados['categoria'],
-            $dados['status'],
-            $responsavel,
-            $dados['endereco'],
-            $dados['cidade'],
-            $dados['estado'],
-            $dados['cep'],
-            $preco_min,
-            $preco_max,
-            $data_inicio,
-            $data_entrega,
+            $dados['nome'], $dados['descricao'], $dados['categoria'], $dados['status'], $responsavel,
+            $dados['endereco'], $dados['cidade'], $dados['estado'], $dados['cep'],
+            $preco_min, $preco_max, $data_inicio, $data_entrega,
             $id
         );
 
