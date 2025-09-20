@@ -83,6 +83,15 @@ require_once __DIR__ . '/../../config/rotas.php';
                 </a>
             </div>
             <div>
+                <h3 class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 translating" data-i18n="sidebar.empreendimento.title">Empreendimentos</h3>
+                <a href="<?= BASE_URL ?>views/empreendimento/cadastrar.php" class="sidebar-link <?= $activeMenu === 'empreendimento_cadastrar' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
+                    <i class="fas fa-plus w-6 text-center"></i><span class="ml-2 translating" data-i18n="sidebar.empreendimento.register">Cadastrar Empreendimento</span>
+                </a>
+                <a href="<?= BASE_URL ?>views/empreendimento/listar.php" class="sidebar-link <?= $activeMenu === 'empreendimento_listar' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
+                    <i class="fas fa-building w-6 text-center"></i><span class="ml-2 translating" data-i18n="sidebar.empreendimento.view">Ver Empreendimentos</span>
+                </a>
+            </div>
+            <div>
                 <h3 class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 translating" data-i18n="sidebar.properties.title">Imóveis</h3>
                 <a href="<?= BASE_URL ?>views/imoveis/cadastrar.php" class="sidebar-link <?= $activeMenu === 'imovel_cadastrar' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
                     <i class="fas fa-plus w-6 text-center"></i><span class="ml-2 translating" data-i18n="sidebar.properties.register">Cadastrar Imóvel</span>
