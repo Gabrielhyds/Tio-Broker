@@ -11,35 +11,43 @@
         <!-- Campo oculto para indicar ao controller que a ação é 'cadastrar'. -->
         <input type="hidden" name="action" value="cadastrar">
 
-        <!-- Campo CNPJ -->
+        <!-- NOVO: Seletor de Tipo de Pessoa -->
         <div class="mb-4">
-            <label for="cnpj" class="block text-sm font-medium text-gray-700 mb-1">CNPJ</label>
+            <label for="tipo_pessoa" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Pessoa</label>
+            <select id="tipo_pessoa" name="tipo_pessoa" onchange="alternarDocumento()" class="w-full border rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <option value="J">Pessoa Jurídica (CNPJ)</option>
+                <option value="F">Pessoa Física (CPF)</option>
+            </select>
+        </div>
+
+        <!-- Campo de Documento (dinâmico para CPF ou CNPJ) -->
+        <div class="mb-4">
+            <label id="label_documento" for="documento" class="block text-sm font-medium text-gray-700 mb-1">CNPJ</label>
             <div class="relative">
-                <!-- Campo de texto para o CNPJ com eventos para formatação e busca automática. -->
-                <input type="text" id="cnpj" name="cnpj"
+                <!-- O 'name' foi alterado para 'documento' para ser genérico. -->
+                <input type="text" id="documento" name="documento"
                     class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
                     placeholder="00.000.000/0000-00"
                     maxlength="18"
                     required
                     onkeypress="apenasNumeros(event)"
-                    oninput="formatarCNPJ(this)"
+                    oninput="formatarDocumento(this)"
                     onblur="buscarDadosCNPJ(this)">
-                <!-- Ícone dentro do campo de input. -->
+                <!-- Ícone dentro do campo de input (também dinâmico). -->
                 <div class="absolute inset-y-0 left-0 flex items-center pl-3">
-                    <i class="fas fa-barcode text-gray-400"></i>
+                    <i id="icone_documento" class="fas fa-barcode text-gray-400"></i>
                 </div>
             </div>
         </div>
 
         <!-- Campo Nome -->
         <div class="mb-6">
-            <label for="nome" class="block text-sm font-medium text-gray-700 mb-1">Nome da Imobiliária</label>
+            <label id="label_nome" for="nome" class="block text-sm font-medium text-gray-700 mb-1">Nome da Imobiliária / Razão Social</label>
             <div class="relative">
                 <input type="text" id="nome" name="nome"
                     class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
                     placeholder="Ex: Imobiliária Exemplo Ltda."
                     required>
-                <!-- Ícone dentro do campo de input. -->
                 <div class="absolute inset-y-0 left-0 flex items-center pl-3">
                     <i class="fas fa-building text-gray-400"></i>
                 </div>
@@ -78,73 +86,115 @@
         if (!/\d/.test(event.key)) event.preventDefault();
     }
 
-    // Função para aplicar a máscara de CNPJ (00.000.000/0000-00) enquanto o usuário digita.
-    function formatarCNPJ(campo) {
-        let cnpj = campo.value.replace(/\D/g, '').slice(0, 14); // Remove não-dígitos e limita a 14.
-        cnpj = cnpj.replace(/^(\d{2})(\d)/, "$1.$2");
-        cnpj = cnpj.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
-        cnpj = cnpj.replace(/\.(\d{3})(\d)/, ".$1/$2");
-        cnpj = cnpj.replace(/(\d{4})(\d)/, "$1-$2");
-        campo.value = cnpj;
+    // Função para alternar entre os campos de CPF e CNPJ.
+    function alternarDocumento() {
+        const tipo = document.getElementById('tipo_pessoa').value;
+        const labelDoc = document.getElementById('label_documento');
+        const inputDoc = document.getElementById('documento');
+        const iconeDoc = document.getElementById('icone_documento');
+        const labelNome = document.getElementById('label_nome');
+
+        inputDoc.value = ''; // Limpa o campo na troca
+        document.getElementById('nome').value = ''; // Limpa o nome também
+
+        if (tipo === 'F') { // Pessoa Física
+            labelDoc.textContent = 'CPF';
+            labelNome.textContent = 'Nome Completo';
+            inputDoc.placeholder = '000.000.000-00';
+            inputDoc.maxLength = 14;
+            inputDoc.onblur = null; // Remove a busca de dados da API
+            iconeDoc.className = "fas fa-id-card text-gray-400";
+        } else { // Pessoa Jurídica
+            labelDoc.textContent = 'CNPJ';
+            labelNome.textContent = 'Nome da Imobiliária / Razão Social';
+            inputDoc.placeholder = '00.000.000/0000-00';
+            inputDoc.maxLength = 18;
+            inputDoc.onblur = function() { buscarDadosCNPJ(this); }; // Adiciona a busca de volta
+            iconeDoc.className = "fas fa-barcode text-gray-400";
+        }
     }
 
-    // Função para buscar dados da empresa a partir do CNPJ usando uma API externa.
-    function buscarDadosCNPJ(campo) {
-        const cnpj = campo.value.replace(/\D/g, ''); // Limpa o CNPJ.
+    // Função para aplicar a máscara correta (CPF ou CNPJ) enquanto o usuário digita.
+    function formatarDocumento(campo) {
+        const tipo = document.getElementById('tipo_pessoa').value;
+        let valor = campo.value.replace(/\D/g, '');
 
+        if (tipo === 'F') {
+            valor = valor.slice(0, 11);
+            valor = valor.replace(/(\d{3})(\d)/, '$1.$2');
+            valor = valor.replace(/(\d{3})(\d)/, '$1.$2');
+            valor = valor.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+        } else {
+            valor = valor.slice(0, 14);
+            valor = valor.replace(/^(\d{2})(\d)/, "$1.$2");
+            valor = valor.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
+            valor = valor.replace(/\.(\d{3})(\d)/, ".$1/$2");
+            valor = valor.replace(/(\d{4})(\d)/, "$1-$2");
+        }
+        campo.value = valor;
+    }
+
+    // Função para buscar dados da empresa a partir do CNPJ (só para PJ).
+    function buscarDadosCNPJ(campo) {
+        const cnpj = campo.value.replace(/\D/g, '');
         if (cnpj.length === 14) {
             const nomeCampo = document.getElementById('nome');
-            nomeCampo.value = "Buscando..."; // Feedback visual para o usuário.
-            nomeCampo.readOnly = true; // Impede a edição enquanto a busca ocorre.
+            nomeCampo.value = "Buscando...";
+            nomeCampo.readOnly = true;
 
-            // Faz uma requisição para o controller que consulta a API de CNPJ.
             fetch(`../../controllers/BuscarCNPJController.php?cnpj=${cnpj}`)
-                .then(response => response.json()) // Converte a resposta para JSON.
+                .then(response => response.json())
                 .then(data => {
                     if (data.status === "OK") {
-                        nomeCampo.value = data.nome; // Preenche o nome da empresa se encontrado.
+                        nomeCampo.value = data.nome;
                     } else {
-                        nomeCampo.value = ""; // Limpa o campo se não encontrar.
+                        nomeCampo.value = "";
                         abrirModal("CNPJ não encontrado. Você pode preencher o nome manualmente.");
                     }
                 })
                 .catch(() => {
-                    nomeCampo.value = ""; // Limpa o campo em caso de erro.
+                    nomeCampo.value = "";
                     abrirModal("Erro ao buscar informações do CNPJ. Preencha manualmente.");
                 })
                 .finally(() => {
-                    nomeCampo.readOnly = false; // Libera o campo para edição após a busca.
+                    nomeCampo.readOnly = false;
                 });
         }
     }
 
     // Função para validar o formulário antes do envio.
     function validarFormulario(event) {
-        const cnpj = document.getElementById('cnpj').value.replace(/\D/g, '');
+        const tipo = document.getElementById('tipo_pessoa').value;
+        const doc = document.getElementById('documento').value.replace(/\D/g, '');
         const nome = document.getElementById('nome').value.trim();
 
-        if (cnpj.length !== 14) {
-            event.preventDefault(); // Impede o envio do formulário.
-            abrirModal("CNPJ inválido! Deve conter exatamente 14 dígitos.");
-            return;
+        if (tipo === 'F') {
+            if (doc.length !== 11) {
+                event.preventDefault();
+                abrirModal("CPF inválido! Deve conter 11 dígitos.");
+                return;
+            }
+        } else { // 'J'
+            if (doc.length !== 14) {
+                event.preventDefault();
+                abrirModal("CNPJ inválido! Deve conter 14 dígitos.");
+                return;
+            }
         }
 
         if (nome === "Buscando..." || nome === "") {
             event.preventDefault();
-            abrirModal("Por favor, preencha um nome para a imobiliária.");
+            abrirModal("Por favor, preencha o campo de nome.");
             return;
         }
-
-        // Se tudo estiver correto, o formulário é enviado.
     }
 
-    // Função para abrir o modal de alerta com uma mensagem específica.
+    // Funções do Modal de Alerta
     function abrirModal(mensagem) {
         document.getElementById('modalMensagem').textContent = mensagem;
         document.getElementById('modalAlerta').classList.remove('hidden');
     }
 
-    // Função para fechar o modal de alerta.
     function fecharModal() {
         document.getElementById('modalAlerta').classList.add('hidden');
     }

@@ -1,4 +1,7 @@
 <?php
+
+require_once __DIR__ . '/../config/validadores.php';
+
 class Imobiliaria
 {
     // Propriedade privada para armazenar a conexão com o banco de dados.
@@ -12,15 +15,45 @@ class Imobiliaria
     }
 
     /**
-     * Cadastra uma nova imobiliária no banco de dados.
+     * Cadastra uma nova imobiliária (Pessoa Física ou Jurídica).
+     *
+     * @param string $nome O nome/razão social.
+     * @param string $documento O CPF ou CNPJ.
+     * @param string $tipo_pessoa 'F' para Física, 'J' para Jurídica.
+     * @return bool Retorna true em caso de sucesso, false em caso de falha.
+     * @throws Exception Lança uma exceção se a query falhar ou o CPF for inválido.
      */
-    public function cadastrar($nome, $cnpj)
+    public function cadastrar($nome, $documento, $tipo_pessoa = 'J')
     {
-        // Prepara uma instrução SQL para inserir nome e CNPJ na tabela 'imobiliaria'.
-        $stmt = $this->conn->prepare("INSERT INTO imobiliaria (nome, cnpj) VALUES (?, ?)");
-        // Associa os parâmetros de nome e CNPJ à instrução. 'ss' significa que ambos são strings.
-        $stmt->bind_param("ss", $nome, $cnpj);
-        // Executa a instrução e retorna true em caso de sucesso ou false em caso de falha.
+        $query = "INSERT INTO imobiliaria (nome, cpf, cnpj, tipo_pessoa) VALUES (?, ?, ?, ?)";
+        
+        $documentoLimpo = preg_replace('/[^0-9]/', '', $documento);
+        
+        // CORREÇÃO: Inicializa as variáveis como NULL em vez de strings vazias.
+        $cpf = null;
+        $cnpj = null;
+
+        if ($tipo_pessoa === 'F') {
+            // Valida o CPF antes de continuar
+            if (!validarCpf($documentoLimpo)) {
+                throw new Exception("CPF inválido. Por favor, verifique o número digitado.");
+            }
+            // Se for Pessoa Física, a variável $cpf recebe o número do documento.
+            $cpf = $documentoLimpo;
+        } else {
+            // Se for Pessoa Jurídica, a variável $cnpj recebe o número do documento.
+            $cnpj = $documentoLimpo;
+        }
+
+        $stmt = $this->conn->prepare($query);
+
+        if ($stmt === false) {
+            throw new Exception("Erro ao preparar a query: " . $this->conn->error);
+        }
+
+        // Faz o bind dos 4 parâmetros para a query. O bind_param lida corretamente com valores NULL.
+        $stmt->bind_param("ssss", $nome, $cpf, $cnpj, $tipo_pessoa);
+
         return $stmt->execute();
     }
 
@@ -134,11 +167,15 @@ class Imobiliaria
     /**
      * Atualiza os dados de uma imobiliária existente.
      */
-    public function atualizar($id, $nome, $cnpj)
+    public function atualizar($id, $nome, $documento, $tipo_pessoa)
     {
-        // Prepara um UPDATE para os dados da imobiliária.
-        $stmt = $this->conn->prepare("UPDATE imobiliaria SET nome = ?, cnpj = ? WHERE id_imobiliaria = ?");
-        $stmt->bind_param("ssi", $nome, $cnpj, $id);
+        if ($tipo_pessoa === 'F') {
+            $stmt = $this->conn->prepare("UPDATE imobiliaria SET nome = ?, cpf = ?, tipo_pessoa = ? WHERE id_imobiliaria = ?");
+        } else {
+            $stmt = $this->conn->prepare("UPDATE imobiliaria SET nome = ?, cnpj = ?, tipo_pessoa = ? WHERE id_imobiliaria = ?");
+        }
+
+        $stmt->bind_param("sssi", $nome, $documento, $tipo_pessoa, $id);
         return $stmt->execute();
     }
 

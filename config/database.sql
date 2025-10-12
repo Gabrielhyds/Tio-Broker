@@ -6,10 +6,13 @@ USE tio_broker;
 -- Tabela de Imobiliária com exclusão lógica (is_deleted)
 CREATE TABLE imobiliaria (
     id_imobiliaria INT AUTO_INCREMENT PRIMARY KEY,
+    tipo_pessoa CHAR(1) NOT NULL DEFAULT 'J' COMMENT 'F = Física | J = Jurídica',
     nome VARCHAR(255) NOT NULL,
-    cnpj VARCHAR(18) UNIQUE NOT NULL,
-    -- 0 para ativo, 1 para excluído
-    is_deleted TINYINT(1) NOT NULL DEFAULT 0
+    cnpj VARCHAR(18) NULL,
+    cpf VARCHAR(14) NULL,
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0, -- 0 para ativo, 1 para excluído
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- Tabela de Usuários com exclusão lógica (is_deleted)
@@ -245,4 +248,77 @@ CREATE TABLE imovel_documento (
     id_imovel INT,
     caminho VARCHAR(255),
     FOREIGN KEY (id_imovel) REFERENCES imovel (id_imovel) ON DELETE CASCADE
+);
+
+CREATE TABLE empreendimento (
+    id_empreendimento INT AUTO_INCREMENT PRIMARY KEY,
+    id_imobiliaria INT NULL, -- Empresa responsável pelo empreendimento
+    nome VARCHAR(255) NOT NULL,
+    descricao TEXT,
+    categoria ENUM('imobiliario', 'automotivo', 'franquia', 'outro') DEFAULT 'imobiliario',
+    status ENUM('planejamento', 'em_andamento', 'concluido', 'disponivel', 'encerrado') DEFAULT 'disponivel',
+    responsavel VARCHAR(255) NULL, -- construtora, montadora, franqueadora etc.
+
+-- Endereço do empreendimento
+endereco VARCHAR(255) NULL,
+cidade VARCHAR(100) NULL,
+estado VARCHAR(2) NULL,
+cep VARCHAR(10) NULL,
+
+-- Preço mínimo e máximo para referência
+preco_min DECIMAL(15, 2) NULL, preco_max DECIMAL(15, 2) NULL,
+
+-- Datas do empreendimento
+data_inicio DATE NULL, data_entrega DATE NULL,
+
+-- Controle de criação e atualização
+criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+-- Exclusão lógica
+is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+
+-- Chave estrangeira para imobiliária
+FOREIGN KEY (id_imobiliaria) REFERENCES imobiliaria (id_imobiliaria) ON DELETE SET NULL
+);
+
+CREATE TABLE empreendimento_imovel (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_empreendimento INT NOT NULL,
+    id_imovel INT NOT NULL,
+    FOREIGN KEY (id_empreendimento) REFERENCES empreendimento (id_empreendimento) ON DELETE CASCADE,
+    FOREIGN KEY (id_imovel) REFERENCES imovel (id_imovel) ON DELETE CASCADE,
+    UNIQUE KEY unq_empreendimento_imovel (id_empreendimento, id_imovel)
+);
+
+CREATE TABLE empreendimento_cliente (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_empreendimento INT NOT NULL,
+    id_cliente INT NULL,
+    id_lead INT NULL,
+    interesse ENUM('alto', 'medio', 'baixo') DEFAULT 'medio',
+    data_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_empreendimento) REFERENCES empreendimento (id_empreendimento) ON DELETE CASCADE,
+    FOREIGN KEY (id_cliente) REFERENCES cliente (id_cliente) ON DELETE CASCADE
+);
+
+CREATE TABLE empreendimento_imagem (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_empreendimento INT NOT NULL,
+    caminho VARCHAR(255) NOT NULL,
+    FOREIGN KEY (id_empreendimento) REFERENCES empreendimento (id_empreendimento) ON DELETE CASCADE
+);
+
+CREATE TABLE empreendimento_video (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_empreendimento INT NOT NULL,
+    caminho VARCHAR(255) NOT NULL,
+    FOREIGN KEY (id_empreendimento) REFERENCES empreendimento (id_empreendimento) ON DELETE CASCADE
+);
+
+CREATE TABLE empreendimento_documento (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_empreendimento INT NOT NULL,
+    caminho VARCHAR(255) NOT NULL,
+    FOREIGN KEY (id_empreendimento) REFERENCES empreendimento (id_empreendimento) ON DELETE CASCADE
 );

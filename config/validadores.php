@@ -1,34 +1,34 @@
 <?php
 
-// Função para validar CPF
+/**
+ * Função para validar o CPF.
+ *
+ * @param string $cpf O CPF a ser validado, podendo conter máscara.
+ * @return bool Retorna true se o CPF for válido, false caso contrário.
+ */
 function validarCpf($cpf)
 {
-    // Remove todos os caracteres que não são dígitos (mantém apenas números)
-    $cpf = preg_replace('/\D/', '', $cpf);
+    // 1. Remove qualquer caractere que não seja número
+    $cpf = preg_replace('/[^0-9]/is', '', $cpf);
 
-    // Verifica se o CPF tem exatamente 11 dígitos ou se todos os dígitos são iguais (ex: 11111111111)
-    if (strlen($cpf) != 11 || preg_match('/(\d)\1{10}/', $cpf)) {
-        return false; // CPF inválido
+    // 2. Verifica se a string tem 11 caracteres
+    if (strlen($cpf) != 11) {
+        return false;
     }
 
-    // Laço para validar os dois dígitos verificadores (posição 10 e 11)
+    // 3. Verifica se todos os dígitos são iguais (ex: 111.111.111-11), o que é inválido
+    if (preg_match('/(\d)\1{10}/', $cpf)) {
+        return false;
+    }
+
+    // 4. Calcula os dígitos verificadores para validar o CPF
     for ($t = 9; $t < 11; $t++) {
-        $soma = 0;
-
-        // Calcula a soma dos dígitos multiplicados por pesos decrescentes
-        for ($i = 0; $i < $t; $i++) {
-            $soma += $cpf[$i] * (($t + 1) - $i);
+        for ($d = 0, $c = 0; $c < $t; $c++) {
+            $d += $cpf[$c] * (($t + 1) - $c);
         }
-
-        // Calcula o dígito verificador
-        $digito = ($soma * 10) % 11;
-
-        // Se o resultado for 10, considera como 0
-        if ($digito == 10) $digito = 0;
-
-        // Compara o dígito calculado com o dígito real do CPF
-        if ($cpf[$t] != $digito) {
-            return false; // Dígito inválido
+        $d = ((10 * $d) % 11) % 10;
+        if ($cpf[$c] != $d) {
+            return false;
         }
     }
 
@@ -36,9 +36,10 @@ function validarCpf($cpf)
     return true;
 }
 
+
 /**
  * Função para validar um número de telefone.
- * Verifica se, após remover a formatação, o número contém 10 ou 11 dígitos (padrão brasileiro).
+ * Verifica se, após remover a formatação, o número contém 10 ou 11 dígitos.
  *
  * @param string $telefone O número de telefone a ser validado.
  * @return bool Retorna true se o telefone for válido, false caso contrário.
@@ -56,3 +57,4 @@ function validarTelefone($telefone)
 
     return false; // Telefone inválido
 }
+

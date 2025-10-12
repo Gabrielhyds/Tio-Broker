@@ -1,10 +1,11 @@
 <?php
 /*
 |--------------------------------------------------------------------------
-| ARQUIVO: sidebar.php (VERSÃO COM DROPDOWNS)
+| ARQUIVO: sidebar.php (VERSÃO COM DROPDOWNS E MEMÓRIA DE SCROLL)
 |--------------------------------------------------------------------------
 | Itens de menu agrupados em dropdowns para melhor organização.
-| Adicionado JavaScript para controlar a abertura/fechamento dos dropdowns.
+| Adicionado JavaScript para controlar a abertura/fechamento e memorizar
+| a posição da barra de rolagem (scroll) entre as páginas.
 */
 
 if (session_status() === PHP_SESSION_NONE) session_start();
@@ -28,7 +29,7 @@ $isEmpreendimentoMenuActive = in_array($activeMenu, $empreendimentoSubMenu);
 $isImovelMenuActive = in_array($activeMenu, $imovelSubMenu);
 
 ?>
-<aside id="sidebar" class="w-64 flex-shrink-0 bg-white border-r border-gray-200 p-4 transform lg:transform-none lg:relative fixed h-full z-30 transition-transform duration-300 ease-in-out -translate-x-full lg:translate-x-0">
+<aside id="sidebar" class="w-64 flex-shrink-0 bg-white border-r border-gray-200 p-4 transform lg:relative fixed h-full z-30 transition-transform duration-300 ease-in-out -translate-x-full lg:translate-x-0">
     <div class="relative flex justify-center items-center mb-8">
         <a href="<?= BASE_URL ?>views/dashboards/dashboard_unificado.php">
             <img src="<?= BASE_URL ?>views/assets/img/tio_broker_ligth.png" alt="Logo Tio Broker" class="h-10 w-auto max-w-[160px] object-contain">
@@ -37,7 +38,8 @@ $isImovelMenuActive = in_array($activeMenu, $imovelSubMenu);
             <i class="fas fa-times text-xl"></i>
         </button>
     </div>
-    <nav class="space-y-2 sidebar-scroll h-full pb-20 overflow-y-auto">
+    <!-- ID 'sidebar-nav' adicionado para controlar o scroll -->
+    <nav id="sidebar-nav" class="space-y-2 sidebar-scroll h-full pb-20 overflow-y-auto">
         <div>
             <h3 class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 translating" data-i18n="sidebar.home.title">Início</h3>
             <a href="<?= BASE_URL ?>views/dashboards/dashboard_unificado.php" class="sidebar-link <?= $activeMenu === 'dashboard' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
@@ -163,19 +165,16 @@ $isImovelMenuActive = in_array($activeMenu, $imovelSubMenu);
     </nav>
 </aside>
 
-<!-- Adicione este script no final do seu layout principal ou antes de </body> -->
+<!-- SCRIPT ATUALIZADO -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // 1. Funcionalidade dos Dropdowns
     const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
-
     dropdownToggles.forEach(toggle => {
         toggle.addEventListener('click', (event) => {
-            // Impede que o clique se propague para outros elementos
             event.preventDefault();
-
             const dropdownMenu = toggle.nextElementSibling;
             const chevron = toggle.querySelector('.fa-chevron-down');
-
             if (dropdownMenu) {
                 dropdownMenu.classList.toggle('hidden');
             }
@@ -184,6 +183,39 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    // 2. Lógica para abrir e fechar a Sidebar (mobile e desktop)
+    const sidebar = document.getElementById('sidebar');
+    const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+    const openSidebarBtn = document.getElementById('open-sidebar-btn'); // Botão no header.php
+
+    if (sidebar) {
+        if (closeSidebarBtn) {
+            closeSidebarBtn.addEventListener('click', () => {
+                sidebar.classList.add('-translate-x-full');
+            });
+        }
+        if (openSidebarBtn) {
+            openSidebarBtn.addEventListener('click', () => {
+                sidebar.classList.remove('-translate-x-full');
+            });
+        }
+    }
+
+    // 3. Lógica para manter a posição do scroll da Sidebar
+    const sidebarNav = document.getElementById('sidebar-nav');
+    if (sidebarNav) {
+        // Ao carregar a página, restaura a posição do scroll
+        const savedScrollPosition = sessionStorage.getItem('sidebarScrollPos');
+        if (savedScrollPosition) {
+            sidebarNav.scrollTop = parseInt(savedScrollPosition, 10);
+        }
+
+        // Antes de navegar para outra página, salva a posição do scroll
+        window.addEventListener('beforeunload', () => {
+            sessionStorage.setItem('sidebarScrollPos', sidebarNav.scrollTop);
+        });
+    }
 });
 </script>
 

@@ -1,6 +1,29 @@
 <?php
 // Este código deve estar no início do seu ficheiro `listar_imobiliaria.php`
 // As variáveis $lista, $filtro, $total_paginas, $pagina_atual já devem ter sido definidas pelo seu controller.
+
+/**
+ * Função para formatar um número de CPF ou CNPJ com a máscara correta.
+ * @param string $documento O número do documento (apenas dígitos).
+ * @param string $tipo 'F' para CPF, 'J' para CNPJ.
+ * @return string O documento formatado ou o original se inválido.
+ */
+function formatarDocumentoParaExibicao($documento, $tipo) {
+    $docLimpo = preg_replace('/[^0-9]/', '', $documento);
+
+    if ($tipo === 'F') {
+        if (strlen($docLimpo) === 11) {
+            // Formata para XXX.XXX.XXX-XX
+            return substr($docLimpo, 0, 3) . '.' . substr($docLimpo, 3, 3) . '.' . substr($docLimpo, 6, 3) . '-' . substr($docLimpo, 9, 2);
+        }
+    } elseif ($tipo === 'J') {
+        if (strlen($docLimpo) === 14) {
+            // Formata para XX.XXX.XXX/XXXX-XX
+            return substr($docLimpo, 0, 2) . '.' . substr($docLimpo, 2, 3) . '.' . substr($docLimpo, 5, 3) . '/' . substr($docLimpo, 8, 4) . '-' . substr($docLimpo, 12, 2);
+        }
+    }
+    return $documento; // Retorna o original se não corresponder ao padrão
+}
 ?>
 
 <!-- Link para a biblioteca de ícones Font Awesome e Bootstrap Icons -->
@@ -79,7 +102,7 @@
             <form method="GET" action="listar_imobiliaria.php" class="flex items-center gap-2">
                 <div class="relative">
                     <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                    <input type="text" name="filtro" class="w-full md:w-64 border border-gray-300 rounded-md pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Buscar por nome ou CNPJ..." value="<?= htmlspecialchars($filtro ?? '') ?>">
+                    <input type="text" name="filtro" class="w-full md:w-64 border border-gray-300 rounded-md pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Buscar por nome ou documento..." value="<?= htmlspecialchars($filtro ?? '') ?>">
                 </div>
                 <?php if (!empty($filtro)): ?>
                     <a href="listar_imobiliaria.php" class="text-gray-500 hover:text-red-600 p-2" title="Limpar filtro">
@@ -103,7 +126,7 @@
                 <tr>
                     <th class="px-6 py-3">ID</th>
                     <th class="px-6 py-3">Nome</th>
-                    <th class="px-6 py-3">CNPJ</th>
+                    <th class="px-6 py-3">Documento</th> <!-- <-- TÍTULO CORRIGIDO -->
                     <th class="px-6 py-3">Usuários</th>
                     <th class="px-6 py-3 text-center">Ações</th>
                 </tr>
@@ -114,7 +137,15 @@
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4"><?= $item['id_imobiliaria'] ?></td>
                             <td class="px-6 py-4 font-medium text-gray-900"><?= htmlspecialchars($item['nome']) ?></td>
-                            <td class="px-6 py-4"><?= htmlspecialchars($item['cnpj']) ?></td>
+                            <!-- CÉLULA COM LÓGICA DE FORMATAÇÃO -->
+                            <td class="px-6 py-4">
+                                <?php
+                                    // Determina qual documento exibir e formata-o
+                                    $documento = !empty($item['cpf']) ? $item['cpf'] : $item['cnpj'];
+                                    $tipo = !empty($item['cpf']) ? 'F' : 'J';
+                                    echo htmlspecialchars(formatarDocumentoParaExibicao($documento, $tipo));
+                                ?>
+                            </td>
                             <td class="px-6 py-4">
                                 <span class="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
                                     <?= $item['total_usuarios'] ?>

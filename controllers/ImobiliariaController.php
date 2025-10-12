@@ -14,42 +14,36 @@ $imobiliaria = new Imobiliaria($connection);
 // --- Bloco para Requisições POST ---
 // Verifica se o método da requisição HTTP é POST, usado para enviar dados de formulários (neste caso, para cadastrar ou atualizar).
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Verifica se a requisição POST contém o campo 'action' com o valor 'cadastrar'.
+    $tipo_pessoa = $_POST['tipo_pessoa']; // 'F' ou 'J'
+    $nome = trim($_POST['nome']);
+    $documento = trim($_POST['documento']); // CPF ou CNPJ
+
     if (isset($_POST['action']) && $_POST['action'] === 'cadastrar') {
-        // Pega o valor do campo 'nome' do formulário e remove espaços em branco do início e do fim.
-        $nome = trim($_POST['nome']);
-        // Pega o valor do campo 'cnpj' do formulário e remove espaços em branco.
-        $cnpj = trim($_POST['cnpj']);
-        // Chama o método 'cadastrar' do objeto $imobiliaria, passando os dados.
-        if ($imobiliaria->cadastrar($nome, $cnpj)) {
-            // Se o cadastro for bem-sucedido, armazena uma mensagem de sucesso na sessão.
-            $_SESSION['sucesso'] = "Imobiliária cadastrada com sucesso!";
-        } else {
-            // Se houver uma falha no cadastro, armazena uma mensagem de erro na sessão.
-            $_SESSION['erro'] = "Erro ao cadastrar imobiliária.";
+        try {
+            if ($imobiliaria->cadastrar($nome, $documento, $tipo_pessoa)) {
+                $_SESSION['sucesso'] = "Imobiliária cadastrada com sucesso!";
+            } else {
+                $_SESSION['erro'] = "Erro ao cadastrar imobiliária.";
+            }
+        } catch (Exception $e) {
+            $_SESSION['erro'] = $e->getMessage();
         }
     }
 
-    // Verifica se a requisição POST contém o campo 'action' com o valor 'atualizar'.
     if (isset($_POST['action']) && $_POST['action'] === 'atualizar') {
-        // Pega o ID da imobiliária que será atualizada.
         $id = $_POST['id'];
-        // Pega o novo valor para o campo 'nome'.
-        $nome = trim($_POST['nome']);
-        // Pega o novo valor para o campo 'cnpj'.
-        $cnpj = trim($_POST['cnpj']);
-        // Chama o método 'atualizar' do objeto $imobiliaria.
-        if ($imobiliaria->atualizar($id, $nome, $cnpj)) {
-            // Se a atualização for bem-sucedida, define uma mensagem de sucesso.
-            $_SESSION['sucesso'] = "Imobiliária atualizada com sucesso!";
-        } else {
-            // Se a atualização falhar, define uma mensagem de erro.
-            $_SESSION['erro'] = "Erro ao atualizar imobiliária.";
+        try {
+            if ($imobiliaria->atualizar($id, $nome, $documento, $tipo_pessoa)) {
+                $_SESSION['sucesso'] = "Imobiliária atualizada com sucesso!";
+            } else {
+                $_SESSION['erro'] = "Erro ao atualizar imobiliária.";
+            }
+        } catch (Exception $e) {
+            $_SESSION['erro'] = $e->getMessage();
         }
     }
-    // Após processar a ação (cadastrar ou atualizar), redireciona o navegador para a página de listagem.
+
     header('Location: ../views/imobiliarias/listar_imobiliaria.php');
-    // Encerra a execução do script para garantir que o redirecionamento ocorra imediatamente.
     exit;
 }
 
