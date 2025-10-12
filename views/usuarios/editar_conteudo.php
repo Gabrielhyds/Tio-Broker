@@ -93,16 +93,21 @@
             <div>
                 <label for="id_imobiliaria" class="block text-sm font-medium text-gray-700">Imobiliária</label>
                 <!-- Select para alterar a imobiliária do usuário. -->
-                <select name="id_imobiliaria">
-                    <!-- Loop PHP para popular o select com as imobiliárias disponíveis. -->
-                    <?php foreach ($listaImobiliarias as $imob): ?>
-                        <option value="<?= $imob['id_imobiliaria'] ?>" <?= $usuario['id_imobiliaria'] == $imob['id_imobiliaria'] ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($imob['nome']) ?>
-                        </option>
-                    <?php endforeach; ?>
+                <select id="id_imobiliaria" name="id_imobiliaria" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                            <option value="">Nenhuma</option> <!-- Opção para desvincular -->
+                            <!-- Loop PHP para popular o select com as imobiliárias disponíveis. -->
+                            <?php foreach ($listaImobiliarias as $imob): ?>
+                                <!-- 
+                                CORREÇÃO: A variável foi alterada de $usuario[...] para $dados[...], 
+                                para manter a consistência com o restante do formulário.
+                            -->
+                                <option value="<?= $imob['id_imobiliaria'] ?>" <?= ($dados['id_imobiliaria'] ?? null) == $imob['id_imobiliaria'] ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($imob['nome']) ?>
+                                </option>
+                            <?php endforeach; ?>
                 </select>
             </div>
-        </div>
+                            </div>
 
         <!-- Botões de ação do formulário. -->
         <div class="mt-6 flex justify-between">
