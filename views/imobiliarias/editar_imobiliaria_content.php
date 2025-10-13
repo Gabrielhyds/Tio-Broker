@@ -6,7 +6,7 @@
 
 <!-- Primeiro card: Formulário para editar os dados da imobiliária. -->
 <div class="bg-white p-6 rounded-xl shadow mb-6">
-    <form action="../../controllers/ImobiliariaController.php" method="POST" onsubmit="validarFormulario(event)">
+    <form action="../../controllers/ImobiliariaController.php" method="POST">
         <!-- Campos ocultos para enviar a ação, o ID e o tipo de pessoa. -->
         <input type="hidden" name="action" value="atualizar">
         <input type="hidden" name="id" value="<?= $dadosImob['id_imobiliaria'] ?>">
@@ -30,11 +30,15 @@
                 </select>
             </div>
 
-            <!-- Campo Documento (CPF ou CNPJ) -->
+           <!-- Campo Documento (CPF ou CNPJ) -->
             <div class="md:col-span-2">
-                <label id="label_documento" for="documento" class="block text-sm font-medium text-gray-700 mb-1">Documento</label>
-                <input type="text" name="documento" id="documento" required 
-                    onkeypress="apenasNumeros(event)" oninput="formatarDocumento(this)"
+                <label id="label_documento" for="documento" class="block text-sm font-medium text-gray-700 mb-1">
+                    Documento
+                </label>
+                <input type="text" name="documento" id="documento" required
+                    value="<?= htmlspecialchars($dadosImob['cpf'] ?? $dadosImob['cnpj'] ?? '') ?>"
+                    onkeypress="apenasNumeros(event)"
+                    oninput="formatarDocumento(this, '<?= $dadosImob['tipo_pessoa'] ?>')"
                     class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
             </div>
         </div>
@@ -120,68 +124,63 @@
         <p class="text-gray-500">Nenhum usuário vinculado.</p>
     <?php endif; ?>
 </div>
-
-<!-- Scripts JavaScript -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Configura o formulário inicial com os dados do PHP
-    configurarFormulario();
+    const campoDocumento = document.getElementById('documento');
+    const labelDocumento = document.getElementById('label_documento');
+    const tipoPessoa = '<?= $dadosImob['tipo_pessoa'] ?>'; // "F" ou "J"
 
-    // Adiciona o evento de confirmação para os botões de remover usuário
-    const botoesRemover = document.querySelectorAll('.btn-remover-usuario');
-    botoesRemover.forEach(function(botao) {
-        botao.addEventListener('click', function(event) {
-            event.preventDefault();
-            const urlParaRemover = this.href;
-            Swal.fire({
-                title: 'Tem certeza?',
-                text: "Deseja realmente remover este usuário da imobiliária?",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Sim, remover!',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = urlParaRemover;
-                }
-            });
+    // Ajusta label e placeholder
+    if (tipoPessoa === 'F') {
+        labelDocumento.textContent = 'CPF';
+        campoDocumento.placeholder = '000.000.000-00';
+        campoDocumento.maxLength = 14;
+    } else {
+        labelDocumento.textContent = 'CNPJ';
+        campoDocumento.placeholder = '00.000.000/0000-00';
+        campoDocumento.maxLength = 18;
+    }
+
+    // Formata o valor já preenchido corretamente
+    campoDocumento.value = campoDocumento.value.replace(/\D/g, '');
+    formatarDocumento(campoDocumento, tipoPessoa);
+
+    // Validação no envio
+    const form = document.querySelector('form[action$="ImobiliariaController.php"]');
+    if (form) {
+        form.addEventListener('submit', function(event) {
+            const doc = campoDocumento.value.replace(/\D/g, '');
+            let erro = '';
+
+            if (tipoPessoa === 'F' && doc.length !== 11) {
+                erro = 'O CPF deve conter 11 dígitos.';
+            } else if (tipoPessoa === 'J' && doc.length !== 14) {
+                erro = 'O CNPJ deve conter 14 dígitos.';
+            }
+
+            if (erro) {
+                event.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Documento Inválido',
+                    text: erro
+                });
+            }
         });
-    });
+    }
 });
 
-function configurarFormulario() {
-    // Pega os dados do PHP embutidos no HTML
-    const tipoPessoa = '<?= $dadosImob['tipo_pessoa'] ?>';
-    const documento = '<?= $dadosImob['tipo_pessoa'] == 'F' ? htmlspecialchars($dadosImob['cpf']) : htmlspecialchars($dadosImob['cnpj']) ?>';
-    
-    const label = document.getElementById('label_documento');
-    const input = document.getElementById('documento');
-
-    if (tipoPessoa === 'F') {
-        label.textContent = 'CPF';
-        input.placeholder = '000.000.000-00';
-        input.maxLength = 14;
-    } else {
-        label.textContent = 'CNPJ';
-        input.placeholder = '00.000.000/0000-00';
-        input.maxLength = 18;
-    }
-    input.value = documento;
-    formatarDocumento(input); // Aplica a máscara inicial
-}
-
+// Permite apenas números
 function apenasNumeros(event) {
     if (!/\d/.test(event.key)) event.preventDefault();
 }
 
-function formatarDocumento(campo) {
-    const tipo = '<?= $dadosImob['tipo_pessoa'] ?>';
+// Formata CPF ou CNPJ
+function formatarDocumento(campo, tipoPessoa) {
     let valor = campo.value.replace(/\D/g, '');
 
-    if (tipo === 'F') { // CPF
+    if (tipoPessoa === 'F') { // CPF
         valor = valor.slice(0, 11);
         valor = valor.replace(/(\d{3})(\d)/, '$1.$2');
         valor = valor.replace(/(\d{3})(\d)/, '$1.$2');
@@ -193,27 +192,7 @@ function formatarDocumento(campo) {
         valor = valor.replace(/\.(\d{3})(\d)/, '.$1/$2');
         valor = valor.replace(/(\d{4})(\d)/, '$1-$2');
     }
+
     campo.value = valor;
-}
-
-function validarFormulario(event) {
-    const tipo = '<?= $dadosImob['tipo_pessoa'] ?>';
-    const doc = document.getElementById('documento').value.replace(/\D/g, '');
-    let erro = '';
-
-    if (tipo === 'F' && doc.length !== 11) {
-        erro = 'O CPF deve conter 11 dígitos.';
-    } else if (tipo === 'J' && doc.length !== 14) {
-        erro = 'O CNPJ deve conter 14 dígitos.';
-    }
-
-    if (erro) {
-        event.preventDefault(); // Impede o envio
-        Swal.fire({
-            icon: 'error',
-            title: 'Documento Inválido',
-            text: erro
-        });
-    }
 }
 </script>
