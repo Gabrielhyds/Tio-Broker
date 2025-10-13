@@ -164,23 +164,33 @@ $isImovelMenuActive = in_array($activeMenu, $imovelSubMenu);
         <?php endif; ?>
     </nav>
 </aside>
-
-<!-- SCRIPT ATUALIZADO -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // 1. Funcionalidade dos Dropdowns
     const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
-    dropdownToggles.forEach(toggle => {
+
+    // Recupera o estado salvo dos dropdowns (abertos/fechados)
+    const dropdownState = JSON.parse(sessionStorage.getItem('dropdownState') || '{}');
+
+    dropdownToggles.forEach((toggle, index) => {
+        const dropdownMenu = toggle.nextElementSibling;
+        const chevron = toggle.querySelector('.fa-chevron-down');
+
+        // Se havia estado salvo, aplica
+        if (dropdownState[index]) {
+            dropdownMenu.classList.remove('hidden');
+            chevron.classList.add('rotate-180');
+        }
+
         toggle.addEventListener('click', (event) => {
             event.preventDefault();
-            const dropdownMenu = toggle.nextElementSibling;
-            const chevron = toggle.querySelector('.fa-chevron-down');
-            if (dropdownMenu) {
-                dropdownMenu.classList.toggle('hidden');
-            }
-            if (chevron) {
-                chevron.classList.toggle('rotate-180');
-            }
+
+            dropdownMenu.classList.toggle('hidden');
+            chevron.classList.toggle('rotate-180');
+
+            // Atualiza e salva o estado atual do dropdown
+            dropdownState[index] = !dropdownMenu.classList.contains('hidden');
+            sessionStorage.setItem('dropdownState', JSON.stringify(dropdownState));
         });
     });
 
@@ -218,4 +228,3 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-
