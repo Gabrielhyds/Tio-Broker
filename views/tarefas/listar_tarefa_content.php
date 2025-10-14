@@ -11,7 +11,6 @@
 
 if (!isset($filtroUsuario)) $filtroUsuario = $_GET['usuario'] ?? '';
 if (!isset($filtroCliente)) $filtroCliente = $_GET['cliente'] ?? '';
-// ✅ NOVO FILTRO: Captura o filtro de prioridade da URL
 if (!isset($filtroPrioridade)) $filtroPrioridade = $_GET['prioridade'] ?? '';
 
 
@@ -113,17 +112,18 @@ foreach ($tarefas as $tarefa) {
                             <th class="px-6 py-3">Status</th>
                             <th class="px-6 py-3">Prioridade</th>
                             <th class="px-6 py-3">Criada em</th>
+                            <th class="px-6 py-3">Prazo</th>
                             <th class="px-6 py-3 text-center">Ações</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200">
                         <?php if (!empty($tarefas)): ?>
                             <?php foreach ($tarefas as $t): ?>
-                                <tr class="hover:bg-slate-50 transition-colors">
+                                <tr class="hover:bg-slate-50 transition-colors" data-id="<?= $t['id_tarefa'] ?>">
                                     <td class="px-6 py-4 font-medium text-slate-800"><?= htmlspecialchars($t['descricao']) ?></td>
                                     <td class="px-6 py-4"><?= htmlspecialchars($t['nome_usuario']) ?></td>
                                     <td class="px-6 py-4"><?= htmlspecialchars($t['nome_cliente']) ?></td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-4" data-cell="status">
                                         <?php
                                         $statusClasses = ['pendente' => 'bg-yellow-100 text-yellow-800', 'em andamento' => 'bg-blue-100 text-blue-800', 'concluida' => 'bg-green-100 text-green-800'];
                                         ?>
@@ -136,7 +136,6 @@ foreach ($tarefas as $tarefa) {
                                         $prioridadeClass = 'bg-slate-100 text-slate-800'; // Default
                                         switch ($t['prioridade']) {
                                             case 'alta': $prioridadeClass = 'bg-red-100 text-red-800'; break;
-                                            // ✅ COR ATUALIZADA para 'media'
                                             case 'media': $prioridadeClass = 'bg-yellow-100 text-yellow-800'; break;
                                             case 'baixa': $prioridadeClass = 'bg-sky-100 text-sky-800'; break;
                                         }
@@ -146,6 +145,22 @@ foreach ($tarefas as $tarefa) {
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-slate-500"><?= date('d/m/Y H:i', strtotime($t['data_criacao'])) ?></td>
+                                    <td class="px-6 py-4" data-cell="prazo">
+                                        <?php if (!empty($t['prazo'])):
+                                            $prazo = new DateTime($t['prazo']);
+                                            $hoje = new DateTime(date('Y-m-d'));
+                                            $atrasada = $prazo < $hoje && $t['status'] !== 'concluida';
+                                        ?>
+                                            <span class="flex items-center gap-2 <?= $atrasada ? 'text-red-600 font-semibold' : 'text-slate-500' ?>">
+                                                <?php if($atrasada): ?>
+                                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
+                                                <?php endif; ?>
+                                                <?= $prazo->format('d/m/Y') ?>
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="text-slate-400">—</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td class="px-6 py-4 text-center">
                                         <div class="flex justify-center items-center gap-4">
                                             <a href="editar_tarefa.php?id=<?= $t['id_tarefa'] ?>" class="text-slate-500 hover:text-indigo-600" title="Editar"><svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg></a>
@@ -156,7 +171,7 @@ foreach ($tarefas as $tarefa) {
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="7" class="text-center py-10 text-slate-400">
+                                <td colspan="8" class="text-center py-10 text-slate-400">
                                     <div class="flex flex-col items-center gap-2">
                                         <svg class="w-12 h-12 text-slate-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" /></svg>
                                         <p>Nenhuma tarefa encontrada.</p>
@@ -193,7 +208,6 @@ foreach ($tarefas as $tarefa) {
                                     $prioridadeBorder = 'border-slate-200'; // Default
                                     switch ($t['prioridade']) {
                                         case 'alta': $prioridadeBorder = 'border-red-500'; break;
-                                        // ✅ COR DA BORDA ATUALIZADA para 'media'
                                         case 'media': $prioridadeBorder = 'border-yellow-500'; break;
                                         case 'baixa': $prioridadeBorder = 'border-sky-500'; break;
                                     }
@@ -204,12 +218,29 @@ foreach ($tarefas as $tarefa) {
                                         data-usuario="<?= htmlspecialchars($t['nome_usuario']) ?>"
                                         data-cliente="<?= htmlspecialchars($t['nome_cliente']) ?>"
                                         data-prioridade="<?= htmlspecialchars($t['prioridade']) ?>"
+                                        data-prazo="<?= htmlspecialchars($t['prazo'] ?? '') ?>"
+                                        data-status="<?= htmlspecialchars($t['status']) ?>"
                                         onclick="abrirModal(this)">
                                         <p class="font-semibold text-slate-800 text-sm leading-tight mb-2"><?= htmlspecialchars($t['descricao']) ?></p>
                                         <div class="flex items-center justify-between text-xs text-slate-500">
                                             <span><?= htmlspecialchars($t['nome_usuario']) ?></span>
                                             <span class="font-medium"><?= htmlspecialchars($t['nome_cliente']) ?></span>
                                         </div>
+                                        <?php if (!empty($t['prazo'])):
+                                            $prazo = new DateTime($t['prazo']);
+                                            $hoje = new DateTime(date('Y-m-d'));
+                                            $atrasada = $prazo < $hoje && $t['status'] !== 'concluida';
+                                        ?>
+                                        <div class="mt-3 pt-2 border-t border-slate-100 flex items-center gap-2 text-xs <?= $atrasada ? 'text-red-600 font-semibold' : 'text-slate-500' ?>">
+                                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0h18M-4.5 12h22.5" /></svg>
+                                            Prazo: <?= $prazo->format('d/m/Y') ?>
+                                            <?php if ($atrasada): ?>
+                                                <span class="ml-auto text-red-600" title="Tarefa Atrasada">
+                                                   <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
+                                                </span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <?php endif; ?>
                                     </li>
                                 <?php endforeach; ?>
                             <?php endif; ?>
@@ -220,27 +251,91 @@ foreach ($tarefas as $tarefa) {
         </div>
     </div>
 
-    <!-- MODAL DE DETALHES -->
+    <!-- MODAL DE DETALHES (NOVO DESIGN) -->
     <div id="modal-tarefa" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50 hidden transition-opacity duration-300">
-        <div class="bg-white rounded-lg shadow-xl max-w-md w-full m-4 p-6 transform transition-all duration-300 scale-95">
-            <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-200">
-                <h3 class="text-xl font-bold text-slate-800">Detalhes da Tarefa</h3>
-                <button onclick="fecharModal()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+        <div class="bg-slate-50 rounded-xl shadow-xl max-w-lg w-full m-4 transform transition-all duration-300 scale-95">
+            
+            <!-- Header -->
+            <div class="bg-white p-5 rounded-t-xl border-b border-slate-200 flex justify-between items-start">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-800">Detalhes da Tarefa</h3>
+                    <p class="text-sm text-slate-500">Informações completas da tarefa selecionada.</p>
+                </div>
+                <button onclick="fecharModal()" class="text-slate-400 hover:text-slate-600 text-3xl leading-none">&times;</button>
             </div>
-            <div class="space-y-3 mb-6">
-                <div><strong class="text-sm text-slate-500 block">Descrição:</strong><p id="modal-descricao" class="text-slate-700"></p></div>
-                <div><strong class="text-sm text-slate-500 block">Responsável:</strong><p id="modal-usuario" class="text-slate-700"></p></div>
-                <div><strong class="text-sm text-slate-500 block">Cliente:</strong><p id="modal-cliente" class="text-slate-700"></p></div>
-                <div><strong class="text-sm text-slate-500 block">Prioridade:</strong><div id="modal-prioridade"></div></div>
+
+            <!-- Content -->
+            <div class="p-6 space-y-6">
+                <!-- Descrição -->
+                <div class="bg-white p-4 rounded-lg border border-slate-200">
+                    <h4 class="text-sm font-semibold text-slate-500 mb-1">Descrição</h4>
+                    <p id="modal-descricao" class="text-slate-800 text-base leading-relaxed"></p>
+                </div>
+
+                <!-- Detalhes em Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <!-- Responsável -->
+                    <div class="flex items-start gap-3">
+                        <div class="bg-indigo-100 text-indigo-600 p-2 rounded-lg">
+                            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
+                        </div>
+                        <div>
+                            <strong class="text-sm text-slate-500 block">Responsável</strong>
+                            <p id="modal-usuario" class="text-slate-800 font-semibold"></p>
+                        </div>
+                    </div>
+
+                    <!-- Cliente -->
+                    <div class="flex items-start gap-3">
+                        <div class="bg-sky-100 text-sky-600 p-2 rounded-lg">
+                            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m-7.5-2.928A9.095 9.095 0 0112 5.25c2.628 0 4.935.94 6.75 2.501m-13.5 0A9.095 9.095 0 0112 5.25c2.628 0 4.935.94 6.75 2.501m-13.5 0a3 3 0 11-4.682 2.72 9.094 9.094 0 013.741.479m-4.5-2.928a3 3 0 010-5.456m13.5 5.456a3 3 0 000-5.456m-13.5 0a3 3 0 010-5.456" /></svg>
+                        </div>
+                        <div>
+                            <strong class="text-sm text-slate-500 block">Cliente</strong>
+                            <p id="modal-cliente" class="text-slate-800 font-semibold"></p>
+                        </div>
+                    </div>
+
+                    <!-- Prioridade -->
+                    <div class="flex items-start gap-3">
+                        <div class="bg-amber-100 text-amber-600 p-2 rounded-lg">
+                           <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v1.5M3 21v-6m0 0l2.77-.693a9 9 0 016.208.682l.108.054a9 9 0 006.086.71l3.114-.732a48.524 48.524 0 01-.005-10.499l-3.11.732a9 9 0 01-6.085-.711l-.108-.054a9 9 0 00-6.208-.682L3 4.5M3 15V4.5" /></svg>
+                        </div>
+                        <div>
+                            <strong class="text-sm text-slate-500 block">Prioridade</strong>
+                            <div id="modal-prioridade"></div>
+                        </div>
+                    </div>
+
+                    <!-- Prazo -->
+                    <div id="modal-prazo-container" class="flex items-start gap-3">
+                        <div class="bg-red-100 text-red-600 p-2 rounded-lg">
+                            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0h18M-4.5 12h22.5" /></svg>
+                        </div>
+                        <div>
+                            <strong class="text-sm text-slate-500 block">Prazo</strong>
+                            <div id="modal-prazo"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="flex justify-end gap-3">
-                <a id="btn-editar" href="#" class="inline-flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">Editar</a>
-                <a id="btn-excluir" href="#" class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors btn-excluir">Excluir</a>
+
+            <!-- Footer / Actions -->
+            <div class="p-5 bg-slate-100 rounded-b-xl flex justify-end gap-3">
+                <button onclick="fecharModal()" class="bg-white hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold transition-colors border border-slate-300">Fechar</button>
+                <a id="btn-editar" href="#" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+                   <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" /></svg>
+                    Editar
+                </a>
+                <a id="btn-excluir" href="#" class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors btn-excluir">
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.067-2.09 1.02-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
+                    Excluir
+                </a>
             </div>
         </div>
     </div>
 
-    <!-- ✅ Bloco de classes para garantir a compilação do Tailwind JIT -->
+    <!-- Bloco de classes para garantir a compilação do Tailwind JIT -->
     <div class="hidden">
         <span class="bg-red-100 text-red-800"></span>
         <span class="bg-yellow-100 text-yellow-800"></span>
@@ -285,7 +380,6 @@ foreach ($tarefas as $tarefa) {
                 updateView();
             });
             
-            // ✅ FUNÇÃO ATUALIZADA com a nova cor para 'media'
             const getPriorityBadge = (priority) => {
                 let className = 'bg-slate-100 text-slate-800'; // Default
                 switch (priority) {
@@ -304,6 +398,32 @@ foreach ($tarefas as $tarefa) {
                 document.getElementById('modal-prioridade').innerHTML = getPriorityBadge(el.dataset.prioridade);
                 document.getElementById('btn-editar').href = `editar_tarefa.php?id=${el.dataset.id}`;
                 document.getElementById('btn-excluir').href = `../../controllers/TarefaController.php?action=excluir&id=${el.dataset.id}`;
+
+                const prazo = el.dataset.prazo;
+                const status = el.dataset.status;
+                const modalPrazoContainer = document.getElementById('modal-prazo-container');
+                const modalPrazo = document.getElementById('modal-prazo');
+
+                if (prazo) {
+                    const [year, month, day] = prazo.split('-');
+                    const prazoFormatted = `${day}/${month}/${year}`;
+                    
+                    const prazoDate = new Date(prazo + 'T00:00:00');
+                    const hoje = new Date();
+                    hoje.setHours(0, 0, 0, 0);
+
+                    let prazoHTML = `<p class="text-slate-800 font-semibold">${prazoFormatted}</p>`;
+                    if (prazoDate < hoje && status !== 'concluida') {
+                        prazoHTML = `<p class="flex items-center gap-2 text-red-600 font-semibold">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
+                            ${prazoFormatted} (Atrasada)
+                        </p>`;
+                    }
+                    modalPrazo.innerHTML = prazoHTML;
+                    modalPrazoContainer.style.display = 'flex';
+                } else {
+                     modalPrazoContainer.style.display = 'none';
+                }
 
                 modal.classList.remove('hidden');
                 setTimeout(() => {
@@ -352,6 +472,29 @@ foreach ($tarefas as $tarefa) {
             // --- LÓGICA KANBAN ---
             const statuses = ['pendente', 'em andamento', 'concluida'];
             
+            function updateCardStyle(cardElement) {
+                const prazo = cardElement.dataset.prazo;
+                const status = cardElement.dataset.status;
+                if (!prazo) return;
+
+                const prazoDiv = cardElement.querySelector('div.mt-3');
+                if (!prazoDiv) return;
+
+                const prazoDate = new Date(prazo + 'T00:00:00');
+                const hoje = new Date();
+                hoje.setHours(0, 0, 0, 0);
+
+                const isOverdue = prazoDate < hoje && status !== 'concluida';
+
+                if (isOverdue) {
+                    prazoDiv.classList.remove('text-slate-500');
+                    prazoDiv.classList.add('text-red-600', 'font-semibold');
+                } else {
+                    prazoDiv.classList.add('text-slate-500');
+                    prazoDiv.classList.remove('text-red-600', 'font-semibold');
+                }
+            }
+
             function updateColumnCount(status) {
                 const column = document.getElementById(`coluna-${status}`);
                 const countElement = document.getElementById(`count-${status}`);
@@ -379,6 +522,59 @@ foreach ($tarefas as $tarefa) {
                     }
                 }
             }
+
+            // ✅ NOVA FUNÇÃO: Sincroniza a linha da tabela com as mudanças do Kanban
+            function syncTableRow(tarefaId, novoStatus) {
+                const tableRow = document.querySelector(`#tabela-view tr[data-id="${tarefaId}"]`);
+                if (!tableRow) return;
+
+                // 1. Atualizar a célula de Status
+                const statusCell = tableRow.querySelector('td[data-cell="status"]');
+                if (statusCell) {
+                    const statusClasses = {
+                        'pendente': 'bg-yellow-100 text-yellow-800',
+                        'em andamento': 'bg-blue-100 text-blue-800',
+                        'concluida': 'bg-green-100 text-green-800'
+                    };
+                    const statusText = (novoStatus.charAt(0).toUpperCase() + novoStatus.slice(1)).replace('_', ' ');
+                    
+                    statusCell.innerHTML = `
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClasses[novoStatus] || 'bg-slate-100 text-slate-800'}">
+                            ${statusText}
+                        </span>`;
+                }
+
+                // 2. Atualizar a célula de Prazo
+                const prazoCell = tableRow.querySelector('td[data-cell="prazo"]');
+                const kanbanCard = document.querySelector(`#kanban-view li[data-id="${tarefaId}"]`);
+                if (prazoCell && kanbanCard && kanbanCard.dataset.prazo) {
+                    const prazo = kanbanCard.dataset.prazo;
+                    const prazoDate = new Date(prazo + 'T00:00:00');
+                    const hoje = new Date();
+                    hoje.setHours(0, 0, 0, 0);
+
+                    const isOverdue = prazoDate < hoje && novoStatus !== 'concluida';
+                    const prazoSpan = prazoCell.querySelector('span');
+                    const warningIcon = prazoSpan.querySelector('svg');
+
+                    if (isOverdue) {
+                        prazoSpan.classList.remove('text-slate-500');
+                        prazoSpan.classList.add('text-red-600', 'font-semibold');
+                        if (!warningIcon) {
+                            prazoSpan.insertAdjacentHTML('afterbegin', `
+                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
+                            `);
+                        }
+                    } else {
+                        prazoSpan.classList.add('text-slate-500');
+                        prazoSpan.classList.remove('text-red-600', 'font-semibold');
+                        if (warningIcon) {
+                            warningIcon.remove();
+                        }
+                    }
+                }
+            }
+
 
             statuses.forEach(status => {
                 const columnEl = document.getElementById(`coluna-${status}`);
@@ -415,13 +611,21 @@ foreach ($tarefas as $tarefa) {
                                     if (!data.success) {
                                         return Promise.reject(data.message || 'Falha ao atualizar.');
                                     }
+                                    item.dataset.status = novoStatus;
+                                    updateCardStyle(item);
+                                    // ✅ SINCRONIZA A TABELA
+                                    syncTableRow(tarefaId, novoStatus);
                                 })
                                 .catch(error => {
+                                    // Reverte a ação no front-end em caso de erro
                                     fromColumn.appendChild(item);
                                     updateColumnCount(fromColumn.dataset.status);
                                     updateColumnCount(toColumn.dataset.status);
                                     togglePlaceholder(fromColumn);
                                     togglePlaceholder(toColumn);
+                                    updateCardStyle(item);
+                                    // Reverte também na tabela
+                                    syncTableRow(tarefaId, fromColumn.dataset.status);
                                 });
                             }
                         }
@@ -432,3 +636,4 @@ foreach ($tarefas as $tarefa) {
     </script>
 </body>
 </html>
+
