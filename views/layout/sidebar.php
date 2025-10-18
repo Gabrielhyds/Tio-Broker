@@ -48,7 +48,7 @@ $isImovelMenuActive = in_array($activeMenu, $imovelSubMenu);
         </div>
         
         <!-- Dropdown Leads -->
-        <div hidden>
+        <div>
             <button type="button" class="dropdown-toggle flex items-center w-full px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
                 <i class="fas fa-funnel-dollar w-6 text-center"></i>
                 <span class="ml-2 flex-1 text-left whitespace-nowrap translating" data-i18n="sidebar.lead.title">Leads</span>
