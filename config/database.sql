@@ -142,16 +142,6 @@ CREATE TABLE tarefas (
     FOREIGN KEY (id_imobiliaria) REFERENCES imobiliaria (id_imobiliaria) ON DELETE CASCADE
 );
 
--- Tabela de Ranking de Desempenho
-CREATE TABLE ranking_desempenho (
-    id_ranking INT AUTO_INCREMENT PRIMARY KEY,
-    id_usuario INT NOT NULL,
-    vendas INT DEFAULT 0,
-    contatos INT DEFAULT 0,
-    data_atualizacao DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_usuario) REFERENCES usuario (id_usuario) ON DELETE CASCADE
-);
-
 -- Tabela de Conversas
 CREATE TABLE conversas (
     id_conversa INT AUTO_INCREMENT PRIMARY KEY,
@@ -175,10 +165,14 @@ CREATE TABLE mensagens (
     id_conversa INT NOT NULL,
     id_usuario INT NOT NULL,
     mensagem TEXT NOT NULL,
+    editada_em TIMESTAMP NULL DEFAULT NULL, -- nova coluna para registrar edições
+    apagada TINYINT(1) NOT NULL DEFAULT 0, -- nova coluna para exclusão lógica
     data_envio DATETIME DEFAULT CURRENT_TIMESTAMP,
     lida BOOLEAN NOT NULL DEFAULT FALSE,
     FOREIGN KEY (id_conversa) REFERENCES conversas (id_conversa) ON DELETE CASCADE,
-    FOREIGN KEY (id_usuario) REFERENCES usuario (id_usuario) ON DELETE CASCADE
+    FOREIGN KEY (id_usuario) REFERENCES usuario (id_usuario) ON DELETE CASCADE,
+    INDEX ix_msg_conversa_data (id_conversa, data_envio), -- índice para buscas por conversa e data
+    INDEX ix_msg_usuario_lida (id_usuario, lida) -- índice para buscas por usuário e status de leitura
 );
 
 -- Tabela de Reações
