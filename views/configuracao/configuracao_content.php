@@ -89,25 +89,54 @@ if (session_status() === PHP_SESSION_NONE) {
             </div>
 
             <!-- Seção de Notificações -->
-            <div>
-                <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4 translating" data-i18n="notifications.title">Notificações</h2>
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between">
-                        <label for="sound-notifications" class="text-gray-600 translating" data-i18n="notifications.sound">Notificações Sonoras</label>
-                        <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-                            <input type="checkbox" name="sound-notifications" id="sound-notifications" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" />
-                            <label for="sound-notifications" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <label for="visual-notifications" class="text-gray-600 translating" data-i18n="notifications.visual">Notificações Visuais (Pop-ups)</label>
-                        <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-                            <input type="checkbox" name="visual-notifications" id="visual-notifications" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" />
-                            <label for="visual-notifications" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div>
+  <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4 translating" data-i18n="notifications.title">
+    Notificações
+  </h2>
+  <div class="space-y-4">
+    <!-- Toggle Notificações Sonoras -->
+    <div class="flex items-center justify-between">
+      <label for="sound-notifications" class="text-gray-600 translating" data-i18n="notifications.sound">
+        Notificações Sonoras
+      </label>
+      <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+        <input type="checkbox" name="sound-notifications" id="sound-notifications"
+          class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" />
+        <label for="sound-notifications"
+          class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+      </div>
+    </div>
+
+    <!-- Escolher Toque -->
+    <div class="flex items-center justify-between pl-4">
+      <label for="notification-sound" class="text-gray-600 translating" data-i18n="notifications.soundName">
+        Escolher Toque
+      </label>
+      <div class="flex items-center space-x-2">
+        <select id="notification-sound" name="notification-sound" class="border rounded-md px-3 py-2">
+          <option value="audio_0">Padrão</option>
+          <option value="audio_1">Alerta 1</option>
+          <option value="audio_2">Alerta 2</option>
+        </select>
+        <button id="play-sound-btn" class="text-blue-600 hover:text-blue-800">
+          <i class="fas fa-play"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Toggle Notificações Visuais -->
+    <div class="flex items-center justify-between">
+      <label for="visual-notifications" class="text-gray-600 translating"
+        data-i18n="notifications.visual">Notificações Visuais (Pop-ups)</label>
+      <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+        <input type="checkbox" name="visual-notifications" id="visual-notifications"
+          class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" />
+        <label for="visual-notifications"
+          class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+      </div>
+    </div>
+  </div>
+</div>
 
             <!-- Seção Sobre -->
             <div>
@@ -133,176 +162,188 @@ if (session_status() === PHP_SESSION_NONE) {
         </div>
     </main>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const userSettingsFromPHP = <?= json_encode($_SESSION['usuario']['configuracoes'] ?? null); ?>;
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const userSettingsFromPHP = <?= json_encode($_SESSION['usuario']['configuracoes'] ?? null); ?>;
 
-            let translations = {};
+    let translations = {};
 
-            async function loadTranslations(module, lang) {
-                try {
-                    const response = await fetch(`../../controllers/TraducaoController.php?modulo=${module}&lang=${lang}`);
-                    const result = await response.json();
-                    if (result.success) {
-                        translations = result.data;
-                    }
-                } catch (error) {
-                    console.error(`Could not load translation for module "${module}":`, error);
+    async function loadTranslations(module, lang) {
+        try {
+            const response = await fetch(`../../controllers/TraducaoController.php?modulo=${module}&lang=${lang}`);
+            const result = await response.json();
+            if (result.success) {
+                translations = result.data;
+            }
+        } catch (error) {
+            console.error(`Could not load translation for module "${module}":`, error);
+        }
+    }
+
+    function t(key) {
+        return key.split('.').reduce((obj, i) => obj && obj[i], translations) || key;
+    }
+
+    function applyTranslationsToDOM() {
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.dataset.i18n;
+            const translation = t(key);
+            if (translation !== key) {
+                if (el.tagName === 'TITLE') {
+                    el.textContent = translation;
+                } else {
+                    el.innerText = translation;
                 }
             }
-
-            function t(key) {
-                return key.split('.').reduce((obj, i) => obj && obj[i], translations) || key;
-            }
-
-            function applyTranslationsToDOM() {
-                document.querySelectorAll('[data-i18n]').forEach(el => {
-                    const key = el.dataset.i18n;
-                    const translation = t(key);
-                    if (translation !== key) {
-                        if (el.tagName === 'TITLE') {
-                            el.textContent = translation;
-                        } else {
-                            el.innerText = translation;
-                        }
-                    }
-                    // Remove a classe para mostrar o texto já traduzido
-                    el.classList.remove('translating');
-                });
-            }
-
-            const narratorCheckbox = document.getElementById('narrador');
-            const fontBtns = document.querySelectorAll('.font-btn');
-            const themeRadios = document.querySelectorAll('input[name="theme"]');
-            const languageSelect = document.getElementById('language');
-            const soundNotificationsCheckbox = document.getElementById('sound-notifications');
-            const visualNotificationsCheckbox = document.getElementById('visual-notifications');
-            const saveBtn = document.getElementById('save-settings-btn');
-            const feedbackMessage = document.getElementById('feedback-message');
-
-            let selectedFontSize = 'text-base';
-
-            function loadSettings() {
-                const settings = userSettingsFromPHP || JSON.parse(localStorage.getItem('userSettings'));
-                if (!settings) return;
-
-                narratorCheckbox.checked = settings.accessibility?.narrator || false;
-                selectedFontSize = settings.accessibility?.fontSize || 'text-base';
-                updateFontUI();
-
-                const theme = settings.appearance?.theme || 'light';
-                document.querySelector(`input[name="theme"][value="${theme}"]`).checked = true;
-                if (theme === 'dark') document.documentElement.classList.add('dark');
-                else document.documentElement.classList.remove('dark');
-
-                languageSelect.value = settings.language || 'pt-br';
-
-                soundNotificationsCheckbox.checked = settings.notifications?.sound ?? true;
-                visualNotificationsCheckbox.checked = settings.notifications?.visual ?? true;
-            }
-
-            function saveSettings() {
-                const oldLang = userSettingsFromPHP?.language || localStorage.getItem('calendarLang') || 'pt-br';
-
-                const settings = {
-                    accessibility: {
-                        narrator: narratorCheckbox.checked,
-                        fontSize: selectedFontSize
-                    },
-                    appearance: {
-                        theme: document.querySelector('input[name="theme"]:checked').value
-                    },
-                    language: languageSelect.value,
-                    notifications: {
-                        sound: soundNotificationsCheckbox.checked,
-                        visual: visualNotificationsCheckbox.checked
-                    }
-                };
-
-                const newLang = settings.language;
-
-                localStorage.setItem('userSettings', JSON.stringify(settings));
-                localStorage.setItem('calendarLang', newLang);
-
-                saveBtn.textContent = t('buttons.saving');
-                saveBtn.disabled = true;
-
-                fetch('../../controllers/ConfiguracaoController.php?action=salvar', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(settings)
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            showFeedback(t('feedback.success'), 'success');
-                            if (oldLang !== newLang) {
-                                setTimeout(() => {
-                                    location.reload();
-                                }, 1500);
-                            }
-                        } else {
-                            throw new Error(data.message || t('feedback.error'));
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Erro:', error);
-                        showFeedback(error.message, 'error');
-                    })
-                    .finally(() => {
-                        if (oldLang === newLang) {
-                            setTimeout(() => {
-                                saveBtn.textContent = t('buttons.save');
-                                saveBtn.disabled = false;
-                                feedbackMessage.classList.add('hidden');
-                            }, 3000);
-                        }
-                    });
-            }
-
-            function showFeedback(message, type) {
-                feedbackMessage.textContent = message;
-                feedbackMessage.className = type === 'success' ?
-                    'text-center p-4 mt-4 rounded-md bg-green-100 text-green-700' :
-                    'text-center p-4 mt-4 rounded-md bg-red-100 text-red-700';
-            }
-
-            function updateFontUI() {
-                fontBtns.forEach(b => b.classList.remove('bg-blue-100', 'text-blue-600'));
-                const activeBtn = document.querySelector(`.font-btn[data-font-size="${selectedFontSize}"]`);
-                if (activeBtn) activeBtn.classList.add('bg-blue-100', 'text-blue-600');
-                document.body.className = `bg-gray-50 ${selectedFontSize}`;
-            }
-
-            fontBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    selectedFontSize = this.dataset.fontSize;
-                    updateFontUI();
-                });
-            });
-
-            themeRadios.forEach(radio => {
-                radio.addEventListener('change', function() {
-                    if (this.value === 'dark') document.documentElement.classList.add('dark');
-                    else document.documentElement.classList.remove('dark');
-                });
-            });
-
-            saveBtn.addEventListener('click', saveSettings);
-
-            async function initialize() {
-                const initialLang = userSettingsFromPHP?.language || localStorage.getItem('calendarLang') || 'pt-br';
-
-                await loadTranslations('configuracao', initialLang);
-                applyTranslationsToDOM();
-                loadSettings();
-            }
-
-            initialize();
+            el.classList.remove('translating');
         });
-    </script>
+    }
+
+    // Inputs e botões
+    const narratorCheckbox = document.getElementById('narrador');
+    const fontBtns = document.querySelectorAll('.font-btn');
+    const themeRadios = document.querySelectorAll('input[name="theme"]');
+    const languageSelect = document.getElementById('language');
+    const soundNotificationsCheckbox = document.getElementById('sound-notifications');
+    const visualNotificationsCheckbox = document.getElementById('visual-notifications');
+    const soundSelect = document.getElementById('notification-sound'); // Novo seletor
+    const playSoundBtn = document.getElementById('play-sound-btn');   // Novo botão de teste
+    const saveBtn = document.getElementById('save-settings-btn');
+    const feedbackMessage = document.getElementById('feedback-message');
+
+    let selectedFontSize = 'text-base';
+
+    function loadSettings() {
+        const settings = userSettingsFromPHP || JSON.parse(localStorage.getItem('userSettings'));
+        if (!settings) return;
+
+        narratorCheckbox.checked = settings.accessibility?.narrator || false;
+        selectedFontSize = settings.accessibility?.fontSize || 'text-base';
+        updateFontUI();
+
+        const theme = settings.appearance?.theme || 'light';
+        document.querySelector(`input[name="theme"][value="${theme}"]`).checked = true;
+        if (theme === 'dark') document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
+
+        languageSelect.value = settings.language || 'pt-br';
+
+        soundNotificationsCheckbox.checked = settings.notifications?.sound ?? true;
+        visualNotificationsCheckbox.checked = settings.notifications?.visual ?? true;
+        soundSelect.value = settings.notifications?.soundName || 'default'; // Carrega toque salvo
+    }
+
+    function saveSettings() {
+        const oldLang = userSettingsFromPHP?.language || localStorage.getItem('calendarLang') || 'pt-br';
+
+        const settings = {
+            accessibility: {
+                narrator: narratorCheckbox.checked,
+                fontSize: selectedFontSize
+            },
+            appearance: {
+                theme: document.querySelector('input[name="theme"]:checked').value
+            },
+            language: languageSelect.value,
+            notifications: {
+                sound: soundNotificationsCheckbox.checked,
+                visual: visualNotificationsCheckbox.checked,
+                soundName: soundSelect.value // Salva o toque selecionado
+            }
+        };
+
+        const newLang = settings.language;
+
+        localStorage.setItem('userSettings', JSON.stringify(settings));
+        localStorage.setItem('calendarLang', newLang);
+
+        saveBtn.textContent = t('buttons.saving');
+        saveBtn.disabled = true;
+
+        fetch('../../controllers/ConfiguracaoController.php?action=salvar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(settings)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showFeedback(t('feedback.success'), 'success');
+                    if (oldLang !== newLang) {
+                        setTimeout(() => location.reload(), 1500);
+                    }
+                } else {
+                    throw new Error(data.message || t('feedback.error'));
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                showFeedback(error.message, 'error');
+            })
+            .finally(() => {
+                if (oldLang === newLang) {
+                    setTimeout(() => {
+                        saveBtn.textContent = t('buttons.save');
+                        saveBtn.disabled = false;
+                        feedbackMessage.classList.add('hidden');
+                    }, 3000);
+                }
+            });
+    }
+
+    function showFeedback(message, type) {
+        feedbackMessage.textContent = message;
+        feedbackMessage.className = type === 'success' ?
+            'text-center p-4 mt-4 rounded-md bg-green-100 text-green-700' :
+            'text-center p-4 mt-4 rounded-md bg-red-100 text-red-700';
+    }
+
+    function updateFontUI() {
+        fontBtns.forEach(b => b.classList.remove('bg-blue-100', 'text-blue-600'));
+        const activeBtn = document.querySelector(`.font-btn[data-font-size="${selectedFontSize}"]`);
+        if (activeBtn) activeBtn.classList.add('bg-blue-100', 'text-blue-600');
+        document.body.className = `bg-gray-50 ${selectedFontSize}`;
+    }
+
+    fontBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            selectedFontSize = this.dataset.fontSize;
+            updateFontUI();
+        });
+    });
+
+    themeRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.value === 'dark') document.documentElement.classList.add('dark');
+            else document.documentElement.classList.remove('dark');
+        });
+    });
+
+    saveBtn.addEventListener('click', saveSettings);
+
+    // 🔊 Botão de teste do toque
+    playSoundBtn.addEventListener('click', () => {
+        if (!soundNotificationsCheckbox.checked) {
+            alert('Ative as notificações sonoras para testar o toque.');
+            return;
+        }
+        const soundFile = soundSelect.value;
+        new Audio(`../../uploads/sounds/${soundFile}.mp3`).play();
+    });
+
+    async function initialize() {
+        const initialLang = userSettingsFromPHP?.language || localStorage.getItem('calendarLang') || 'pt-br';
+
+        await loadTranslations('configuracao', initialLang);
+        applyTranslationsToDOM();
+        loadSettings();
+    }
+
+    initialize();
+});
+</script>
 </body>
 
 </html>
