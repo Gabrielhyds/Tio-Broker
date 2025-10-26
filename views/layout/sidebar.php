@@ -59,7 +59,7 @@ $isImovelMenuActive = in_array($activeMenu, $imovelSubMenu);
                     <i class="fas fa-plus-circle w-6 text-center"></i>
                     <span class="ml-2 translating" data-i18n="sidebar.lead.register">Cadastrar Lead</span>
                 </a>
-                <a href="<?= BASE_URL ?>views/leads/listar.php" class="sidebar-link <?= $activeMenu === 'lead_listar' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
+                <a href="<?= BASE_URL ?>views/leads/pipeline.php" class="sidebar-link <?= $activeMenu === 'lead_listar' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
                     <i class="fas fa-tasks w-6 text-center"></i>
                     <span class="ml-2 translating" data-i18n="sidebar.lead.manage">Gerenciar Leads</span>
                 </a>

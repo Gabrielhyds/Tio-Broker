@@ -316,3 +316,32 @@ CREATE TABLE empreendimento_documento (
     caminho VARCHAR(255) NOT NULL,
     FOREIGN KEY (id_empreendimento) REFERENCES empreendimento (id_empreendimento) ON DELETE CASCADE
 );
+
+CREATE TABLE leads (
+  id_lead INT AUTO_INCREMENT PRIMARY KEY,
+  nome VARCHAR(255) NOT NULL,
+  email VARCHAR(100),
+  telefone VARCHAR(20),
+  origem VARCHAR(100), -- (RF01)
+  interesse VARCHAR(255), -- (RF01)
+  status_pipeline ENUM('Novo', 'Contato', 'Negociação', 'Fechado', 'Perdido') NOT NULL DEFAULT 'Novo', -- (RF04)
+  id_usuario_responsavel INT NULL, -- (RF06)
+  id_imobiliaria INT NULL,
+  is_deleted TINYINT(1) NOT NULL DEFAULT 0, -- (RF03 - Exclusão lógica)
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (id_usuario_responsavel) REFERENCES usuario (id_usuario) ON DELETE SET NULL,
+  FOREIGN KEY (id_imobiliaria) REFERENCES imobiliaria (id_imobiliaria) ON DELETE SET NULL
+);
+
+-- Tabela de Interações do Lead (RF08)
+CREATE TABLE lead_interacoes (
+  id_interacao INT AUTO_INCREMENT PRIMARY KEY,
+  id_lead INT NOT NULL,
+  id_usuario INT NOT NULL,
+  tipo_interacao ENUM('ligacao', 'visita', 'email', 'whatsapp', 'outro') NOT NULL, -- (RF08)
+  descricao TEXT NOT NULL, -- (RF08)
+  data_interacao DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (id_lead) REFERENCES leads (id_lead) ON DELETE CASCADE,
+  FOREIGN KEY (id_usuario) REFERENCES usuario (id_usuario) ON DELETE CASCADE
+);
