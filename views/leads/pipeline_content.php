@@ -207,7 +207,7 @@ $usuario_e_coordenador = true; // Assumindo que pode atribuir (RF06)
     </div>
 </div>
 
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <!-- =================================================== -->
 <!-- SCRIPTS JAVASCRIPT -->
 <!-- =================================================== -->
@@ -562,39 +562,61 @@ $usuario_e_coordenador = true; // Assumindo que pode atribuir (RF06)
     }
 
     /**
-     * RF03: Excluir Lead (via Fetch)
-     */
-    async function excluirLead(idLead, nomeLead) {
-        // (RF03) Confirmação
-        // NÃO use window.confirm() pois pode ser bloqueado.
-        // Em um app real, usaríamos um modal de confirmação.
-        // Por simplicidade, vamos usar o confirm, mas idealmente seria um modal.
-        if (!confirm(`Tem certeza que deseja excluir o lead "${nomeLead}"?\nEsta ação o marcará como 'inativo'.`)) {
-            return;
-        }
+ * RF03: Excluir Lead (via Fetch e SweetAlert)
+ */
+async function excluirLead(idLead, nomeLead) {
+    // 1. Chame o SweetAlert em vez do confirm()
+    Swal.fire({
+        title: 'Você tem certeza?',
+        text: `Deseja realmente excluir (inativar) o lead "${nomeLead}"?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Sim, excluir!',
+        cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+        // 2. Verifique se o usuário clicou em "Sim, excluir!"
+        if (result.isConfirmed) {
+            // 3. Coloque toda a lógica de fetch original aqui dentro
+            try {
+                const response = await fetch(CONTROLLER_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        action: 'excluir',
+                        id_lead: idLead
+                    })
+                });
 
-        try {
-            // ATUALIZADO: Enviando como x-www-form-urlencoded
-             const response = await fetch(CONTROLLER_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({ action: 'excluir', id_lead: idLead })
-            });
-            const result = await response.json();
+                const result = await response.json();
 
-            if (result.success) {
-                showToast('Lead excluído (inativado).', 'success');
-                // Remove o card da UI
-                document.querySelector(`.lead-card[data-id='${idLead}']`).remove();
-                fecharModais();
-            } else {
-                // (RF03 Erro)
-                throw new Error(result.message);
+                if (result.success) {
+                    // Mostra sucesso no SweetAlert
+                    Swal.fire(
+                        'Excluído!',
+                        'O lead foi marcado como inativo.',
+                        'success'
+                    );
+
+                    // Remove o card da UI
+                    document.querySelector(`.lead-card[data-id='${idLead}']`).remove();
+                    fecharModais();
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                // Mostra erro no SweetAlert
+                Swal.fire(
+                    'Erro!',
+                    `Erro: ${error.message}`,
+                    'error'
+                );
             }
-        } catch (error) {
-             showToast(`Erro: ${error.message}`, 'error');
         }
-    }
+    });
+}
+
 
 
     /**
@@ -662,6 +684,8 @@ $usuario_e_coordenador = true; // Assumindo que pode atribuir (RF06)
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
     }
+
+
 </script>
 
 
