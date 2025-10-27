@@ -14,10 +14,10 @@ $activeMenu = $activeMenu ?? '';
 require_once __DIR__ . '/../../config/rotas.php';
 
 // --- Lógica para manter o dropdown ativo aberto ---
-$leadSubMenu = ['lead_cadastrar', 'lead_listar'];
+$leadSubMenu = ['lead_cadastrar', 'lead_listar','contatos'];
 $imobiliariaSubMenu = ['imobiliaria_cadastrar', 'imobiliaria_listar'];
 $usuarioSubMenu = ['usuario_cadastrar', 'usuario_listar'];
-$ferramentasSubMenu = ['chat', 'contatos', 'tarefas', 'agenda'];
+$ferramentasSubMenu = ['chat', 'tarefas', 'agenda'];
 $empreendimentoSubMenu = ['empreendimento_cadastrar', 'empreendimento_listar'];
 $imovelSubMenu = ['imovel_cadastrar', 'imovel_listar'];
 
@@ -62,6 +62,9 @@ $isImovelMenuActive = in_array($activeMenu, $imovelSubMenu);
                 <a href="<?= BASE_URL ?>views/leads/pipeline.php" class="sidebar-link <?= $activeMenu === 'lead_listar' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
                     <i class="fas fa-tasks w-6 text-center"></i>
                     <span class="ml-2 translating" data-i18n="sidebar.lead.manage">Gerenciar Leads</span>
+                </a>
+                <a href="<?= BASE_URL ?>views/contatos/index.php?controller=cliente&action=listar" class="sidebar-link <?= $activeMenu === 'contatos' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
+                        <i class="fas fa-address-book w-6 text-center"></i><span class="ml-2 translating" data-i18n="sidebar.tools.contacts">Agenda de Contatos</span>
                 </a>
             </div>
         </div>
@@ -115,9 +118,6 @@ $isImovelMenuActive = in_array($activeMenu, $imovelSubMenu);
                 <div class="dropdown-menu <?= $isFerramentasMenuActive ? '' : 'hidden' ?> py-1 space-y-1 pl-8">
                     <a href="<?= BASE_URL ?>views/chat/chat.php" class="sidebar-link <?= $activeMenu === 'chat' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
                         <i class="fas fa-comments w-6 text-center"></i><span class="ml-2 translating" data-i18n="sidebar.tools.chat">Chat</span>
-                    </a>
-                    <a href="<?= BASE_URL ?>views/contatos/index.php?controller=cliente&action=listar" class="sidebar-link <?= $activeMenu === 'contatos' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
-                        <i class="fas fa-address-book w-6 text-center"></i><span class="ml-2 translating" data-i18n="sidebar.tools.contacts">Agenda de Contatos</span>
                     </a>
                     <a href="<?= BASE_URL ?>views/tarefas/listar_tarefa.php" class="sidebar-link <?= $activeMenu === 'tarefas' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
                         <i class="fas fa-tasks w-6 text-center"></i><span class="ml-2 translating" data-i18n="sidebar.tools.tasks">Tarefas</span>
