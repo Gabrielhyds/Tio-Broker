@@ -252,28 +252,27 @@ CREATE TABLE empreendimento (
     categoria ENUM('imobiliario', 'automotivo', 'franquia', 'outro') DEFAULT 'imobiliario',
     status ENUM('planejamento', 'em_andamento', 'concluido', 'disponivel', 'encerrado') DEFAULT 'disponivel',
     responsavel VARCHAR(255) NULL, -- construtora, montadora, franqueadora etc.
+    -- Endereço do empreendimento
+    endereco VARCHAR(255) NULL,
+    cidade VARCHAR(100) NULL,
+    estado VARCHAR(2) NULL,
+    cep VARCHAR(10) NULL,
 
--- Endereço do empreendimento
-endereco VARCHAR(255) NULL,
-cidade VARCHAR(100) NULL,
-estado VARCHAR(2) NULL,
-cep VARCHAR(10) NULL,
+    -- Preço mínimo e máximo para referência
+    preco_min DECIMAL(15, 2) NULL, preco_max DECIMAL(15, 2) NULL,
 
--- Preço mínimo e máximo para referência
-preco_min DECIMAL(15, 2) NULL, preco_max DECIMAL(15, 2) NULL,
+    -- Datas do empreendimento
+    data_inicio DATE NULL, data_entrega DATE NULL,
 
--- Datas do empreendimento
-data_inicio DATE NULL, data_entrega DATE NULL,
+    -- Controle de criação e atualização
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
--- Controle de criação e atualização
-criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    -- Exclusão lógica
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
 
--- Exclusão lógica
-is_deleted TINYINT(1) NOT NULL DEFAULT 0,
-
--- Chave estrangeira para imobiliária
-FOREIGN KEY (id_imobiliaria) REFERENCES imobiliaria (id_imobiliaria) ON DELETE SET NULL
+    -- Chave estrangeira para imobiliária
+    FOREIGN KEY (id_imobiliaria) REFERENCES imobiliaria (id_imobiliaria) ON DELETE SET NULL
 );
 
 CREATE TABLE empreendimento_imovel (
