@@ -66,6 +66,10 @@ $isImovelMenuActive = in_array($activeMenu, $imovelSubMenu);
                 <a href="<?= BASE_URL ?>views/contatos/index.php?controller=cliente&action=listar" class="sidebar-link <?= $activeMenu === 'contatos' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
                         <i class="fas fa-address-book w-6 text-center"></i><span class="ml-2 translating" data-i18n="sidebar.tools.contacts">Agenda de Contatos</span>
                 </a>
+                <a href="<?= BASE_URL ?>views/relatorios/relatorio_leads.php" class="sidebar-link <?= $activeMenu === 'relatorio_leads' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
+                    <i class="fas fa-chart-line w-6 text-center"></i>
+                    <span class="ml-2 translating" data-i18n="sidebar.lead.reports">Relatórios de Leads</span>
+                </a>
             </div>
         </div>
 
