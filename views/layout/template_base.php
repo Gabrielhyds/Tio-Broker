@@ -65,7 +65,6 @@ require_once __DIR__ . '/../../config/rotas.php';
             <?php include 'header.php'; ?>
             <main id="main-content" class="flex-1 overflow-x-hidden overflow-y-auto bg-slate-50 p-6">
                 
-                <!-- ✅ CORREÇÃO: A linha de inclusão dos alertas foi movida para o topo do conteúdo principal. -->
                 <?php include '_alertas.php'; ?>
 
                 <?php
@@ -80,95 +79,93 @@ require_once __DIR__ . '/../../config/rotas.php';
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            let translations = {};
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let translations = {};
 
-            async function loadLayoutTranslations(lang) {
-                try {
-                    const response = await fetch(`<?= BASE_URL ?>controllers/TraducaoController.php?modulo=layout&lang=${lang}`);
-                    const result = await response.json();
-                    if (result.success) {
-                        translations = result.data;
-                    }
-                } catch (error) {
-                    console.error('Failed to load layout translations:', error);
-                }
-            }
+            async function loadLayoutTranslations(lang) {
+                try {
+                    const response = await fetch(`<?= BASE_URL ?>controllers/TraducaoController.php?modulo=layout&lang=${lang}`);
+                    const result = await response.json();
+                    if (result.success) {
+                        translations = result.data;
+                    }
+                } catch (error) {
+                    console.error('Failed to load layout translations:', error);
+                }
+            }
 
-            function t(key) {
-                return key.split('.').reduce((obj, i) => obj && obj[i], translations) || key;
-            }
+            function t(key) {
+                return key.split('.').reduce((obj, i) => obj && obj[i], translations) || key;
+            }
 
-            function applyLayoutTranslations() {
-                document.querySelectorAll('[data-i18n]').forEach(el => {
-                    const key = el.dataset.i18n;
-                    const translation = t(key);
-                    if (translation !== key) {
-                        if (el.hasAttribute('placeholder')) {
-                            el.placeholder = translation;
-                        } else {
-                            el.innerText = translation;
-                        }
-                    }
-                    el.classList.remove('translating');
-                });
-            }
+            function applyLayoutTranslations() {
+                document.querySelectorAll('[data-i18n]').forEach(el => {
+                    const key = el.dataset.i18n;
+                    const translation = t(key);
+                    if (translation !== key) {
+                        if (el.hasAttribute('placeholder')) {
+                            el.placeholder = translation;
+                        } else {
+                            el.innerText = translation;
+                        }
+                    }
+                    el.classList.remove('translating');
+                });
+            }
 
-            // ... (resto da sua lógica de interatividade do template) ...
-            const profileBtn = document.getElementById('profile-btn');
-            const profileMenu = document.getElementById('profile-menu');
-            const sidebar = document.getElementById('sidebar');
-            const sidebarBtn = document.getElementById('open-sidebar-btn');
-            const closeSidebarBtn = document.getElementById('close-sidebar-btn');
-            const logoutBtn = document.getElementById('logout-btn');
-            const logoutOverlay = document.getElementById('logout-overlay');
+            // --- LÓGICA DE INTERATIVIDADE DO TEMPLATE ---
+            // **REMOVIDO** profileBtn e profileMenu daqui para evitar conflito
+            const sidebar = document.getElementById('sidebar');
+            const sidebarBtn = document.getElementById('open-sidebar-btn');
+            const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+            const logoutBtn = document.getElementById('logout-btn');
+            const logoutOverlay = document.getElementById('logout-overlay');
 
-            document.addEventListener('click', (e) => {
-                if (profileMenu && !profileMenu.contains(e.target) && !profileBtn.contains(e.target)) {
-                    profileMenu.classList.add('hidden');
-                }
-                const isMobile = window.innerWidth < 1024;
-                if (isMobile && sidebar && !sidebar.contains(e.target) && !sidebarBtn.contains(e.target)) {
-                    sidebar.classList.add('-translate-x-full');
-                }
-            });
+            document.addEventListener('click', (e) => {
+                // **REMOVIDA** A lógica de clique fora do profileMenu
+                const isMobile = window.innerWidth < 1024;
+                if (isMobile && sidebar && !sidebar.contains(e.target) && !sidebarBtn.contains(e.target)) {
+                    sidebar.classList.add('-translate-x-full');
+                }
+            });
 
-            profileBtn?.addEventListener('click', (e) => {
-                e.stopPropagation();
-                profileMenu.classList.toggle('hidden');
-            });
-            sidebarBtn?.addEventListener('click', (e) => {
-                e.stopPropagation();
-                sidebar.classList.toggle('-translate-x-full');
-            });
-            closeSidebarBtn?.addEventListener('click', () => {
-                sidebar.classList.add('-translate-x-full');
-            });
+            // **REMOVIDO** O listener de clique do profileBtn
+        
+            // Listeners da Sidebar (Mantidos)
+            sidebarBtn?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                sidebar.classList.toggle('-translate-x-full');
+            });
+            closeSidebarBtn?.addEventListener('click', () => {
+                sidebar.classList.add('-translate-x-full');
+            });
 
-            if (logoutBtn && logoutOverlay) {
-                logoutBtn.addEventListener('click', function(event) {
-                    event.preventDefault();
-                    logoutOverlay.classList.remove('hidden');
-                    const logoutUrl = this.href;
-                    setTimeout(() => {
-                        window.location.href = logoutUrl;
-                    }, 1500);
-                });
-            }
+            // Listener de Logout (Mantido)
+            if (logoutBtn && logoutOverlay) {
+                logoutBtn.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    logoutOverlay.classList.remove('hidden');
+                    const logoutUrl = this.href;
+                    setTimeout(() => {
+                        window.location.href = logoutUrl;
+                    }, 1500);
+                });
+            }
 
-            async function initializeLayout() {
-                const lang = "<?= $_SESSION['usuario']['configuracoes']['language'] ?? '' ?>" || localStorage.getItem('calendarLang') || 'pt-br';
-                document.documentElement.lang = lang;
-                localStorage.setItem('calendarLang', lang);
+            // Lógica de Tradução (Mantida)
+            async function initializeLayout() {
+                const lang = "<?= $_SESSION['usuario']['configuracoes']['language'] ?? '' ?>" || localStorage.getItem('calendarLang') || 'pt-br';
+                document.documentElement.lang = lang;
+                localStorage.setItem('calendarLang', lang);
 
-                await loadLayoutTranslations(lang);
-                applyLayoutTranslations();
-            }
+                await loadLayoutTranslations(lang);
+                applyLayoutTranslations();
+            }
 
-            initializeLayout();
-        });
-    </script>
+            initializeLayout();
+        });
+    </script>
 </body>
 
 </html>
