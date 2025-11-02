@@ -12,13 +12,13 @@ INSERT INTO imobiliaria (id_imobiliaria, tipo_pessoa, nome, cnpj, cpf, is_delete
 -- Tabela: usuario (7 registros)
 -- Senhas são 'senha_hash' e devem ser trocadas por hashes reais
 INSERT INTO usuario (id_usuario, nome, email, cpf, senha, creci, telefone, permissao, id_imobiliaria, is_deleted) VALUES
-(1, 'Super Administrador', 'super@tiobroker.com', '100.100.100-10', 'senha_hash', NULL, '(11) 91111-1111', 'SuperAdmin', NULL, 0),
-(2, 'Ana Gerente (Imob 1)', 'ana.gerente@imobcentral.com', '200.200.200-20', 'senha_hash', '12345-J', '(11) 92222-2222', 'Admin', 1, 0),
-(3, 'Bruno Coordenador (Imob 1)', 'bruno.coord@imobcentral.com', '300.300.300-30', 'senha_hash', '23456-F', '(11) 93333-3333', 'Coordenador', 1, 0),
-(4, 'Carlos Corretor (Imob 2)', 'carlos.corretor@suacasa.com', '400.400.400-40', 'senha_hash', '34567-F', '(19) 94444-4444', 'Corretor', 2, 0),
-(5, 'Daniela Corretora (Imob 2)', 'daniela.corretora@suacasa.com', '500.500.500-50', 'senha_hash', '45678-F', '(19) 95555-5555', 'Corretor', 2, 0),
-(6, 'José Silva (Corretor F)', 'jose.silva@corretor.com', '111.222.333-44', 'senha_hash', '56789-F', '(11) 96666-6666', 'Admin', 3, 0),
-(7, 'Usuário Demitido', 'demitido@imobcentral.com', '700.700.700-70', 'senha_hash', '67890-F', '(11) 97777-7777', 'Corretor', 1, 1);
+(1, 'Super Administrador', 'super@tiobroker.com', '100.100.100-10', 'e10adc3949ba59abbe56e057f20f883e', NULL, '(11) 91111-1111', 'SuperAdmin', NULL, 0),
+(2, 'Ana Gerente (Imob 1)', 'ana.gerente@imobcentral.com', '200.200.200-20', 'e10adc3949ba59abbe56e057f20f883e', '12345-J', '(11) 92222-2222', 'Admin', 1, 0),
+(3, 'Bruno Coordenador (Imob 1)', 'bruno.coord@imobcentral.com', '300.300.300-30', 'e10adc3949ba59abbe56e057f20f883e', '23456-F', '(11) 93333-3333', 'Coordenador', 1, 0),
+(4, 'Carlos Corretor (Imob 2)', 'carlos.corretor@suacasa.com', '400.400.400-40', 'e10adc3949ba59abbe56e057f20f883e', '34567-F', '(19) 94444-4444', 'Corretor', 2, 0),
+(5, 'Daniela Corretora (Imob 2)', 'daniela.corretora@suacasa.com', '500.500.500-50', 'e10adc3949ba59abbe56e057f20f883e', '45678-F', '(19) 95555-5555', 'Corretor', 2, 0),
+(6, 'José Silva (Corretor F)', 'jose.silva@corretor.com', '111.222.333-44', 'e10adc3949ba59abbe56e057f20f883e', '56789-F', '(11) 96666-6666', 'Admin', 3, 0),
+(7, 'Usuário Demitido', 'demitido@imobcentral.com', '700.700.700-70', 'e10adc3949ba59abbe56e057f20f883e', '67890-F', '(11) 97777-7777', 'Corretor', 1, 1);
 
 
 -- Tabela: cliente (11 registros)
