@@ -29,9 +29,32 @@ $caminhoFoto = $temFoto ? BASE_URL . ltrim(str_replace('../', '', $fotoPerfil), 
         </div>
     </div>
     <div class="flex items-center space-x-6">
-        <button class="text-gray-500 hover:text-blue-500">
-            <i class="fas fa-bell text-xl"></i>
-        </button>
+       <div class="flex items-center space-x-6">
+        
+        <div class="relative">
+            <button id="notification-btn" class="text-gray-500 hover:text-blue-500">
+                <i class="fas fa-bell text-xl"></i>
+                <span id="notification-badge" class="hidden absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                    0
+                </span>
+            </button>
+            <div id="notification-menu" class="hidden absolute right-0 mt-3 w-72 md:w-80 bg-white rounded-md shadow-lg py-1 z-20 transition-all duration-200 origin-top-right">
+                <div class="px-4 py-3 flex justify-between items-center">
+                    <p class="text-sm font-semibold text-gray-800" data-i18n="header.notifications">Notificações</p>
+                    <button id="mark-all-as-read" class="text-xs text-blue-500 hover:underline" data-i18n="header.mark_all_read">Marcar todas como lidas</button>
+                </div>
+                <hr>
+                <div id="notification-list" class="max-h-64 overflow-y-auto">
+                    <div class="px-4 py-3 text-center text-sm text-gray-500" data-i18n="header.no_notifications">
+                        Nenhuma notificação nova.
+                    </div>
+                </div>
+                <hr>
+                <a href="#" class="block px-4 py-2 text-sm text-center text-blue-500 hover:bg-gray-100" data-i18n="header.all_notifications">
+                    Ver todas
+                </a>
+            </div>
+        </div>
         <div class="relative">
             <!-- ATENÇÃO: O ID foi movido para o botão para facilitar o clique -->
             <button id="profile-btn" class="flex items-center space-x-2 cursor-pointer">
@@ -63,3 +86,113 @@ $caminhoFoto = $temFoto ? BASE_URL . ltrim(str_replace('../', '', $fotoPerfil), 
         <p class="text-sm text-gray-500" data-i18n="header.redirecting">Você será redirecionado em breve.</p>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+    // --- Seletores dos Menus ---
+    const profileBtn = document.getElementById('profile-btn');
+    const profileMenu = document.getElementById('profile-menu');
+    const notificationBtn = document.getElementById('notification-btn');
+    const notificationMenu = document.getElementById('notification-menu');
+    const notificationList = document.getElementById('notification-list');
+    const notificationBadge = document.getElementById('notification-badge');
+
+    // --- Lógica para Abrir/Fechar o Menu de Notificação ---
+    if (notificationBtn && notificationMenu) {
+        notificationBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Impede que o clique feche o menu imediatamente
+            // Mostra ou esconde o menu de notificação
+            notificationMenu.classList.toggle('hidden');
+            // Esconde o menu de perfil (se estiver aberto)
+            if (profileMenu) {
+                profileMenu.classList.add('hidden');
+            }
+            
+            // Se o menu foi aberto, carrega as notificações
+            if (!notificationMenu.classList.contains('hidden')) {
+                carregarNotificacoes();
+            }
+        });
+    }
+
+    // --- Lógica para Abrir/Fechar o Menu de Perfil (Você já deve ter) ---
+    if (profileBtn && profileMenu) {
+        profileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            profileMenu.classList.toggle('hidden');
+            // Esconde o menu de notificação (se estiver aberto)
+            if (notificationMenu) {
+                notificationMenu.classList.add('hidden');
+            }
+        });
+    }
+
+    // --- Fecha os menus se clicar fora deles ---
+    document.addEventListener('click', (e) => {
+        if (profileMenu && !profileMenu.classList.contains('hidden') && !profileMenu.contains(e.target)) {
+            profileMenu.classList.add('hidden');
+        }
+        if (notificationMenu && !notificationMenu.classList.contains('hidden') && !notificationMenu.contains(e.target)) {
+            notificationMenu.classList.add('hidden');
+        }
+    });
+
+    // --- Função para Buscar Notificações (PASSO 3 - Backend) ---
+    async function carregarNotificacoes() {
+        // Isso é um placeholder. Você precisa criar este arquivo no backend!
+        const urlDaSuaApi = '<?= BASE_URL ?>api/get_notificacoes.php'; 
+        
+        try {
+            const response = await fetch(urlDaSuaApi);
+            if (!response.ok) {
+                throw new Error('Erro ao buscar notificações');
+            }
+            
+            const data = await response.json(); // Espera um JSON: { count: 2, items: [...] }
+
+            // Atualiza o contador (badge)
+            if (data.count > 0) {
+                notificationBadge.textContent = data.count;
+                notificationBadge.classList.remove('hidden');
+            } else {
+                notificationBadge.classList.add('hidden');
+            }
+
+            // Limpa a lista atual
+            notificationList.innerHTML = '';
+
+            // Preenche a lista com as novas notificações
+            if (data.items && data.items.length > 0) {
+                data.items.forEach(item => {
+                    const itemHtml = `
+                        <a href="${item.link || '#'}" class="block px-4 py-3 hover:bg-gray-100">
+                            <p class="text-sm text-gray-800 font-semibold">${item.titulo}</p>
+                            <p class="text-xs text-gray-600">${item.mensagem}</p>
+                            <p class="text-xs text-blue-500 mt-1">${item.data}</p>
+                        </a>
+                    `;
+                    notificationList.innerHTML += itemHtml;
+                });
+            } else {
+                notificationList.innerHTML = `
+                    <div class="px-4 py-3 text-center text-sm text-gray-500" data-i18n="header.no_notifications">
+                        Nenhuma notificação nova.
+                    </div>
+                `;
+            }
+
+        } catch (error) {
+            console.error('Erro no carregarNotificacoes:', error);
+            notificationList.innerHTML = `
+                <div class="px-4 py-3 text-center text-sm text-red-500">
+                    Erro ao carregar.
+                </div>
+            `;
+        }
+    }
+    
+    // Carrega as notificações quando a página abre (opcional, mas bom para o badge)
+    // carregarNotificacoes(); // Descomente quando a API estiver pronta
+});
+</script>
