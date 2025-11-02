@@ -2,70 +2,115 @@
 // models/Notificacao.php
 
 class Notificacao {
-    
-    private $db; // Armazena a conexão MySQLi
+
+    private $db; // Conexão MySQLi
 
     /**
-     * @param mysqli $db A conexão com o banco de dados MySQLi
+     * @param mysqli $db Conexão com o banco de dados MySQLi
      */
-    public function __construct($db) {
+    public function __construct(mysqli $db) {
         $this->db = $db;
     }
 
     /**
-     * Busca todas as notificações não lidas de um usuário. (MySQLi)
+     * Retorna até $limite notificações não lidas de um usuário
+     * @param int $id_usuario
+     * @param int $limite
+     * @return array
      */
-    public function buscarNaoLidasPorUsuario($id_usuario) {
+    public function buscarNaoLidasPorUsuario(int $id_usuario, int $limite = 10): array {
         $sql = "SELECT * FROM notificacoes 
-                WHERE id_usuario = ? AND lida = FALSE 
-                ORDER BY data_envio DESC 
-                LIMIT 10";
+                WHERE id_usuario = ? AND lida = FALSE
+                ORDER BY data_envio DESC
+                LIMIT ?";
         
         $stmt = $this->db->prepare($sql);
         if (!$stmt) {
-            // Tratar erro na preparação
+            error_log("Erro preparar buscarNaoLidasPorUsuario: " . $this->db->error);
             return [];
         }
-        
-        $stmt->bind_param("i", $id_usuario); // 'i' para integer
+
+        $stmt->bind_param("ii", $id_usuario, $limite);
         $stmt->execute();
         $result = $stmt->get_result();
-        
-        return $result->fetch_all(MYSQLI_ASSOC);
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
 
     /**
-     * Conta todas as notificações não lidas de um usuário. (MySQLi)
+     * Conta todas as notificações não lidas de um usuário
+     * @param int $id_usuario
+     * @return int
      */
-    public function contarNaoLidasPorUsuario($id_usuario) {
-        $sql = "SELECT COUNT(id_notificacao) AS total FROM notificacoes 
+    public function contarNaoLidasPorUsuario(int $id_usuario): int {
+        $sql = "SELECT COUNT(id_notificacao) AS total FROM notificacoes
                 WHERE id_usuario = ? AND lida = FALSE";
         
         $stmt = $this->db->prepare($sql);
         if (!$stmt) {
+            error_log("Erro preparar contarNaoLidasPorUsuario: " . $this->db->error);
             return 0;
         }
 
         $stmt->bind_param("i", $id_usuario);
         $stmt->execute();
         $result = $stmt->get_result();
-        
-        $resultado = $result->fetch_assoc();
-        return $resultado ? (int)$resultado['total'] : 0;
+        $row = $result ? $result->fetch_assoc() : null;
+        return $row ? (int)$row['total'] : 0;
     }
 
     /**
-     * Marca todas as notificações de um usuário como lidas. (MySQLi)
+     * Marca todas as notificações de um usuário como lidas
+     * @param int $id_usuario
+     * @return bool
      */
-    public function marcarTodasComoLidas($id_usuario) {
+    public function marcarTodasComoLidas(int $id_usuario): bool {
         $sql = "UPDATE notificacoes SET lida = TRUE WHERE id_usuario = ? AND lida = FALSE";
+        $stmt = $this->db->prepare($sql);
+        if (!$stmt) {
+            error_log("Erro preparar marcarTodasComoLidas: " . $this->db->error);
+            return false;
+        }
+        $stmt->bind_param("i", $id_usuario);
+        return $stmt->execute();
+    }
+
+    /**
+     * Retorna até $limite notificações de um usuário (lidas e não lidas)
+     * @param int $id_usuario
+     * @param int $limite
+     * @return array
+     */
+    public function buscarTodasPorUsuario(int $id_usuario, int $limite = 50): array {
+        $sql = "SELECT * FROM notificacoes
+                WHERE id_usuario = ?
+                ORDER BY data_envio DESC
+                LIMIT ?";
         
         $stmt = $this->db->prepare($sql);
-         if (!$stmt) {
+        if (!$stmt) {
+            error_log("Erro preparar buscarTodasPorUsuario: " . $this->db->error);
+            return [];
+        }
+
+        $stmt->bind_param("ii", $id_usuario, $limite);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
+    /**
+     * **NOVO:** Cria uma nova notificação para um usuário.
+     */
+    public function criarNotificacao($id_usuario, $mensagem) {
+        $sql = "INSERT INTO notificacoes (id_usuario, mensagem) VALUES (?, ?)";
+        
+        $stmt = $this->db->prepare($sql);
+        if (!$stmt) {
+            // Lidar com erro, talvez logar
             return false;
         }
         
-        $stmt->bind_param("i", $id_usuario);
+        // 'i' para id_usuario (integer), 's' para mensagem (string)
+        $stmt->bind_param("is", $id_usuario, $mensagem); 
         return $stmt->execute();
     }
 }

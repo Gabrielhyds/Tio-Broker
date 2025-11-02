@@ -57,9 +57,9 @@ $caminhoFoto = $temFoto ? BASE_URL . ltrim(str_replace('../', '', $fotoPerfil), 
                     </div>
                 </div>
                 <hr>
-                <a href="#" class="block px-4 py-2 text-sm text-center text-blue-500 hover:bg-gray-100" data-i18n="header.all_notifications">
-                    Ver todas
-                </a>
+                <a href="<?= BASE_URL ?>views/notificacoes/todas.php" class="block px-4 py-2 text-sm text-center text-blue-500 hover:bg-gray-100" data-i18n="header.all_notifications">
+                    Ver todas
+                </a>
             </div>
         </div>
 
