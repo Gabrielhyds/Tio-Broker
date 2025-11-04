@@ -20,14 +20,20 @@ $usuarioSubMenu = ['usuario_cadastrar', 'usuario_listar'];
 $ferramentasSubMenu = ['chat', 'tarefas', 'agenda'];
 $empreendimentoSubMenu = ['empreendimento_cadastrar', 'empreendimento_listar'];
 $imovelSubMenu = ['imovel_cadastrar', 'imovel_listar'];
+$contratoSubMenu = ['contrato_cadastrar', 'listar_contratos', 'contrato_assinar'];
 
+$emdesenvolviementoSubmenu = ['em_desenvolvimento'];
+$isemdesenvolviementoMenuActive = in_array($activeMenu, $emdesenvolviementoSubmenu);
+
+
+$isContratoMenuActive = in_array($activeMenu, $contratoSubMenu);
 $isLeadMenuActive = in_array($activeMenu, $leadSubMenu);
 $isImobiliariaMenuActive = in_array($activeMenu, $imobiliariaSubMenu);
 $isUsuarioMenuActive = in_array($activeMenu, $usuarioSubMenu);
 $isFerramentasMenuActive = in_array($activeMenu, $ferramentasSubMenu);
 $isEmpreendimentoMenuActive = in_array($activeMenu, $empreendimentoSubMenu);
 $isImovelMenuActive = in_array($activeMenu, $imovelSubMenu);
-
+$isImovelMenuActive = in_array($activeMenu, $imovelSubMenu);
 ?>
 <aside id="sidebar" class="w-64 flex-shrink-0 bg-white border-r border-gray-200 p-4 transform lg:relative fixed h-full z-30 transition-transform duration-300 ease-in-out -translate-x-full lg:translate-x-0">
     <div class="relative flex justify-center items-center mb-8">
@@ -66,7 +72,7 @@ $isImovelMenuActive = in_array($activeMenu, $imovelSubMenu);
                 <a href="<?= BASE_URL ?>views/contatos/index.php?controller=cliente&action=listar" class="sidebar-link <?= $activeMenu === 'contatos' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
                         <i class="fas fa-address-book w-6 text-center"></i><span class="ml-2 translating" data-i18n="sidebar.tools.contacts">Agenda de Contatos</span>
                 </a>
-                <a href="<?= BASE_URL ?>views/relatorios/relatorio_leads.php" class="sidebar-link <?= $activeMenu === 'relatorio_leads' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
+                <a  href="<?= BASE_URL ?>views/relatorios/relatorio_leads.php" class="hidden  sidebar-link <?= $activeMenu === 'relatorio_leads' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
                     <i class="fas fa-chart-line w-6 text-center"></i>
                     <span class="ml-2 translating" data-i18n="sidebar.lead.reports">Relatórios de Leads</span>
                 </a>
@@ -163,6 +169,29 @@ $isImovelMenuActive = in_array($activeMenu, $imovelSubMenu);
                     <a href="<?= BASE_URL ?>views/imoveis/listar.php" class="sidebar-link <?= $activeMenu === 'imovel_listar' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
                         <i class="fas fa-list-alt w-6 text-center"></i><span class="ml-2 translating" data-i18n="sidebar.properties.view">Ver Imóveis</span>
                     </a>
+                </div>
+            </div>
+             <div>
+                <div>
+                    <button type="button" class="dropdown-toggle flex items-center w-full px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
+                        <i class="fas fa-file-signature w-6 text-center"></i>
+                        <span class="ml-2 flex-1 text-left whitespace-nowrap translating" data-i18n="sidebar.contracts.title">Contratos</span>
+                        <i class="fas fa-chevron-down ml-auto transition-transform duration-200 <?= $isContratoMenuActive ? 'rotate-180' : '' ?>"></i>
+                    </button>
+                    <div class="dropdown-menu <?= $isContratoMenuActive ? '' : 'hidden' ?> py-1 space-y-1 pl-8">
+                        <a href="<?= BASE_URL ?>views/contratos/contrato.php" class="sidebar-link <?= $activeMenu === 'contrato_cadastrar' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
+                            <i class="fas fa-plus-circle w-6 text-center"></i>
+                            <span class="ml-2 translating" data-i18n="sidebar.contracts.register">Cadastrar Contrato</span>
+                        </a>
+                        <a href="<?= BASE_URL ?>views/contratos/listar_contratos.php" class="sidebar-link <?= $activeMenu === 'listar_contratos' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
+                            <i class="fas fa-list-alt w-6 text-center"></i>
+                            <span class="ml-2 translating" data-i18n="sidebar.contracts.view">Ver Contratos</span>
+                        </a>
+                        <a href="<?= BASE_URL ?>views/em_desenvolvimento/em_desenvolvimento.php" class="sidebar-link <?= $activeMenu === 'em_desenvolviemento' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
+                            <i class="fas fa-pen-nib w-6 text-center"></i>
+                            <span class="ml-2 translating" data-i18n="sidebar.contracts.sign">Assinar (Teste)</span>
+                        </a>
+                    </div>
                 </div>
             </div>
         <?php endif; ?>

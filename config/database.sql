@@ -344,3 +344,13 @@ CREATE TABLE lead_interacoes (
   FOREIGN KEY (id_lead) REFERENCES leads (id_lead) ON DELETE CASCADE,
   FOREIGN KEY (id_usuario) REFERENCES usuario (id_usuario) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS contratos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome_cliente VARCHAR(100) NOT NULL,
+    email_cliente VARCHAR(100) NOT NULL,
+    contrato_texto TEXT NOT NULL,
+    assinatura_simulada TEXT,
+    data_assinatura DATETIME,
+    ip_assinante VARCHAR(45)
+);
