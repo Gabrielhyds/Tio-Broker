@@ -3,6 +3,9 @@
 Um sistema web completo e escalável para administração de **imobiliárias, corretores, clientes e empreendimentos**.  
 Desenvolvido em **PHP (padrão MVC)** com banco de dados **MySQL**, interface **responsiva e moderna** em **Bootstrap 5**, voltado para performance, segurança e facilidade de uso.
 
+
+O arquivo do banco de dados está em: CONFIG/DATABASE.SQL
+
 ---
 
 ## ⚙️ **Principais Recursos**
