@@ -22,6 +22,7 @@ body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
 .sidebar-link.active { background-color:#eff6ff;color:#2563eb;border-left:4px solid #2563eb; }
 .translating { visibility:hidden; }
 </style>
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 </head>
 <body class="bg-slate-50">
 <div class="flex h-screen bg-white">

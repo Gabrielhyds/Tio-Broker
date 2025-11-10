@@ -13,7 +13,12 @@ if (!$usuario) {
 // Define qual item do menu de navegação deve ser marcado como "ativo".
 $activeMenu = 'dashboard';
 
-// Define o caminho para o arquivo que contém o conteúdo visual do dashboard.
-$conteudo = __DIR__ . '/dashboard_unificado_content.php';
-// Inclui o template base da página, que por sua vez carregará o arquivo de conteúdo definido acima.
+// --- ESTA É A MUDANÇA ---
+// Antes: apontava para o arquivo antigo que misturava PHP e HTML
+// $conteudo = __DIR__ . '/dashboard_unificado_content.php';
+
+// Agora: aponta para o seu novo arquivo de frontend Vue
+$conteudo = __DIR__ . '/dashboard_com_api.php'; // <--- MUDOU AQUI
+
+// Inclui o template base da página (que carrega o Vue.js, CSS, etc.)
 include __DIR__ . '/../layout/template_base.php';
