@@ -1,0 +1,44 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tiobroker_app
+    volumes:
+      # CORREÇÃO: Mapeia a pasta do projeto para a raiz do servidor web.
+      - ./Tio-Broker:/var/www/html
+    ports:
+      - "8080:80"
+      - "8082:8080"
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_NAME: tio_broker
+      DB_USER: root
+      DB_PASSWORD: root
+      TZ: America/Sao_Paulo
+
+  db:
+    image: mariadb:10.6
+    container_name: tiobroker_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: tio_broker
+    volumes:
+      - ./volumes/db:/var/lib/mysql
+      - ./volumes/init:/docker-entrypoint-initdb.d
+    ports:
+      - "3310:3306"
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: tiobroker_pma
+    restart: always
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: root
