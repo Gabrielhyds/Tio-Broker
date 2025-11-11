@@ -10,7 +10,7 @@ class Lead {
     }
 
     /**
-     * RF01: Cadastrar Lead
+     * RF01: função para Cadastrar o Lead no banco de dados
      */
     public function cadastrar($dados) {
         $query = "INSERT INTO " . $this->table_name . " 
@@ -37,7 +37,7 @@ class Lead {
     }
 
     /**
-     * RF02: Editar Lead
+     * RF02: função para Editar o Lead no banco de dados
      */
     public function editar($id, $dados) {
         $query = "UPDATE " . $this->table_name . " SET 
@@ -61,12 +61,9 @@ class Lead {
     }
 
     /**
-     * RF03: Excluir Lead (Exclusão Lógica)
+     * RF03: função que permite Excluir o Lead no banco de dados (Exclusão Lógica)
      */
-    public function excluir($id) {
-        // Validação (RF03 Erro): Verificar negociações abertas (Simplificado)
-        // Em um app real, verificaríamos outra tabela. Aqui, vamos apenas inativar.
-        
+    public function excluir($id) {        
         $query = "UPDATE " . $this->table_name . " SET is_deleted = 1 WHERE id_lead = ?";
         $stmt = $this->conn->prepare($query);
         $id_lead = (int)$id;
@@ -76,7 +73,7 @@ class Lead {
     }
 
     /**
-     * RF04: Visualizar Pipeline / Listar Todos
+     * RF04: função para exibir o Pipeline / Listar Todos
      * RF07: Buscar e Filtrar Leads (Simplificado)
      */
     public function listarTodos($filtros = []) {
@@ -101,7 +98,7 @@ class Lead {
     }
 
     /**
-     * RF05: Movimentar Lead no Pipeline
+     * RF05: função para Movimentar Lead no Pipeline
      */
     public function moverPipeline($id, $novoStatus) {
         $query = "UPDATE " . $this->table_name . " SET status_pipeline = ? WHERE id_lead = ?";
@@ -115,7 +112,7 @@ class Lead {
     }
 
     /**
-     * RF06: Atribuir Lead a Usuários
+     * RF06: função para Atribuir Lead a Usuários
      */
     public function atribuirResponsavel($id, $id_usuario) {
         $query = "UPDATE " . $this->table_name . " SET id_usuario_responsavel = ? WHERE id_lead = ?";
@@ -129,7 +126,7 @@ class Lead {
     }
 
     /**
-     * RF08: Registrar Interações do Lead
+     * RF08: função para Registrar Interações do Lead
      */
     public function registrarInteracao($dados) {
         $query = "INSERT INTO " . $this->table_interacoes . "
@@ -148,7 +145,7 @@ class Lead {
     }
 
     /**
-     * Busca um lead específico e suas interações (RF02, RF08)
+     * função para Busca um lead específico e suas interações (RF02, RF08)
      */
     public function buscarPorId($id) {
         $lead = [];
