@@ -1,11 +1,10 @@
 <?php
 /*
 |--------------------------------------------------------------------------
-| ARQUIVO: sidebar.php (VERSÃO COM DROPDOWNS E MEMÓRIA DE SCROLL)
+| ARQUIVO: sidebar.php (VERSÃO REVISADA)
 |--------------------------------------------------------------------------
-| Itens de menu agrupados em dropdowns para melhor organização.
-| Adicionado JavaScript para controlar a abertura/fechamento e memorizar
-| a posição da barra de rolagem (scroll) entre as páginas.
+| O <script> foi REMOVIDO e movido para 'index.php'.
+| A estrutura HTML foi limpa e otimizada para responsividade.
 */
 
 if (session_status() === PHP_SESSION_NONE) session_start();
@@ -25,7 +24,6 @@ $contratoSubMenu = ['contrato_cadastrar', 'listar_contratos', 'contrato_assinar'
 $emdesenvolviementoSubmenu = ['em_desenvolvimento'];
 $isemdesenvolviementoMenuActive = in_array($activeMenu, $emdesenvolviementoSubmenu);
 
-
 $isContratoMenuActive = in_array($activeMenu, $contratoSubMenu);
 $isLeadMenuActive = in_array($activeMenu, $leadSubMenu);
 $isImobiliariaMenuActive = in_array($activeMenu, $imobiliariaSubMenu);
@@ -33,19 +31,33 @@ $isUsuarioMenuActive = in_array($activeMenu, $usuarioSubMenu);
 $isFerramentasMenuActive = in_array($activeMenu, $ferramentasSubMenu);
 $isEmpreendimentoMenuActive = in_array($activeMenu, $empreendimentoSubMenu);
 $isImovelMenuActive = in_array($activeMenu, $imovelSubMenu);
-$isImovelMenuActive = in_array($activeMenu, $imovelSubMenu);
 ?>
-<aside id="sidebar" class="w-64 flex-shrink-0 bg-white border-r border-gray-200 p-4 transform lg:relative fixed h-full z-30 transition-transform duration-300 ease-in-out -translate-x-full lg:translate-x-0">
-    <div class="relative flex justify-center items-center mb-8">
+
+<!-- 
+    Sidebar:
+    - 'fixed' e 'inset-y-0' para cobrir a altura total no mobile
+    - 'z-40' para ficar acima do conteúdo mas abaixo do overlay (z-30)
+    - '-translate-x-full' é o estado "fechado"
+    - 'lg:relative' e 'lg:translate-x-0' para ficar fixo e visível no desktop
+-->
+<aside id="sidebar" class="w-64 flex-shrink-0 bg-white border-r border-gray-200 p-4 fixed inset-y-0 left-0 z-40 transform -translate-x-full lg:relative lg:translate-x-0 lg:h-screen lg:sticky lg:top-0">
+    
+    <!-- Header da Sidebar -->
+    <div class="relative flex justify-center items-center mb-6 pt-2">
         <a href="<?= BASE_URL ?>views/dashboards/dashboard_unificado.php">
             <img src="<?= BASE_URL ?>views/assets/img/tio_broker_ligth.png" alt="Logo Tio Broker" class="h-10 w-auto max-w-[160px] object-contain">
         </a>
-        <button id="close-sidebar-btn" class="absolute right-0 top-1/2 -translate-y-1/2 lg:hidden text-gray-500 hover:text-gray-800">
+        <!-- Botão de Fechar (Apenas Mobile) -->
+        <button id="close-sidebar-btn" class="absolute right-0 top-1/2 -translate-y-1/2 lg:hidden text-gray-500 hover:text-gray-800 p-2">
             <i class="fas fa-times text-xl"></i>
         </button>
     </div>
-    <!-- ID 'sidebar-nav' adicionado para controlar o scroll -->
-    <nav id="sidebar-nav" class="space-y-2 sidebar-scroll h-full pb-20 overflow-y-auto">
+
+    <!-- Navegação (Rolável) -->
+    <!-- ID 'sidebar-nav' é usado pelo JS para memória de scroll -->
+    <nav id="sidebar-nav" class_name="sidebar-scroll h-full pb-24 overflow-y-auto space-y-2">
+        
+        <!-- Bloco Início -->
         <div>
             <h3 class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 translating" data-i18n="sidebar.home.title">Início</h3>
             <a href="<?= BASE_URL ?>views/dashboards/dashboard_unificado.php" class="sidebar-link <?= $activeMenu === 'dashboard' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
@@ -63,16 +75,16 @@ $isImovelMenuActive = in_array($activeMenu, $imovelSubMenu);
             <div class="dropdown-menu <?= $isLeadMenuActive ? '' : 'hidden' ?> py-1 space-y-1 pl-8">
                 <a href="<?= BASE_URL ?>views/leads/cadastrar.php" class="sidebar-link <?= $activeMenu === 'lead_cadastrar' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
                     <i class="fas fa-plus-circle w-6 text-center"></i>
-                    <span class="ml-2 translating" data-i18n="sidebar.lead.register">Cadastrar Lead</span>
+                    <span class="ml-2 translating" data-i1imn="sidebar.lead.register">Cadastrar Lead</span>
                 </a>
                 <a href="<?= BASE_URL ?>views/leads/pipeline.php" class="sidebar-link <?= $activeMenu === 'lead_listar' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
                     <i class="fas fa-tasks w-6 text-center"></i>
                     <span class="ml-2 translating" data-i18n="sidebar.lead.manage">Gerenciar Leads</span>
                 </a>
                 <a href="<?= BASE_URL ?>views/contatos/index.php?controller=cliente&action=listar" class="sidebar-link <?= $activeMenu === 'contatos' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
-                        <i class="fas fa-address-book w-6 text-center"></i><span class="ml-2 translating" data-i18n="sidebar.tools.contacts">Agenda de Contatos</span>
+                    <i class="fas fa-address-book w-6 text-center"></i><span class="ml-2 translating" data-i18n="sidebar.tools.contacts">Agenda de Contatos</span>
                 </a>
-                <a  href="<?= BASE_URL ?>views/relatorios/relatorio_leads.php" class="hidden  sidebar-link <?= $activeMenu === 'relatorio_leads' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
+                <a href="<?= BASE_URL ?>views/relatorios/relatorio_leads.php" class="hidden sidebar-link <?= $activeMenu === 'relatorio_leads' ? 'active' : '' ?> flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
                     <i class="fas fa-chart-line w-6 text-center"></i>
                     <span class="ml-2 translating" data-i18n="sidebar.lead.reports">Relatórios de Leads</span>
                 </a>
@@ -117,8 +129,8 @@ $isImovelMenuActive = in_array($activeMenu, $imovelSubMenu);
             </div>
         <?php endif; ?>
 
+        <!-- Dropdown Ferramentas -->
         <?php if (in_array($permissao, ['SuperAdmin', 'Admin', 'Coordenador', 'Corretor'])): ?>
-            <!-- Dropdown Ferramentas -->
             <div>
                 <button type="button" class="dropdown-toggle flex items-center w-full px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
                     <i class="fas fa-tools w-6 text-center"></i>
@@ -159,7 +171,7 @@ $isImovelMenuActive = in_array($activeMenu, $imovelSubMenu);
             <div>
                 <button type="button" class="dropdown-toggle flex items-center w-full px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
                     <i class="fas fa-home w-6 text-center"></i>
-                    <span class="ml-2 flex-1 text-left whitespace-nowrap translating" data-i18n="sidebar.properties.title">Imóveis</span>
+                    <span class="ml-2 flex-1 text-left whitespace-nowtam-wrap translating" data-i18n="sidebar.properties.title">Imóveis</span>
                     <i class="fas fa-chevron-down ml-auto transition-transform duration-200 <?= $isImovelMenuActive ? 'rotate-180' : '' ?>"></i>
                 </button>
                 <div class="dropdown-menu <?= $isImovelMenuActive ? '' : 'hidden' ?> py-1 space-y-1 pl-8">
@@ -171,6 +183,8 @@ $isImovelMenuActive = in_array($activeMenu, $imovelSubMenu);
                     </a>
                 </div>
             </div>
+
+            <!-- Dropdown Contratos -->
              <div>
                 <div>
                     <button type="button" class="dropdown-toggle flex items-center w-full px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">
@@ -195,69 +209,6 @@ $isImovelMenuActive = in_array($activeMenu, $imovelSubMenu);
                 </div>
             </div>
         <?php endif; ?>
+
     </nav>
 </aside>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // 1. Funcionalidade dos Dropdowns
-    const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
-
-    // Recupera o estado salvo dos dropdowns (abertos/fechados)
-    const dropdownState = JSON.parse(sessionStorage.getItem('dropdownState') || '{}');
-
-    dropdownToggles.forEach((toggle, index) => {
-        const dropdownMenu = toggle.nextElementSibling;
-        const chevron = toggle.querySelector('.fa-chevron-down');
-
-        // Se havia estado salvo, aplica
-        if (dropdownState[index]) {
-            dropdownMenu.classList.remove('hidden');
-            chevron.classList.add('rotate-180');
-        }
-
-        toggle.addEventListener('click', (event) => {
-            event.preventDefault();
-
-            dropdownMenu.classList.toggle('hidden');
-            chevron.classList.toggle('rotate-180');
-
-            // Atualiza e salva o estado atual do dropdown
-            dropdownState[index] = !dropdownMenu.classList.contains('hidden');
-            sessionStorage.setItem('dropdownState', JSON.stringify(dropdownState));
-        });
-    });
-
-    // 2. Lógica para abrir e fechar a Sidebar (mobile e desktop)
-    const sidebar = document.getElementById('sidebar');
-    const closeSidebarBtn = document.getElementById('close-sidebar-btn');
-    const openSidebarBtn = document.getElementById('open-sidebar-btn'); // Botão no header.php
-
-    if (sidebar) {
-        if (closeSidebarBtn) {
-            closeSidebarBtn.addEventListener('click', () => {
-                sidebar.classList.add('-translate-x-full');
-            });
-        }
-        if (openSidebarBtn) {
-            openSidebarBtn.addEventListener('click', () => {
-                sidebar.classList.remove('-translate-x-full');
-            });
-        }
-    }
-
-    // 3. Lógica para manter a posição do scroll da Sidebar
-    const sidebarNav = document.getElementById('sidebar-nav');
-    if (sidebarNav) {
-        // Ao carregar a página, restaura a posição do scroll
-        const savedScrollPosition = sessionStorage.getItem('sidebarScrollPos');
-        if (savedScrollPosition) {
-            sidebarNav.scrollTop = parseInt(savedScrollPosition, 10);
-        }
-
-        // Antes de navegar para outra página, salva a posição do scroll
-        window.addEventListener('beforeunload', () => {
-            sessionStorage.setItem('sidebarScrollPos', sidebarNav.scrollTop);
-        });
-    }
-});
-</script>
