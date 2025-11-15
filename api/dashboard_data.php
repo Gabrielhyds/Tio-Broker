@@ -1,29 +1,57 @@
 <?php
 // =========================================================================
 // ETAPA 1: API (BACKEND)
-// Versão atualizada para corresponder ao esquema SQL fornecido
+// Versão atualizada com melhorias de depuração e correções
 // =========================================================================
+
+// --- Configuração de Erros ---
+// Adicionado para depuração. Comente ou remova em produção.
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Proteção da API
-if (!isset($_SESSION['usuario'])) {
+// Resposta de erro padronizada
+function enviarErro($mensagem, $codigo = 500) {
     header('Content-Type: application/json');
-    http_response_code(401);
-    echo json_encode(['erro' => 'Usuario nao autenticado']);
+    http_response_code($codigo);
+    echo json_encode(['erro' => $mensagem]);
     exit;
 }
 
-// Inclui a configuração e estabelece a conexão
-// CORREÇÃO: O caminho estava com um '../' a mais.
-require_once __DIR__ . '/../config/config.php';
+// Proteção da API
+if (!isset($_SESSION['usuario'])) {
+    enviarErro('Usuario nao autenticado', 401);
+}
+
+// --- Conexão com o Banco ---
+$configFile = __DIR__ . '/../config/config.php';
+if (!file_exists($configFile)) {
+    enviarErro('Arquivo de configuracao nao encontrado em: ' . $configFile);
+}
+
+require_once $configFile;
+
+// Verificação de Conexão
+if (!isset($connection) || $connection->connect_error) {
+    enviarErro('Falha na conexao com o banco de dados: ' . ($connection->connect_error ?? 'Variavel de conexao nao definida.'));
+}
 $mysqli = $connection;
 
-// --- Início da Lógica de Negócios (Exatamente como estava) ---
+
+// --- Início da Lógica de Negócios ---
 $nomeUsuario = $_SESSION['usuario']['nome'] ?? 'Usuário';
 $idUsuarioLogado = (int)($_SESSION['usuario']['id_usuario'] ?? 0);
 $idImobiliaria = (int)($_SESSION['usuario']['id_imobiliaria'] ?? 0);
+$permissao = $_SESSION['usuario']['permissao'] ?? null;
+
+// Se a permissão for nula, é um problema.
+if ($permissao === null) {
+    enviarErro('Permissao do usuario nao definida na sessao.');
+}
 
 // Buscar o nome da imobiliária
 $nomeImobiliaria = '';
@@ -45,7 +73,7 @@ $dadosCards = [];
 $queryTotalImoveis = "SELECT COUNT(*) AS total FROM imovel WHERE id_imobiliaria = ?";
 $queryTotalLeads = "SELECT COUNT(*) AS total FROM leads WHERE id_imobiliaria = ? AND is_deleted = 0";
 $queryTotalUsuarios = "SELECT COUNT(*) AS total FROM usuario WHERE id_imobiliaria = ? AND is_deleted = 0";
-$queryTotalClientes = "SELECT COUNT(*) AS total FROM cliente WHERE id_imobiliaria = ? AND is_deleted = 0"; // Assumindo is_deleted=0
+$queryTotalClientes = "SELECT COUNT(*) AS total FROM cliente WHERE id_imobiliaria = ? AND is_deleted = 0";
 
 if ($permissao === 'SuperAdmin') {
     $result = $mysqli->query("SELECT COUNT(*) AS total FROM imobiliaria WHERE is_deleted = 0");
@@ -141,13 +169,17 @@ $statusFunil = [
 ];
 $statusFunilSQL = implode("', '", array_keys($statusFunil));
 
-// CORREÇÃO: Usando 'status_pipeline'
+// =========================================================================
+// CORREÇÃO SQL_MODE
+// Adicionamos 'status_pipeline' ao SELECT para que possa ser usado no GROUP BY
+// =========================================================================
 $queryFunilBase = "SELECT 
                         CASE status_pipeline ";
 foreach ($statusFunil as $statusKey => $statusLabel) {
     $queryFunilBase .= "WHEN '$statusKey' THEN '$statusLabel' ";
 }
 $queryFunilBase .= "END as status_label, 
+                        status_pipeline, -- <--- ADICIONADO AQUI
                         COUNT(*) as total 
                    FROM leads 
                    WHERE status_pipeline IN ('$statusFunilSQL')";
@@ -155,27 +187,51 @@ $queryFunilBase .= "END as status_label,
 $dadosGraficoFunil = ['labels' => [], 'data' => []];
 $dadosGraficoStatus = ['labels' => [], 'data' => []]; 
 
+// =========================================================================
+// INÍCIO DA CORREÇÃO DO BUG
+// A lógica de execute() e close() foi movida para DENTRO de cada bloco.
+// =========================================================================
+
 if ($permissao === 'Corretor') {
     // CORREÇÃO: Usando 'id_usuario_responsavel'
-    $stmt = $mysqli->prepare("$queryFunilBase AND id_usuario_responsavel = ? AND is_deleted = 0 GROUP BY status_label ORDER BY FIELD(status_pipeline, '$statusFunilSQL')");
+    // CORREÇÃO SQL_MODE: Adicionado 'status_pipeline' ao GROUP BY
+    $stmt = $mysqli->prepare("$queryFunilBase AND id_usuario_responsavel = ? AND is_deleted = 0 GROUP BY status_label, status_pipeline ORDER BY FIELD(status_pipeline, '$statusFunilSQL')");
     $stmt->bind_param("i", $idUsuarioLogado);
-} elseif ($permissao === 'Admin' || $permissao === 'Coordenador') {
-    $stmt = $mysqli->prepare("$queryFunilBase AND id_imobiliaria = ? AND is_deleted = 0 GROUP BY status_label ORDER BY FIELD(status_pipeline, '$statusFunilSQL')");
-    $stmt->bind_param("i", $idImobiliaria);
-} elseif ($permissao === 'SuperAdmin') {
-    $stmt = $mysqli->prepare("$queryFunilBase AND is_deleted = 0 GROUP BY status_label ORDER BY FIELD(status_pipeline, '$statusFunilSQL')");
-}
-
-if (isset($stmt)) {
     $stmt->execute();
     $resultado = $stmt->get_result();
     $dadosFormatados = formatarDadosGrafico($resultado);
-    $dadosGraficoFunil = $dadosFormatados;
-    $dadosGraficoStatus = $dadosFormatados; // Usando os mesmos dados, você pode mudar a query de status
+    $stmt->close();
+} elseif ($permissao === 'Admin' || $permissao === 'Coordenador') {
+    // CORREÇÃO SQL_MODE: Adicionado 'status_pipeline' ao GROUP BY
+    $stmt = $mysqli->prepare("$queryFunilBase AND id_imobiliaria = ? AND is_deleted = 0 GROUP BY status_label, status_pipeline ORDER BY FIELD(status_pipeline, '$statusFunilSQL')");
+    $stmt->bind_param("i", $idImobiliaria);
+    $stmt->execute();
+    $resultado = $stmt->get_result();
+    $dadosFormatados = formatarDadosGrafico($resultado);
+    $stmt->close();
+} elseif ($permissao === 'SuperAdmin') {
+    // CORREÇÃO SQL_MODE: Adicionado 'status_pipeline' ao GROUP BY
+    $stmt = $mysqli->prepare("$queryFunilBase AND is_deleted = 0 GROUP BY status_label, status_pipeline ORDER BY FIELD(status_pipeline, '$statusFunilSQL')");
+    $stmt->execute();
+    $resultado = $stmt->get_result();
+    $dadosFormatados = formatarDadosGrafico($resultado);
     $stmt->close();
 }
 
+// Agora, só preenchemos os dados se $dadosFormatados foi definido
+if (isset($dadosFormatados)) {
+    $dadosGraficoFunil = $dadosFormatados;
+    // Você pode ter uma query diferente para o gráfico de status, se necessário.
+    // Por enquanto, estou usando os mesmos dados do funil.
+    $dadosGraficoStatus = $dadosFormatados; 
+}
+// =========================================================================
+// FIM DA CORREÇÃO
+// =========================================================================
+
+
 // --- Lógica para TAREFAS (Correta) ---
+// Esta consulta agora é segura, pois $stmt não está mais "contaminado"
 $stmt = $mysqli->prepare("SELECT id_tarefa, descricao, prazo, status FROM tarefas WHERE id_usuario = ? AND status != 'concluida' ORDER BY prazo ASC");
 $stmt->bind_param("i", $idUsuarioLogado);
 $stmt->execute();
