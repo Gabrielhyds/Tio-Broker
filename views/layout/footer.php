@@ -3,11 +3,16 @@
 |--------------------------------------------------------------------------
 | ARQUIVO: footer.php (VERSÃO FINAL CORRIGIDA)
 |--------------------------------------------------------------------------
-| Adicionada a classe 'translating' para evitar o "pisca-pisca" do idioma.
+| MUDANÇA: Adicionadas classes 'dark:' para o tema escuro.
 */
 ?>
-<!-- A tag <footer> define o rodapé de uma seção ou de uma página. -->
-<footer class="text-center p-4 text-sm text-gray-500 bg-white border-t border-gray-200">
+<!-- 
+  MUDANÇA: Adicionadas classes dark:
+  - dark:bg-gray-800
+  - dark:border-gray-700
+  - dark:text-gray-400
+-->
+<footer class="text-center p-4 text-sm text-gray-500 bg-white border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400">
     <!-- 
         &copy; é o código HTML para o símbolo de copyright (©).
         O código PHP `<?php echo date('Y'); ?>` exibe dinamicamente o ano atual.
